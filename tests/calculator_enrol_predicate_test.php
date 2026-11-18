@@ -27,10 +27,22 @@ namespace local_dimensions;
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_dimensions\calculator::current_user_can_enrol
- * @covers     \local_dimensions\calculator::current_user_has_pending_application
+ * @covers     \local_dimensions\calculator::has_pending_application
  * @covers     \local_dimensions\calculator::current_user_can_self_enrol
  */
 final class calculator_enrol_predicate_test extends \advanced_testcase {
+    /**
+     * Whether the current $USER has an application awaiting a decision on the course.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    private function current_user_has_pending(int $courseid): bool {
+        global $USER;
+
+        return calculator::has_pending_application($courseid, (int) $USER->id);
+    }
+
     /**
      * Switch enrol_apply on for this test, or skip when the optional plugin is absent.
      *
@@ -95,7 +107,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
 
         $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
-        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertFalse($this->current_user_has_pending((int) $course->id));
     }
 
     /**
@@ -291,7 +303,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $context = \core\context\course::instance($course->id);
         $this->assertFalse(is_enrolled($context, $applicant, '', true));
         $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
         $this->assertFalse(calculator::user_can_access_course($course, (int) $applicant->id));
 
         /* The 'enrolledorself' filter needs no pending branch, because the application is a
@@ -324,14 +336,14 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
             ENROL_USER_SUSPENDED
         );
         $this->setUser($suspended);
-        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertFalse($this->current_user_has_pending((int) $course->id));
 
         /* Control: the same suspended state on the apply instance of the same course is
            pending, so the assertion above cannot pass by the check never running. */
         $applicant = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($applyinstance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
 
         // And the suspended manual row really is there, so the negative above is about scope.
         $this->assertTrue($DB->record_exists('user_enrolments', [
@@ -345,7 +357,7 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
      *
      * With expiredaction set to suspend, core's process_expirations() re-suspends a lapsed active
      * row and leaves timeend in the past, so only the timeend clause of
-     * {@see calculator::current_user_has_pending_application()} tells it from a fresh application.
+     * {@see calculator::has_pending_application()} tells it from a fresh application.
      *
      * @return void
      */
@@ -368,20 +380,20 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
             ENROL_USER_SUSPENDED
         );
         $this->setUser($lapsed);
-        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertFalse($this->current_user_has_pending((int) $course->id));
 
         /* Control: the same suspended state with no period, which is what apply() writes, is
            pending, so the assertion above is about the dates. */
         $applicant = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
 
         // And a period that has NOT run out yet is still an application awaiting a decision.
         $waiting = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($instance, (int) $waiting->id, null, 0, time() + WEEKSECS, ENROL_USER_SUSPENDED);
         $this->setUser($waiting);
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
     }
 
     /**
@@ -399,11 +411,11 @@ final class calculator_enrol_predicate_test extends \advanced_testcase {
         $applicant = $this->getDataGenerator()->create_user();
         $plugin->enrol_user($instance, (int) $applicant->id, null, 0, 0, ENROL_USER_SUSPENDED);
         $this->setUser($applicant);
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
 
         $plugin->update_user_enrol($instance, (int) $applicant->id, ENROL_USER_ACTIVE);
 
-        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertFalse($this->current_user_has_pending((int) $course->id));
         $this->assertTrue(is_enrolled(\core\context\course::instance($course->id), $applicant, '', true));
     }
 

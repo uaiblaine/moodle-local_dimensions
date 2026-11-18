@@ -110,6 +110,35 @@ final class competency_user_evidence_test extends core_reportbuilder_testcase {
     }
 
     /**
+     * Only files in the evidence owner's user context are counted.
+     *
+     * The control is test_content(). Here a file with the same component, file area and item id
+     * sits in another user's context, and must not be counted for the certificate.
+     *
+     * @return void
+     */
+    public function test_files_in_another_context_are_not_counted(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $reportid = $this->create_fixture();
+        $certificateid = (int) $DB->get_field('competency_userevidence', 'id', ['name' => 'Certificate']);
+        $other = $this->getDataGenerator()->create_user();
+        get_file_storage()->create_file_from_string([
+            'contextid' => context_user::instance($other->id)->id,
+            'component' => 'core_competency',
+            'filearea' => 'userevidence',
+            'itemid' => $certificateid,
+            'filepath' => '/',
+            'filename' => 'stranger.pdf',
+        ], 'other-bytes');
+
+        $rows = array_map('array_values', $this->get_custom_report_content($reportid));
+        $this->assertSame('Certificate', $rows[0][0]);
+        $this->assertEquals(1, $rows[0][2]);
+        $this->assertEquals(0, $rows[1][2]);
+    }
+
+    /**
      * A stored URL becomes a link only when it is a web address; anything else is plain, escaped text.
      *
      * The control: an https address keeps its link, with its query string escaped once.

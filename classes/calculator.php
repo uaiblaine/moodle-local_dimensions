@@ -869,7 +869,7 @@ class calculator {
      *
      * The enrolment leg is only evaluated for the current $USER; for anyone else only an
      * active enrolment counts. A pending enrol_apply application satisfies neither leg, so this
-     * returns false for it; see current_user_has_pending_application() for the state to show.
+     * returns false for it; see has_pending_application() for the state to show.
      *
      * @param \stdClass $course A course record with at least an id.
      * @param int $userid The user id.
@@ -959,7 +959,7 @@ class calculator {
     }
 
     /**
-     * Whether the current $USER has an enrol_apply application still awaiting a decision.
+     * Whether a user has an enrol_apply application still awaiting a decision.
      *
      * enrol_apply stores a pending application as a suspended user_enrolments row with no
      * enrolment period (enrol_apply::apply()), so is_enrolled() with onlyactive says no and
@@ -979,24 +979,11 @@ class calculator {
      * timeend = 0 (apply() sets no period; moving a row to the waiting list clears it).
      *
      * Same rule as enrol_apply\local\queue::awaiting_decision_where(), copied rather than called
-     * so the integration stays optional. Keep the two in step. See has_pending_application(), which
-     * asks the same of any user.
+     * so the integration stays optional. Keep the two in step.
      *
-     * @param int $courseid The course id.
-     * @return bool
-     */
-    public static function current_user_has_pending_application(int $courseid): bool {
-        global $USER;
-
-        return self::has_pending_application($courseid, (int) $USER->id);
-    }
-
-    /**
-     * Whether a user has an enrol_apply application still awaiting a decision.
-     *
-     * The rule is current_user_has_pending_application()'s; unlike current_user_can_enrol(), whose
-     * self enrolment leg core answers only for $USER, it holds for any user id. The tracker's card asks
-     * it of its viewer ({@see self::get_course_section_progress()}).
+     * Unlike current_user_can_enrol(), whose self enrolment leg core answers only for $USER, it holds
+     * for any user id. The tracker's locked card asks it of its viewer
+     * ({@see \local_dimensions\local\enrolment_provider_core::locked_state()}).
      *
      * @param int $courseid The course id.
      * @param int $userid The user whose application is looked for.
@@ -1005,10 +992,7 @@ class calculator {
     public static function has_pending_application(int $courseid, int $userid): bool {
         global $DB;
 
-        /* Read straight from the rows, with no enabled-instance or enabled-plugin filter, as the
-           enrol_apply queue does: an application lodged is still awaiting a decision when the plugin
-           or the instance has since been switched off. Whether a route is offered is a separate
-           question, which current_user_can_enrol() answers from enabled instances only. */
+        // No enabled-instance or enabled-plugin filter: a lodged application stays pending either way.
         return $DB->record_exists_sql(
             'SELECT 1
                FROM {user_enrolments} ue

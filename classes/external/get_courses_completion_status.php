@@ -82,8 +82,7 @@ class get_courses_completion_status extends external_api {
      *     competencies.
      */
     public static function execute($courseids, $planid = 0, $competencyid = 0) {
-        global $CFG, $USER;
-        require_once($CFG->libdir . '/completionlib.php');
+        global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseids' => $courseids,
@@ -116,20 +115,9 @@ class get_courses_completion_status extends external_api {
                     continue;
                 }
 
-                $course = $readable[$cid];
-                $completion = new \completion_info($course);
-                $enabled = $completion->is_enabled();
-                $iscompleted = false;
-                if ($enabled) {
-                    $iscompleted = (bool) $completion->is_course_complete($ownerid);
-                }
-                $islocked = calculator::is_locked_for_viewer($course, $ownerid, (int) $USER->id);
-                $results[] = [
-                    'courseid' => $cid,
-                    'iscompleted' => $iscompleted,
-                    'islocked' => $islocked,
-                ];
-            } catch (\Exception $e) {
+                $results[] = static::course_status($readable[$cid], $ownerid, (int) $USER->id);
+            } catch (\Throwable $e) {
+                // An \Error included, as in get_course_progress::execute(): one course never fails the response.
                 $results[] = [
                     'courseid' => $cid,
                     'iscompleted' => false,
@@ -138,6 +126,33 @@ class get_courses_completion_status extends external_api {
             }
         }
         return $results;
+    }
+
+    /**
+     * One readable course's completion and lock status.
+     *
+     * Its own method, as get_course_progress::progress_data() is, so a test can make a single course
+     * throw and check that the others still answer.
+     *
+     * @param \stdClass $course A course the viewer may be told about.
+     * @param int $ownerid The learner the status describes: the plan owner, or the caller without a plan.
+     * @param int $viewerid The caller.
+     * @return array The row: courseid, iscompleted and islocked.
+     */
+    protected static function course_status(\stdClass $course, int $ownerid, int $viewerid): array {
+        global $CFG;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        $completion = new \completion_info($course);
+        $iscompleted = false;
+        if ($completion->is_enabled()) {
+            $iscompleted = (bool) $completion->is_course_complete($ownerid);
+        }
+        return [
+            'courseid' => (int) $course->id,
+            'iscompleted' => $iscompleted,
+            'islocked' => calculator::is_locked_for_viewer($course, $ownerid, $viewerid),
+        ];
     }
 
     /**
