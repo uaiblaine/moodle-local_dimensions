@@ -178,8 +178,9 @@ class category_lifecycle {
      *
      * Runs from core's pre_course_category_delete callback, before core deletes anything in the
      * category and before it recurses into the child categories, so a refusal leaves the whole
-     * tree untouched. The check is the one can_delete_contents() makes, repeated for callers that
-     * reach delete_full() without asking can_delete_full() first.
+     * tree untouched. The in-use check is the one can_delete_contents() makes, repeated for callers
+     * that reach delete_full() without asking can_delete_full() first; its capability check is not
+     * repeated: the competency API checks each capability as it deletes.
      *
      * @param \stdClass $category The course category record.
      * @return void

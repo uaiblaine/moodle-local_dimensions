@@ -38,6 +38,7 @@ import {show as showRuleConfigModal} from 'local_dimensions/central/rule_config'
 import {open as openLinksModal} from 'local_dimensions/central/competency_links';
 import {open as openRelatedModal} from 'local_dimensions/central/related_competencies';
 import {escapeHtml} from 'local_dimensions/central/escape';
+import * as DeleteCheck from 'local_dimensions/central/delete_check';
 import {getString} from 'core/str';
 import {add as addToast} from 'local_dimensions/central/toast';
 import {renderDetailInto, openCompetencyDetailModal} from 'local_dimensions/central/competency_detail';
@@ -820,32 +821,59 @@ const openForm = async(pane, args, titlekey) => {
 };
 
 /**
+ * Tell why a competency cannot be deleted.
+ *
+ * @param {string} name The competency's name, already escaped for HTML.
+ * @param {Object} answer The delete check's answer.
+ * @return {Promise<void>}
+ */
+const showDeleteBlocked = async(name, answer) => {
+    const [title, body] = await Promise.all([
+        getString('hubv2_delete_blocked_title', 'local_dimensions'),
+        DeleteCheck.blockedBody(name, answer),
+    ]);
+    await Notification.alert(title, body);
+};
+
+/**
  * Confirm and delete the active competency.
  *
  * @param {HTMLElement} pane
  * @param {HTMLElement} row
  */
 const confirmDelete = async(pane, row) => {
-    // The row carries the plain name, and both dialogue bodies below are HTML.
+    // The row carries the plain name, and every dialogue body below is HTML.
     const name = escapeHtml(row.dataset.name || '');
-    const [title, question] = await Promise.all([
-        getString('delete'),
-        getString('deletecompetency', 'tool_lp', name),
-    ]);
+    const id = Number(row.dataset.id);
     try {
-        await Notification.deleteCancelPromise(title, question);
-    } catch (e) {
-        return;
-    }
-    Ajax.call([{methodname: 'core_competency_delete_competency', args: {id: Number(row.dataset.id)}}])[0]
-        .then(async(success) => {
-            if (success === false) {
-                Notification.alert(null, await getString('competencycannotbedeleted', 'tool_lp', name));
-                return null;
+        // Asked first, so a competency core will refuse gets its reasons and no delete is attempted.
+        const answer = await DeleteCheck.check(id);
+        if (!answer.candelete) {
+            await showDeleteBlocked(name, answer);
+            return;
+        }
+        const [title, question] = await Promise.all([getString('delete'), DeleteCheck.confirmBody(name, answer)]);
+        const confirmed = await Notification.deleteCancelPromise(title, question).then(() => true, () => false);
+        if (!confirmed) {
+            return;
+        }
+        const [success] = await Promise.all(
+            Ajax.call([{methodname: 'core_competency_delete_competency', args: {id}}])
+        );
+        if (success === false) {
+            // Something started using it between the check and the delete: say what.
+            const again = await DeleteCheck.check(id);
+            if (again.candelete) {
+                await Notification.alert(null, await getString('competencycannotbedeleted', 'tool_lp', name));
+            } else {
+                await showDeleteBlocked(name, again);
             }
-            return reloadPane(pane);
-        })
-        .catch(notifyError);
+            return;
+        }
+        await reloadPane(pane);
+    } catch (error) {
+        notifyError(error);
+    }
 };
 
 /**

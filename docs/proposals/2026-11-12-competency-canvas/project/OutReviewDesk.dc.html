@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Mesa de revisão</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+button:focus-visible,textarea:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.q{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1.5px solid transparent;background:transparent;text-align:left;font-family:inherit;color:#1d2033;cursor:pointer;width:100%}
+.q:hover{background:#f6f7fb}
+.q.on{background:#f2f3fa;border-color:#070093}
+.q .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;color:#10124a;background:#e3e5ff}
+.q b{display:block;font-size:14px}
+.q small{display:block;font-size:12px;color:#5d6180}
+.lvl{display:grid;gap:8px}
+.lvl button{border:1.5px solid #e1e3ef;background:#fff;border-radius:12px;padding:10px 12px;text-align:left;font-family:inherit;cursor:pointer;display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;color:#1d2033;min-height:48px}
+.lvl button.on{border-color:#070093;background:#f2f3fa}
+.lvl button i{width:18px;height:18px;border-radius:50%;border:2px solid #b9bdd6;display:block}
+.lvl button.on i{border-color:#070093;box-shadow:inset 0 0 0 4px #fff;background:#070093}
+.flag{font-size:11.5px;font-weight:700;color:#17694a;background:#dcf3e8;border-radius:999px;padding:2px 8px}
+textarea{width:100%;min-height:86px;border:1.5px solid #e1e3ef;border-radius:12px;padding:10px 12px;font:14px "Noto Sans",sans-serif;resize:vertical;color:#1d2033}
+.ws{display:inline-flex;align-items:center;gap:8px;height:30px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:700}
+</style>
+</helmet>
+<div class="dim" style="width: 1440px; height: 1000px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink on" href="#" aria-current="page">Revisões</a>
+    <span class="grow"></span>
+    <span class="avatar" style="background: #ffd84d;">BL</span>
+  </nav>
+  <div style="display: grid; grid-template-columns: 340px minmax(0, 1fr) 380px; flex: 1 1 auto; min-height: 0;">
+    <aside style="background: #fff; border-right: 1px solid var(--dim-line); padding: 18px 14px; display: flex; flex-direction: column; gap: 12px;">
+      <h1 class="h2" style="padding: 0 6px;">Mesa de revisão</h1>
+      <div class="seg" style="margin: 0 6px;"><span class="on">Competências 5</span><span>Planos 2</span></div>
+      <div class="row" style="gap: 6px; padding: 0 6px; flex-wrap: wrap;"><span class="chip">Aguardando 4</span><span class="chip line">Em revisão comigo 1</span></div>
+      <div class="col" style="gap: 2px;">
+        <sc-for list="{{queue}}" as="q" hint-placeholder-count="5">
+          <button type="button" class="q {{q.cls}}" onClick="{{q.pick}}" aria-pressed="{{q.pressed}}">
+            <span class="av">{{q.ini}}</span>
+            <span><b>{{q.name}}</b><small>{{q.comp}}</small><small>{{q.why}}</small></span>
+            <small style="white-space: nowrap;">{{q.since}}</small>
+          </button>
+        </sc-for>
+      </div>
+      <span class="grow"></span>
+      <span class="small" style="padding: 0 6px;">Mostra os pedidos que você pode revisar (usercompetencyreview), do mais antigo para o mais novo.</span>
+    </aside>
+
+    <main style="padding: 22px 26px; display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+      <div class="row" style="gap: 12px;">
+        <span class="avatar" style="width: 44px; height: 44px; font-size: 15px;">{{cur.ini}}</span>
+        <div class="col" style="gap: 2px;"><span class="small">{{cur.name}} · {{cur.plan}}</span><h2 class="h2">{{cur.comp}}</h2></div>
+        <span class="grow"></span>
+        <span class="ws" style="background: {{wsBg}}; color: {{wsInk}};">{{wsLabel}}</span>
+      </div>
+      <div class="row" style="gap: 8px;">
+        <sc-if value="{{waiting}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn primary sm" onClick="{{start}}">Iniciar revisão</button></sc-if>
+        <sc-if value="{{inReview}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn line sm" onClick="{{stop}}">Encerrar revisão sem avaliar</button></sc-if>
+        <span class="small">{{cur.why}}</span>
+      </div>
+
+      <section class="card pad col" style="gap: 4px;">
+        <div class="row"><h3 class="h3">Na jornada</h3><span class="chip" style="margin-left: 8px;">desde a última avaliação</span><span class="grow"></span><a href="#" class="small" style="font-weight: 600; color: var(--dim-nav);">Abrir o diário completo</a></div>
+        <div class="trail">
+          <div class="stop"><span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0z"></path><path d="M8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M8 20h8"></path></svg></span><span><b>Diário reflexivo de setembro</b><span class="meta">Evidência própria · 2 arquivos · pediu revisão junto</span></span><span class="when">14 out</span></div>
+          <div class="stop"><span class="mk ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg></span><span><b>A atividade "Análise de uma aula gravada" foi concluída</b><span class="meta">Atividade concluída · Plano de desenvolvimento</span></span><span class="when">3 out</span></div>
+          <div class="stop"><span class="mk rate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></span><span><b>Avaliação anterior: Em desenvolvimento</b><span class="meta">por você · "Boa escuta; falta registrar o que muda depois."</span></span><span class="when">22 set</span></div>
+        </div>
+      </section>
+
+      <section class="card pad col" style="gap: 8px;">
+        <h3 class="h3">Vizinhança</h3>
+        <div class="row" style="gap: 8px; flex-wrap: wrap;">
+          <span class="chip"><i style="background: #d9701f;"></i>Define metas profissionais · sem avaliação</span>
+          <span class="chip"><i style="background: #7b2fa8;"></i>Planeja aulas eficazes · Consolidado</span>
+          <span class="chip"><i style="background: #3d4a9c;"></i>Conduz conversas difíceis · Iniciante</span>
+        </div>
+      </section>
+
+      <section class="card pad col" style="gap: 8px;">
+        <h3 class="h3">Comentários</h3>
+        <span class="small">Ana Souza, 14 out: "Juntei o diário de setembro, acho que já consigo mostrar o que mudou nas minhas aulas."</span>
+      </section>
+    </main>
+
+    <aside style="background: #fff; border-left: 1px solid var(--dim-line); padding: 22px 20px; display: flex; flex-direction: column; gap: 14px;">
+      <h2 class="h3">Avaliar</h2>
+      <span class="small">Escala "Indução" · 4 níveis · proficiente a partir de Consolidado</span>
+      <div class="lvl" role="radiogroup" aria-label="Nível">
+        <button type="button" role="radio" class="{{l.c0}}" aria-checked="{{l.a0}}" onClick="{{l.f0}}"><i></i><span>Emergente</span><span></span></button>
+        <button type="button" role="radio" class="{{l.c1}}" aria-checked="{{l.a1}}" onClick="{{l.f1}}"><i></i><span>Em desenvolvimento</span><span class="small">atual</span></button>
+        <button type="button" role="radio" class="{{l.c2}}" aria-checked="{{l.a2}}" onClick="{{l.f2}}"><i></i><span>Consolidado</span><span class="flag">proficiente</span></button>
+        <button type="button" role="radio" class="{{l.c3}}" aria-checked="{{l.a3}}" onClick="{{l.f3}}"><i></i><span>Referência</span><span class="flag">proficiente</span></button>
+      </div>
+      <label class="col" style="gap: 6px;" for="note"><span style="font-weight: 600; font-size: 14px;">Nota da avaliação</span><textarea id="note" placeholder="O que a pessoa mostrou e o que pode vir a seguir"></textarea></label>
+      <span class="grow"></span>
+      <button type="button" class="btn primary" disabled="{{cantRate}}">Avaliar e abrir o próximo</button>
+      <button type="button" class="btn line" disabled="{{cantRate}}">Avaliar</button>
+      <span class="small">Avaliar grava uma evidência e não muda o estado da revisão; ao avaliar, a mesa encerra a revisão por você.</span>
+    </aside>
+  </div>
+  <span class="tagid" style="left: 300px; top: 74px;">R2 · Revisão</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0, status: ['wait', 'wait', 'review', 'wait', 'wait'], level: 2 };
+  }
+  renderVals() {
+    const st = this.state;
+    const Q = [
+      { ini: 'AS', name: 'Ana Souza', comp: 'Reflete sobre a prática', plan: 'Trilha de indução 2026', why: 'Pedido da estudante', since: '5 dias' },
+      { ini: 'DR', name: 'Diego Rocha', comp: 'Trabalha com as famílias', plan: 'Trilha de indução 2026', why: 'Recomendada ao concluir o curso Diálogo com famílias', since: '3 dias' },
+      { ini: 'GR', name: 'Gabriela Reis', comp: 'Planeja aulas eficazes', plan: 'Trilha de indução 2026', why: 'Pedido da estudante', since: '2 dias' },
+      { ini: 'HC', name: 'Heitor Campos', comp: 'Conduz conversas difíceis', plan: 'Liderança intermediária', why: 'Enviada com uma evidência própria', since: 'ontem' },
+      { ini: 'CM', name: 'Carla Mendes', comp: 'Define metas profissionais', plan: 'Trilha de indução 2026', why: 'Pedido da estudante', since: 'hoje' }
+    ];
+    const queue = Q.map((q, i) => Object.assign({}, q, {
+      cls: st.sel === i ? 'on' : '', pressed: st.sel === i ? 'true' : 'false',
+      why: st.status[i] === 'review' ? 'Em revisão com você' : q.why,
+      pick: () => this.setState({ sel: i })
+    }));
+    const cur = Q[st.sel];
+    const s = st.status[st.sel];
+    const setStatus = (v) => { const n = st.status.slice(); n[st.sel] = v; this.setState({ status: n }); };
+    const l = {};
+    [0, 1, 2, 3].forEach((k) => { l['c' + k] = st.level === k ? 'on' : ''; l['a' + k] = st.level === k ? 'true' : 'false'; l['f' + k] = () => this.setState({ level: k }); });
+    return {
+      queue, cur, l,
+      waiting: s === 'wait', inReview: s === 'review',
+      wsLabel: s === 'review' ? 'Em revisão com você' : 'Aguardando revisão',
+      wsBg: s === 'review' ? '#ece9ff' : '#fbedd5', wsInk: s === 'review' ? '#3b2fb3' : '#7a4a00',
+      start: () => setStatus('review'), stop: () => setStatus('wait'),
+      cantRate: s !== 'review'
+    };
+  }
+}
+</script>
+</body>
+</html>

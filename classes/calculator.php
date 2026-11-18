@@ -97,9 +97,9 @@ class calculator {
             $coursecontext = \core\context\course::instance($course->id);
             $isenrolled = is_enrolled($coursecontext, $ownerid, '', true);
 
-            /* On the owner's own card the progress waits for the lock, as it always has. On a card
-               someone else views it is computed whenever the owner is enrolled, whatever the viewer
-               can open: the percentages describe the owner, the lock only what the viewer can click. */
+            /* On the owner's own card the progress waits for the lock. On a card someone else views
+               it is computed whenever the owner is enrolled, whatever the viewer can open: the
+               percentages describe the owner, the lock only what the viewer can click. */
             $progresslocked = $ownerid === $viewerid && $locked;
 
             /* The date a locked card with nothing else to say shows under its pill, when the page
@@ -116,9 +116,17 @@ class calculator {
 
             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
 
-            if (!$completion->is_enabled()) {
+            /* Core counts completion only for its tracked users (enrolled with
+               moodle/course:isincompletionreports, a student's capability), and the plan overview's
+               bar asks the same through get_competency_courses::tracks_completion(): an owner
+               enrolled as a teacher or a manager has no progress to show on either view. An owner
+               who is not enrolled keeps the locked card's timeline, which names nothing. */
+            $tracked = !$isenrolled || $completion->is_tracked_user($ownerid);
+
+            if (!$completion->is_enabled() || !$tracked) {
                 return [
                     'enabled' => false,
+                    'tracked' => $tracked,
                     'locked' => $locked,
                     'formatted_start_date' => $formattedstartdate,
                     'state' => $state,
@@ -266,6 +274,7 @@ class calculator {
 
             return [
                 'enabled' => true,
+                'tracked' => true,
                 'locked' => $locked,
                 'formatted_start_date' => $formattedstartdate,
                 'state' => $state,
@@ -380,25 +389,25 @@ class calculator {
     /**
      * Whether an activity belongs in this learner's required workload.
      *
-     * The single predicate for the course bar and the section rings, which share a card. An
+     * The single predicate for the course bar and the section rings, which share a card. It is core's
+     * rule, {@see \completion_info::get_user_activities_with_completion()}, which Moodle's own course
+     * progress counts by; tests/local/core_parity_test.php holds the two equal for every learner of a
+     * course carrying each of its cases, and docs/core-parity.md says what to do when core moves it. An
      * activity counts when all three hold:
      *
-     * 1. Completion is tracked on it.
-     * 2. The learner can see it: $cm->visible, and either listed on the course page or openable
-     *    now. Both halves are needed: a date-restricted activity shown greyed is listed but not
-     *    openable, and a stealth activity ("Make available but don't show on course page") is
-     *    openable but not listed. Both are work the learner owes; core's is_visible_on_course_page()
-     *    alone would drop the stealth one.
-     * 3. It is theirs to do, now or later. filter_user_list() applies only the conditions that
-     *    are permanent for a person - group, grouping, profile (see
+     * 1. Completion is tracked on it, and it is not being deleted.
+     * 2. It is shown to the learner on the course page ({@see \cm_info::is_visible_on_course_page()}).
+     *    A date-restricted activity shown greyed counts; a hidden one does not, nor a stealth one
+     *    ("Make available but don't show on course page"), which core leaves out too.
+     * 3. It is theirs to do, now or later. Only the conditions that are permanent for a person
+     *    apply - group, grouping, profile (see
      *    {@see \core_availability\tree_node::is_applied_to_user_lists()}) - so a date-locked
      *    activity still counts while one restricted to another group does not, which would
-     *    otherwise make 100% unreachable.
+     *    otherwise make 100% unreachable. {@see local\learner_restrictions} answers what core's
+     *    filter_user_list() answers for this one learner, without listing the group's members.
      *
-     * The explicit $cm->visible test also evens out a core change: for a teacher-hidden activity
-     * that also shows a restriction, is_visible_on_course_page() is true on 4.5 and false once
-     * MDL-66780 is in (5.1.5, 5.2.1). deletioninprogress is tested explicitly because
-     * is_visible_on_course_page() returns null, not false, for such a module.
+     * is_visible_on_course_page() is the owner's: the modinfo is built for the learner the card
+     * describes, so a viewer's capabilities never decide it.
      *
      * @param \cm_info $cm The activity to judge.
      * @param int $userid The learner whose visibility and restrictions are read.
@@ -413,13 +422,11 @@ class calculator {
             return false;
         }
 
-        if (!$cm->visible || !($cm->is_visible_on_course_page() || $cm->uservisible)) {
+        if (!$cm->is_visible_on_course_page()) {
             return false;
         }
 
-        $users = [$userid => (object) ['id' => $userid]];
-
-        return !empty((new \core_availability\info_module($cm))->filter_user_list($users));
+        return local\learner_restrictions::passes($cm, $userid);
     }
 
     /**
@@ -746,9 +753,9 @@ class calculator {
      * Whether the course is locked for the user.
      *
      * Locked unless the user is actively enrolled, whatever role the enrolment carries: this is the
-     * question the plan accordion asks (get_competency_courses). Asking for a learner role as well
-     * locked an enrolled teacher, or a user enrolled through an instance that assigns no role, out
-     * of their own course and then offered them "Enrol to start".
+     * question the plan accordion asks (get_competency_courses). No learner role is required, so an
+     * enrolled teacher, or a user enrolled through an instance that assigns no role, can open the
+     * course from the card.
      *
      * @param stdClass $course Course object
      * @param int $userid User ID
@@ -860,7 +867,7 @@ class calculator {
      *
      * The enrolment leg is only evaluated for the current $USER; for anyone else only an
      * active enrolment counts. A pending enrol_apply application satisfies neither leg, so this
-     * returns false for it; see current_user_has_pending_application() for the state to show.
+     * returns false for it; see has_pending_application() for the state to show.
      *
      * @param \stdClass $course A course record with at least an id.
      * @param int $userid The user id.
@@ -950,7 +957,7 @@ class calculator {
     }
 
     /**
-     * Whether the current $USER has an enrol_apply application still awaiting a decision.
+     * Whether a user has an enrol_apply application still awaiting a decision.
      *
      * enrol_apply stores a pending application as a suspended user_enrolments row with no
      * enrolment period (enrol_apply::apply()), so is_enrolled() with onlyactive says no and
@@ -970,24 +977,11 @@ class calculator {
      * timeend = 0 (apply() sets no period; moving a row to the waiting list clears it).
      *
      * Same rule as enrol_apply\local\queue::awaiting_decision_where(), copied rather than called
-     * so the integration stays optional. Keep the two in step. See has_pending_application(), which
-     * asks the same of any user.
+     * so the integration stays optional. Keep the two in step.
      *
-     * @param int $courseid The course id.
-     * @return bool
-     */
-    public static function current_user_has_pending_application(int $courseid): bool {
-        global $USER;
-
-        return self::has_pending_application($courseid, (int) $USER->id);
-    }
-
-    /**
-     * Whether a user has an enrol_apply application still awaiting a decision.
-     *
-     * The rule is current_user_has_pending_application()'s; unlike current_user_can_enrol(), whose
-     * self enrolment leg core answers only for $USER, it holds for any user id. The tracker's card asks
-     * it of its viewer ({@see self::get_course_section_progress()}).
+     * Unlike current_user_can_enrol(), whose self enrolment leg core answers only for $USER, it holds
+     * for any user id. The tracker's locked card asks it of its viewer
+     * ({@see \local_dimensions\local\enrolment_provider_core::locked_state()}).
      *
      * @param int $courseid The course id.
      * @param int $userid The user whose application is looked for.
@@ -996,10 +990,7 @@ class calculator {
     public static function has_pending_application(int $courseid, int $userid): bool {
         global $DB;
 
-        /* Read straight from the rows, with no enabled-instance or enabled-plugin filter, as the
-           enrol_apply queue does: an application lodged is still awaiting a decision when the plugin
-           or the instance has since been switched off. Whether a route is offered is a separate
-           question, which current_user_can_enrol() answers from enabled instances only. */
+        // No enabled-instance or enabled-plugin filter: a lodged application stays pending either way.
         return $DB->record_exists_sql(
             'SELECT 1
                FROM {user_enrolments} ue

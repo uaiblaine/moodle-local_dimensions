@@ -33,9 +33,9 @@ use local_dimensions\local\enrolment_provider as provider;
  *
  * The tracker's card renders it through progress_card_body.mustache and the plan accordion's card
  * through accordion.js; both receive the same payload from their web service, so a state reads the
- * same in both and whichever provider answered ({@see enrolment_provider}). The labels are the
- * theme's (theme_dimensions category_state_*), as the enrolment matrix's shared state area
- * asks. Every text travels in the plain spelling: the template's double stash and the script's
+ * same in both and whichever provider answered ({@see enrolment_provider}). The labels repeat the
+ * wording of theme_dimensions' category_state_* strings, so a state reads the same on the theme's
+ * cards. Every text travels in the plain spelling: the template's double stash and the script's
  * escapeHtml() each escape it once.
  *
  * @package    local_dimensions
@@ -46,7 +46,7 @@ class enrolment_state {
     /**
      * @var array State => [the colour family class, the Font Awesome icon]. The family classes
      *            read the --local-dimensions-state-* tokens in styles.css; the icons are the theme
-     *            card's, in names Moodle 4.5, 5.1 and 5.2 all ship.
+     *            card's, in Font Awesome 6 names.
      */
     public const array LOOK = [
         provider::STATE_ENROLLED => ['local-dimensions-state-enrolled', 'fa-circle-check'],
@@ -103,7 +103,7 @@ class enrolment_state {
             'routelinklabel' => $routeurl === '' ? '' : get_string('state_cta_enrolnow', 'local_dimensions'),
             'routeurl' => $routeurl,
             'opens' => $opens,
-            // The plugin's own string: the theme has no sentence for this chip yet.
+            // The plugin's own string, worded as theme_dimensions' category_state_enrolmentopens.
             'openslabel' => $opens === 0 ? '' : get_string('enrolmentopens', 'local_dimensions', self::date($opens)),
         ];
     }

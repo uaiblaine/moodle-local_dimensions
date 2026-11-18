@@ -151,6 +151,8 @@ class view_competency_page implements renderable, templatable {
             ? \local_dimensions\chip_filters::get_course_values($courseids, $courseshortnames)
             : [];
 
+        $sectioncounts = self::timeline_section_counts($courseids);
+
         foreach ($this->courses as $course) {
             /* Whether the viewer can open the course from the card, as the card services answer it: whether
                the viewer is actively enrolled, on the learner's own page and on a reviewer's alike. */
@@ -173,6 +175,7 @@ class view_competency_page implements renderable, templatable {
                 'viewcoursestr' => get_string('view_course', 'local_dimensions', $plainname),
                 'locked' => $locked,
                 'filtervaluesjson' => json_encode((object) $combinedvalues),
+                'skeletonrows' => self::skeleton_rows($locked ? 0 : ($sectioncounts[$cid] ?? 0)),
             ];
         }
 
@@ -194,9 +197,8 @@ class view_competency_page implements renderable, templatable {
             $chipgroups = array_merge($chipgroups, $coursegroups);
         }
 
-        /* The filter line's scope opens on the learner's open work ("To do") unless they chose "All"
-           on an earlier visit, and the whole stored state goes to the client, which writes the
-           preference back entire: a key this page left out would be reset by its next save. */
+        /* The filter line's scope opens on "To do" unless the learner stored "All". The whole stored
+           state goes to the client, which writes it back entire; see learner_view. */
         $view = \local_dimensions\local\learner_view::resolve();
         $data['scope_is_incomplete'] = ($view['trackerfilter'] === 'incomplete');
         $data['scope_is_all'] = ($view['trackerfilter'] === 'all');
@@ -254,5 +256,44 @@ class view_competency_page implements renderable, templatable {
         }
 
         return $data;
+    }
+    /**
+     * How many top-level sections each course's timeline may list, in one query.
+     *
+     * The card body arrives after the page, so the skeleton stands in for it; drawn at the height of the
+     * timeline it will become, the cards below do not jump when it arrives. This counts what
+     * calculator::get_course_section_progress() starts from (top-level, visible sections), before
+     * the availability it checks per learner, so it is an estimate and never reads modinfo.
+     *
+     * @param int[] $courseids
+     * @return array Course id => section count; a course without sections is absent.
+     */
+    private static function timeline_section_counts(array $courseids): array {
+        global $DB;
+        if (!$courseids) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
+        $rows = $DB->get_records_sql_menu(
+            "SELECT course, COUNT(1)
+               FROM {course_sections}
+              WHERE course {$insql} AND component IS NULL AND visible = 1
+           GROUP BY course",
+            $params
+        );
+        return array_map('intval', $rows);
+    }
+
+    /**
+     * The skeleton rows of one card: as many as its timeline's sections, between three and twelve.
+     *
+     * Three stand for a locked card's overlay and for the short single-activity and single-section
+     * bodies; twelve keeps a course of many sections from drawing a page of grey.
+     *
+     * @param int $sections The course's top-level visible sections, 0 for a locked card.
+     * @return array One entry per row, for the template's loop.
+     */
+    private static function skeleton_rows(int $sections): array {
+        return array_fill(0, max(3, min(12, $sections)), ['row' => true]);
     }
 }

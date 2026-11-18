@@ -100,8 +100,6 @@ final class tracker_cards_scope_test extends \advanced_testcase {
     /**
      * A competency the plan does not reach is refused, as are a missing id and 0.
      *
-     * Without a plan the competency id is not read at all, so the same out-of-scope id is ignored there.
-     *
      * @return void
      */
     public function test_a_competency_the_plan_does_not_reach_is_refused(): void {
@@ -119,18 +117,13 @@ final class tracker_cards_scope_test extends \advanced_testcase {
                 $this->assert_refused($response, 'competency_id_missing', null, $wsname . ' ' . $competencyid);
             }
         }
-
-        // Without a plan the caller's own cards are answered, whatever the competency id says.
-        $own = $this->rows(self::PROGRESS, [$f['kilo']], 0, $f['othercompetencyid']);
-        $this->assertTrue($own[$f['kilo']]['locked']);
-        $this->assertSame('', $own[$f['kilo']]['error']);
     }
 
     /**
      * A course linked to another competency only is answered like an unreadable one, beside a linked one.
      *
-     * Lima carries a competency link, so the gate without a plan answers it; with the plan it is not
-     * linked to the plan's competency. The learner completed it, so any answer about it would show.
+     * Lima carries a competency link, but not to the plan's competency. The learner completed it, so
+     * any answer about it would show.
      *
      * @return void
      */
@@ -147,12 +140,6 @@ final class tracker_cards_scope_test extends \advanced_testcase {
         $this->assertSame(100, $progress[$f['kilo']]['sections'][1]['percentage']);
         $this->assertNotSame('', $progress[$f['kilo']]['formatted_start_date']);
         $this->assertTrue($status[$f['kilo']]['iscompleted']);
-
-        // And the learner, asking without a plan, is answered about Lima: only the link was missing.
-        $this->setUser($f['learner']);
-        $own = $this->rows(self::PROGRESS, [$f['lima']]);
-        $this->assertTrue($own[$f['lima']]['enabled']);
-        $this->assertSame(100, $own[$f['lima']]['sections'][1]['percentage']);
     }
 
     /**
@@ -263,6 +250,7 @@ final class tracker_cards_scope_test extends \advanced_testcase {
         $this->assertSame([
             'courseid' => $progress['courseid'],
             'enabled' => false,
+            'tracked' => true,
             'cardmode' => \local_dimensions\constants::CARDMODE_TIMELINE,
             'locked' => true,
             'formatted_start_date' => '',

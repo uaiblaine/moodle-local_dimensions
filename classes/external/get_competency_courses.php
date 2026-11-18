@@ -26,8 +26,8 @@
  * state (the shared state area of the course cards) and its card shape: its
  * single activity or single section when it resolves to one, otherwise the
  * timeline. Every row also carries what Boost Union's course overview settings
- * leave of the card (the course card contract, section 8), and a course with no
- * image of its own gets the theme's generated one when those settings apply.
+ * leave of the card, and a course with no image of its own gets the theme's
+ * generated one when those settings apply.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -99,6 +99,7 @@ class get_competency_courses extends external_api {
         // Context validation.
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $systemcontext);
 
         /* The same gate as view-competency.php, before anything about the competency is read: a plan
@@ -181,8 +182,7 @@ class get_competency_courses extends external_api {
                 }
             }
 
-            /* Not core_completion\progress::get_course_progress_percentage(), which miscounts on
-               Moodle 4.5 (MDL-60912); see calculator::course_completion_percentage(). */
+            // The calculator's percentage rather than core's progress API: its docblock says why.
             $progress = calculator::course_completion_percentage((int) $course->id, $ownerid);
 
             $isopen = !isset($locked[(int) $course->id]);
@@ -206,7 +206,7 @@ class get_competency_courses extends external_api {
                 'shortname' => format_string($course->shortname, true, ['context' => $coursecontext, 'escape' => false]),
                 'courseimage' => $courseimage,
                 'progress' => $progress,
-                // A course with no completion tracking draws no progress row, never "0 %" (contract, section 3).
+                // A course with no completion tracking draws no progress row, never "0 %".
                 'hascompletion' => $isopen && self::tracks_completion((int) $course->id, $ownerid),
                 'showprogress' => $cardflags['progress'],
                 'showcover' => $cardflags['cover'],
@@ -303,7 +303,7 @@ class get_competency_courses extends external_api {
      * link that outlived its module simply never matches.
      *
      * The viewer's course-level lock is not applied: the plan accordion has no locked overlay to
-     * explain it, and the card's own access state (renderCourseState) already carries it.
+     * explain it, and the card's own state pill (renderStatePill() in accordion.js) already carries it.
      *
      * @param int $competencyid The competency id.
      * @param array $courseids Ids of the courses that survived the enrolment filter.

@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Mapa dos planos</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.tb{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pchip{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px 0 10px;border-radius:999px;border:1.5px solid #e1e3ef;background:#fff;font:600 13.5px "Noto Sans",sans-serif;color:#3a3e58;cursor:pointer}
+.pchip i{width:12px;height:12px;border-radius:4px;display:block;border:2px solid currentColor}
+.pchip.on{border-color:#070093;color:#1d2033;background:#f2f3fa}
+.pchip.on i{background:currentColor}
+.mseg{display:inline-flex;background:#f2f3fa;border-radius:999px;padding:3px;gap:2px}
+.mseg button{border:0;background:transparent;padding:7px 13px;border-radius:999px;font:600 13px "Noto Sans",sans-serif;color:#5d6180;cursor:pointer;min-height:34px}
+.mseg button.on{background:#fff;color:#1d2033;box-shadow:0 1px 3px rgba(10,12,50,.14)}
+.tog{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:#3a3e58;cursor:pointer;border:0;background:transparent;font-family:inherit}
+.tog span{width:34px;height:20px;border-radius:10px;background:#c9cce0;position:relative;display:block}
+.tog span::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.tog.on span{background:#070093}
+.tog.on span::after{left:16px}
+button:focus-visible,.node:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.colhead{display:grid;grid-template-columns:150px repeat(5,minmax(0,1fr));gap:12px;font:600 11.5px "Noto Sans",sans-serif;color:#5d6180;letter-spacing:.06em;text-transform:uppercase}
+.lane{position:relative;display:grid;grid-template-columns:150px repeat(5,minmax(0,1fr));gap:12px;align-items:start;padding:14px 0;border-top:1px solid #eef0f6}
+.lane-lab{display:flex;flex-direction:column;gap:2px;padding-top:10px}
+.lane-lab b{font:700 14.5px "Outfit",sans-serif}
+.lane-line{position:absolute;top:44px;height:4px;border-radius:2px;opacity:.28}
+.slot{position:relative;z-index:1;min-height:20px}
+.node{width:100%;text-align:left;border:1.5px solid #e1e3ef;background:#fff;border-radius:14px;padding:10px 11px;display:flex;flex-direction:column;gap:7px;cursor:pointer;font-family:inherit;color:#1d2033;box-shadow:0 1px 2px rgba(10,12,50,.05);transition:opacity .2s,border-color .15s}
+.node:hover{border-color:#b9bdd6}
+.node.sel{border-color:#070093;box-shadow:0 0 0 3px rgba(68,86,255,.18)}
+.node.dim{opacity:.32}
+.node .nm{font:600 13.5px/1.3 "Noto Sans",sans-serif;display:flex;gap:7px;align-items:flex-start}
+.node .nm i{width:10px;height:10px;border-radius:50%;flex:none;margin-top:4px;display:block}
+.node .nm i.off{background:transparent!important;border:1.5px dashed currentColor}
+.lv{display:flex;gap:3px;align-items:flex-end;height:16px}
+.lv u{flex:1;border-radius:2px;background:#e1e3ef;display:block;text-decoration:none}
+.lv u.f{background:var(--lc)}
+.lv u.p{box-shadow:inset 0 2px 0 #1d2033}
+.nmeta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#5d6180}
+.pd{display:inline-flex;gap:3px}
+.pd b{width:8px;height:8px;border-radius:2px;display:block}
+.it{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#3a3e58;padding:4px 6px;border-radius:8px;background:#f6f7fb}
+.it em{font-style:normal;margin-left:auto;color:#5d6180;white-space:nowrap}
+.ov{display:flex;gap:2px;height:30px;align-items:stretch;position:relative}
+.ov button{flex:1;border:0;border-radius:3px;cursor:pointer;padding:0;min-width:0}
+.ovwin{position:absolute;top:-5px;bottom:-5px;border:2.5px solid #070093;border-radius:8px;pointer-events:none;transition:left .2s,width .2s}
+.side{background:#fff;border-left:1px solid #e1e3ef;padding:22px 22px;display:flex;flex-direction:column;gap:14px}
+.nav-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid #e1e3ef;background:#fff;display:grid;place-items:center;cursor:pointer;color:#1d2033}
+</style>
+</helmet>
+<div class="dim" style="width: 1440px; height: 1060px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minhas competências</a>
+    <span class="grow"></span>
+    <span class="avatar">AM</span>
+  </nav>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) 360px; flex: 1 1 auto; min-height: 0;">
+    <main style="padding: 22px 28px; display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+      <div class="row" style="align-items: flex-end;">
+        <div class="col" style="gap: 4px;"><span class="crumb">Minhas competências</span><h1 class="h1" style="font-size: 30px;">Mapa dos planos</h1></div>
+        <span class="grow"></span>
+        <div class="seg" role="group" aria-label="Ver como"><span class="on">Mapa</span><span>Radar</span><span>Lista</span></div>
+      </div>
+
+      <div class="tb">
+        <span class="small" style="font-weight: 600;">Planos no mapa</span>
+        <button type="button" class="pchip {{p0.cls}}" aria-pressed="{{p0.pressed}}" onClick="{{p0.toggle}}" style="color: #4a1c7a;"><i></i><span style="color: #1d2033;">Trilha de indução 2026</span></button>
+        <button type="button" class="pchip {{p1.cls}}" aria-pressed="{{p1.pressed}}" onClick="{{p1.toggle}}" style="color: #0f5e66;"><i></i><span style="color: #1d2033;">Liderança intermediária</span></button>
+        <button type="button" class="pchip {{p2.cls}}" aria-pressed="{{p2.pressed}}" onClick="{{p2.toggle}}" style="color: #0a4a85;"><i></i><span style="color: #1d2033;">Portfólio de facilitação online</span></button>
+      </div>
+
+      <div class="tb" style="justify-content: space-between;">
+        <div class="row" style="gap: 10px;">
+          <span class="small" style="font-weight: 600;">Destacar</span>
+          <div class="mseg" role="group" aria-label="Destacar">
+            <button type="button" class="{{h.c0}}" aria-pressed="{{h.a0}}" onClick="{{h.f0}}">Tudo</button>
+            <button type="button" class="{{h.c1}}" aria-pressed="{{h.a1}}" onClick="{{h.f1}}">Próximos passos</button>
+            <button type="button" class="{{h.c2}}" aria-pressed="{{h.a2}}" onClick="{{h.f2}}">Proficientes</button>
+            <button type="button" class="{{h.c3}}" aria-pressed="{{h.a3}}" onClick="{{h.f3}}">Sem avaliação</button>
+          </div>
+        </div>
+        <button type="button" class="tog {{itemsCls}}" aria-pressed="{{itemsPressed}}" onClick="{{toggleItems}}"><span></span>Mostrar cursos e atividades</button>
+      </div>
+
+      <section class="card" style="padding: 14px 18px 8px; flex: 1 1 auto; min-height: 0;">
+        <div class="colhead"><span>Área</span><span>{{cols.0}}</span><span>{{cols.1}}</span><span>{{cols.2}}</span><span>{{cols.3}}</span><span>{{cols.4}}</span></div>
+        <sc-for list="{{lanes}}" as="ln" hint-placeholder-count="3">
+          <div class="lane">
+            <span class="lane-line" style="left: {{ln.lineLeft}}; width: {{ln.lineWidth}}; background: {{ln.color}};"></span>
+            <div class="lane-lab"><b style="color: {{ln.color}};">{{ln.name}}</b><span class="small" style="font-size: 12px;">{{ln.count}}</span></div>
+            <div class="slot"><sc-if value="{{ln.s0.has}}" hint-placeholder-val="{{ true }}"><button type="button" class="node {{ln.s0.cls}}" onClick="{{ln.s0.pick}}" style="--lc: {{ln.color}};" aria-label="{{ln.s0.aria}}"><span class="nm"><i class="{{ln.s0.dot}}" style="background: {{ln.color}}; color: {{ln.color}};"></i>{{ln.s0.name}}</span><span class="lv"><u class="{{ln.s0.b0}}"></u><u class="{{ln.s0.b1}}"></u><u class="{{ln.s0.b2}}"></u><u class="{{ln.s0.b3}}"></u><u class="{{ln.s0.b4}}"></u></span><span class="nmeta"><span>{{ln.s0.levelName}}</span><span class="grow"></span><span class="pd"><b style="background: {{ln.s0.pc0}};"></b><b style="background: {{ln.s0.pc1}};"></b></span></span><sc-if value="{{ln.s0.showItem}}" hint-placeholder-val="{{ false }}"><span class="it">{{ln.s0.item}}<em>{{ln.s0.itemState}}</em></span></sc-if></button></sc-if></div>
+            <div class="slot"><sc-if value="{{ln.s1.has}}" hint-placeholder-val="{{ true }}"><button type="button" class="node {{ln.s1.cls}}" onClick="{{ln.s1.pick}}" style="--lc: {{ln.color}};" aria-label="{{ln.s1.aria}}"><span class="nm"><i class="{{ln.s1.dot}}" style="background: {{ln.color}}; color: {{ln.color}};"></i>{{ln.s1.name}}</span><span class="lv"><u class="{{ln.s1.b0}}"></u><u class="{{ln.s1.b1}}"></u><u class="{{ln.s1.b2}}"></u><u class="{{ln.s1.b3}}"></u><u class="{{ln.s1.b4}}"></u></span><span class="nmeta"><span>{{ln.s1.levelName}}</span><span class="grow"></span><span class="pd"><b style="background: {{ln.s1.pc0}};"></b><b style="background: {{ln.s1.pc1}};"></b></span></span><sc-if value="{{ln.s1.showItem}}" hint-placeholder-val="{{ false }}"><span class="it">{{ln.s1.item}}<em>{{ln.s1.itemState}}</em></span></sc-if></button></sc-if></div>
+            <div class="slot"><sc-if value="{{ln.s2.has}}" hint-placeholder-val="{{ true }}"><button type="button" class="node {{ln.s2.cls}}" onClick="{{ln.s2.pick}}" style="--lc: {{ln.color}};" aria-label="{{ln.s2.aria}}"><span class="nm"><i class="{{ln.s2.dot}}" style="background: {{ln.color}}; color: {{ln.color}};"></i>{{ln.s2.name}}</span><span class="lv"><u class="{{ln.s2.b0}}"></u><u class="{{ln.s2.b1}}"></u><u class="{{ln.s2.b2}}"></u><u class="{{ln.s2.b3}}"></u><u class="{{ln.s2.b4}}"></u></span><span class="nmeta"><span>{{ln.s2.levelName}}</span><span class="grow"></span><span class="pd"><b style="background: {{ln.s2.pc0}};"></b><b style="background: {{ln.s2.pc1}};"></b></span></span><sc-if value="{{ln.s2.showItem}}" hint-placeholder-val="{{ false }}"><span class="it">{{ln.s2.item}}<em>{{ln.s2.itemState}}</em></span></sc-if></button></sc-if></div>
+            <div class="slot"><sc-if value="{{ln.s3.has}}" hint-placeholder-val="{{ true }}"><button type="button" class="node {{ln.s3.cls}}" onClick="{{ln.s3.pick}}" style="--lc: {{ln.color}};" aria-label="{{ln.s3.aria}}"><span class="nm"><i class="{{ln.s3.dot}}" style="background: {{ln.color}}; color: {{ln.color}};"></i>{{ln.s3.name}}</span><span class="lv"><u class="{{ln.s3.b0}}"></u><u class="{{ln.s3.b1}}"></u><u class="{{ln.s3.b2}}"></u><u class="{{ln.s3.b3}}"></u><u class="{{ln.s3.b4}}"></u></span><span class="nmeta"><span>{{ln.s3.levelName}}</span><span class="grow"></span><span class="pd"><b style="background: {{ln.s3.pc0}};"></b><b style="background: {{ln.s3.pc1}};"></b></span></span><sc-if value="{{ln.s3.showItem}}" hint-placeholder-val="{{ false }}"><span class="it">{{ln.s3.item}}<em>{{ln.s3.itemState}}</em></span></sc-if></button></sc-if></div>
+            <div class="slot"><sc-if value="{{ln.s4.has}}" hint-placeholder-val="{{ true }}"><button type="button" class="node {{ln.s4.cls}}" onClick="{{ln.s4.pick}}" style="--lc: {{ln.color}};" aria-label="{{ln.s4.aria}}"><span class="nm"><i class="{{ln.s4.dot}}" style="background: {{ln.color}}; color: {{ln.color}};"></i>{{ln.s4.name}}</span><span class="lv"><u class="{{ln.s4.b0}}"></u><u class="{{ln.s4.b1}}"></u><u class="{{ln.s4.b2}}"></u><u class="{{ln.s4.b3}}"></u><u class="{{ln.s4.b4}}"></u></span><span class="nmeta"><span>{{ln.s4.levelName}}</span><span class="grow"></span><span class="pd"><b style="background: {{ln.s4.pc0}};"></b><b style="background: {{ln.s4.pc1}};"></b></span></span><sc-if value="{{ln.s4.showItem}}" hint-placeholder-val="{{ false }}"><span class="it">{{ln.s4.item}}<em>{{ln.s4.itemState}}</em></span></sc-if></button></sc-if></div>
+          </div>
+        </sc-for>
+      </section>
+
+      <section class="card" style="padding: 14px 18px; display: flex; flex-direction: column; gap: 10px;">
+        <div class="row" style="gap: 10px;">
+          <b style="font: 700 14px Outfit, sans-serif;">Faixa visível</b>
+          <span class="small">{{rangeLabel}}</span>
+          <span class="grow"></span>
+          <button type="button" class="nav-btn" aria-label="Faixa anterior" onClick="{{prev}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          <button type="button" class="nav-btn" aria-label="Próxima faixa" onClick="{{next}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+        </div>
+        <div style="position: relative; padding: 4px 0;">
+          <div class="ov" role="group" aria-label="Todas as competências dos planos escolhidos; escolha uma para mover a faixa">
+            <sc-for list="{{overview}}" as="o" hint-placeholder-count="18">
+              <button type="button" aria-label="{{o.aria}}" title="{{o.name}}" onClick="{{o.go}}" style="background: {{o.color}}; opacity: {{o.op}};"></button>
+            </sc-for>
+          </div>
+          <span class="ovwin" style="left: {{winLeft}}; width: {{winWidth}};"></span>
+        </div>
+        <div class="row" style="gap: 14px; font-size: 12px; color: var(--dim-mute); flex-wrap: wrap;">
+          <sc-for list="{{areaKeys}}" as="ak" hint-placeholder-count="5"><span class="row" style="gap: 6px;"><i style="width: 10px; height: 10px; border-radius: 3px; background: {{ak.color}}; display: block;"></i>{{ak.name}}</span></sc-for>
+          <span class="grow"></span><span>Mais forte = nível mais alto</span>
+        </div>
+      </section>
+    </main>
+
+    <aside class="side">
+      <span class="eyebrow" style="color: {{sel.color}};">{{sel.area}}</span>
+      <h2 class="h2">{{sel.name}}</h2>
+      <div class="row" style="gap: 6px; flex-wrap: wrap;">
+        <span class="chip {{sel.chipCls}}">{{sel.levelName}}</span>
+        <span class="chip line">{{sel.plansLabel}}</span>
+      </div>
+      <div class="card" style="padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+        <span class="eyebrow">Escala desta competência</span>
+        <div class="lv" style="height: 40px; --lc: {{sel.color}}; gap: 5px;"><u class="{{sel.b0}}" style="height: 30%;"></u><u class="{{sel.b1}}" style="height: 47%;"></u><u class="{{sel.b2}}" style="height: 64%;"></u><u class="{{sel.b3}}" style="height: 82%;"></u><u class="{{sel.b4}}" style="height: 100%;"></u></div>
+        <span class="small">{{sel.scaleText}}</span>
+      </div>
+      <div class="col" style="gap: 6px;">
+        <span class="eyebrow">Último registro</span>
+        <span style="font-size: 14px;">{{sel.last}}</span>
+      </div>
+      <div class="col" style="gap: 6px;">
+        <span class="eyebrow">Próximos passos</span>
+        <span class="it" style="font-size: 13px; padding: 8px 10px;">{{sel.item}}<em>{{sel.itemState}}</em></span>
+      </div>
+      <span class="grow"></span>
+      <a class="btn primary" href="#">Abrir o diário da competência</a>
+    </aside>
+  </div>
+  <span class="tagid" style="left: 270px; top: 92px;">R2 · Mapa</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { plans: [true, true, false], start: 2, mode: 0, items: true, sel: 'c4' };
+  }
+  data() {
+    const A = {
+      a1: { name: 'Primeiros passos', color: '#0f7d74' },
+      a2: { name: 'Prática em sala', color: '#7b2fa8' },
+      a3: { name: 'Crescimento profissional', color: '#c2570c' },
+      a4: { name: 'Liderança', color: '#3d4a9c' },
+      a5: { name: 'Ensino online', color: '#2a55c9' }
+    };
+    const s4 = ['Emergente', 'Em desenvolvimento', 'Consolidado', 'Referência'];
+    const s3 = ['Iniciante', 'Praticante', 'Mentor'];
+    const s2 = ['Não demonstrado', 'Demonstrado'];
+    const s5 = ['Inicial', 'Básico', 'Intermediário', 'Avançado', 'Especialista'];
+    const C = [
+      ['c1', 'a1', 'Conhece as rotinas da escola', [0], 4, s4, 3, 'Atividade concluída · 3 mar', 'Boas-vindas à escola', 'concluído'],
+      ['c2', 'a1', 'Constrói relações de trabalho', [0, 1], 3, s4, 3, 'Avaliação da mentoria · 20 mai', 'Comunicação na equipe', 'concluído'],
+      ['c3', 'a1', 'Gere o comportamento com consistência', [0], 4, s4, 3, 'Nota do curso · 30 abr', 'Rotinas e protocolos', 'concluído'],
+      ['c4', 'a2', 'Planeja aulas eficazes', [0], 3, s4, 3, 'Atividade concluída · 16 out', 'Sequência de três aulas', 'a fazer'],
+      ['c5', 'a2', 'Trabalha com as famílias', [0], 3, s4, 3, 'Evidência própria · 21 ago', 'Diálogo com famílias', 'concluído'],
+      ['c6', 'a2', 'Trata cada estudante com dignidade', [0], 0, s4, 3, 'Nenhum registro ainda', 'Escuta ativa na sala', 'inscrições abertas'],
+      ['c7', 'a3', 'Reflete sobre a prática', [0, 1], 2, s4, 3, 'Avaliação da mentoria · 22 set', 'Plano de desenvolvimento', '40%'],
+      ['c8', 'a3', 'Define metas profissionais', [0, 1], 0, s4, 3, 'Evidência própria · 9 out', 'Plano de desenvolvimento', '40%'],
+      ['c9', 'a3', 'Mantém limites profissionais', [0], 0, s4, 3, 'Nenhum registro ainda', 'Ética e convivência', 'inscrições abertas'],
+      ['c10', 'a4', 'Conduz conversas difíceis', [1], 1, s3, 2, 'Atividade concluída · 30 set', 'Conversas difíceis', 'em andamento'],
+      ['c11', 'a4', 'Delega com clareza', [1], 2, s3, 2, 'Avaliação da coordenação · 12 out', 'Delegação na prática', 'concluído'],
+      ['c12', 'a4', 'Conduz reuniões de equipe', [1], 0, s3, 2, 'Nenhum registro ainda', 'Reuniões que decidem', 'abre 3 nov'],
+      ['c13', 'a4', 'Dá feedback entre pares', [1], 0, s2, 2, 'Nenhum registro ainda', 'Mentoria entre pares', 'abre 3 nov'],
+      ['c14', 'a5', 'Planeja atividades síncronas', [2], 3, s5, 3, 'Nota do curso · 2 jul', 'Aulas ao vivo', 'concluído'],
+      ['c15', 'a5', 'Modera fóruns', [2], 4, s5, 3, 'Avaliação da coordenação · 8 ago', 'Fóruns que conversam', 'concluído'],
+      ['c16', 'a5', 'Garante acessibilidade digital', [2], 2, s5, 3, 'Atividade concluída · 1 out', 'Acessibilidade na prática', '60%'],
+      ['c17', 'a5', 'Avalia a distância', [2], 0, s5, 3, 'Nenhum registro ainda', 'Rubricas online', 'a fazer'],
+      ['c18', 'a5', 'Engaja a turma a distância', [2], 1, s5, 3, 'Atividade concluída · 14 set', 'Engajamento remoto', 'em andamento']
+    ].map((r) => ({ id: r[0], area: r[1], name: r[2], plans: r[3], level: r[4], scale: r[5], prof: r[6], last: r[7], item: r[8], itemState: r[9] }));
+    return { A, C };
+  }
+  renderVals() {
+    const W = 5;
+    const st = this.state;
+    const { A, C } = this.data();
+    const pcolors = ['#4a1c7a', '#0f5e66', '#0a4a85'];
+    const pnames = ['Trilha de indução 2026', 'Liderança intermediária', 'Portfólio de facilitação online'];
+    const list = C.filter((c) => c.plans.some((p) => st.plans[p]));
+    const maxStart = Math.max(0, list.length - W);
+    const start = Math.min(st.start, maxStart);
+    const win = list.slice(start, start + W);
+    const matches = (c) => {
+      if (st.mode === 1) { return c.level < c.prof; }
+      if (st.mode === 2) { return c.level >= c.prof; }
+      if (st.mode === 3) { return c.level === 0; }
+      return true;
+    };
+    const node = (c) => {
+      const n = c.scale.length;
+      const out = {
+        has: true, name: c.name, pick: () => this.setState({ sel: c.id }),
+        cls: (st.sel === c.id ? 'sel ' : '') + (matches(c) ? '' : 'dim'),
+        dot: c.level === 0 ? 'off' : '',
+        levelName: c.level === 0 ? 'Sem avaliação' : c.scale[c.level - 1],
+        aria: c.name + ': ' + (c.level === 0 ? 'sem avaliação' : c.scale[c.level - 1]),
+        pc0: c.plans.length > 0 ? pcolors[c.plans[0]] : 'transparent',
+        pc1: c.plans.length > 1 ? pcolors[c.plans[1]] : 'transparent',
+        showItem: st.items, item: c.item, itemState: c.itemState
+      };
+      for (let b = 0; b < 5; b++) {
+        let cls = b < n ? '' : 'x';
+        if (b < c.level) { cls = 'f'; }
+        if (b === c.prof - 1) { cls += ' p'; }
+        out['b' + b] = b < n ? cls : 'x';
+      }
+      return out;
+    };
+    const areaOrder = [];
+    win.forEach((c) => { if (!areaOrder.includes(c.area)) { areaOrder.push(c.area); } });
+    const lanes = areaOrder.map((a) => {
+      const lane = { name: A[a].name, color: A[a].color };
+      let first = -1;
+      let last = -1;
+      win.forEach((c, i) => {
+        if (c.area === a) { lane['s' + i] = node(c); if (first < 0) { first = i; } last = i; }
+      });
+      for (let i = 0; i < W; i++) { if (!lane['s' + i]) { lane['s' + i] = { has: false }; } }
+      const total = list.filter((c) => c.area === a).length;
+      lane.count = total + (total === 1 ? ' competência' : ' competências');
+      lane.lineLeft = 'calc(162px + (100% - 162px) * ' + (first / W).toFixed(4) + ' + 20px)';
+      lane.lineWidth = 'calc((100% - 162px) * ' + ((last - first) / W).toFixed(4) + ')';
+      return lane;
+    });
+    const cols = {};
+    for (let i = 0; i < W; i++) { cols[i] = win[i] ? (start + i + 1) + ' de ' + list.length : ''; }
+    const overview = list.map((c, i) => ({
+      name: c.name,
+      aria: (i + 1) + '. ' + c.name,
+      color: A[c.area].color,
+      op: c.level === 0 ? 0.18 : (0.3 + 0.7 * c.level / c.scale.length).toFixed(2),
+      go: () => this.setState({ start: Math.max(0, Math.min(i - 2, maxStart)) })
+    }));
+    const areaKeys = [];
+    list.forEach((c) => { if (!areaKeys.find((k) => k.id === c.area)) { areaKeys.push({ id: c.area, name: A[c.area].name, color: A[c.area].color }); } });
+    const pc = (i) => ({
+      cls: st.plans[i] ? 'on' : '',
+      pressed: st.plans[i] ? 'true' : 'false',
+      toggle: () => {
+        const next = st.plans.slice();
+        next[i] = !next[i];
+        if (next.some(Boolean)) { this.setState({ plans: next, start: 0 }); }
+      }
+    });
+    const h = {};
+    [0, 1, 2, 3].forEach((m) => {
+      h['c' + m] = st.mode === m ? 'on' : '';
+      h['a' + m] = st.mode === m ? 'true' : 'false';
+      h['f' + m] = () => this.setState({ mode: m });
+    });
+    const sc = C.find((c) => c.id === st.sel) || win[0];
+    const sel = node(sc);
+    Object.assign(sel, {
+      area: A[sc.area].name, color: A[sc.area].color,
+      chipCls: sc.level >= sc.prof ? 'ok' : (sc.level === 0 ? 'line' : ''),
+      plansLabel: sc.plans.map((p) => pnames[p]).join(' · '),
+      scaleText: 'Escala de ' + sc.scale.length + ' níveis; proficiente a partir de ' + sc.scale[sc.prof - 1] + '.',
+      last: sc.last
+    });
+    return {
+      p0: pc(0), p1: pc(1), p2: pc(2), h, lanes, cols, overview, areaKeys, sel,
+      itemsCls: st.items ? 'on' : '', itemsPressed: st.items ? 'true' : 'false',
+      toggleItems: () => this.setState({ items: !st.items }),
+      prev: () => this.setState({ start: Math.max(0, start - W) }),
+      next: () => this.setState({ start: Math.min(maxStart, start + W) }),
+      rangeLabel: 'Competências ' + (start + 1) + ' a ' + (start + win.length) + ' de ' + list.length,
+      winLeft: (start / list.length * 100).toFixed(2) + '%',
+      winWidth: (win.length / list.length * 100).toFixed(2) + '%'
+    };
+  }
+}
+</script>
+</body>
+</html>

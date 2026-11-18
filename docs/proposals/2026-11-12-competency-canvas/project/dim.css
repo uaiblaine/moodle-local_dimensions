@@ -1,0 +1,157 @@
+/* Shared look of the Dimensions competency canvas: the theme's light defaults plus the chart pieces. */
+.dim {
+  --dim-nav: #070093;
+  --dim-nav-2: #0b0bb0;
+  --dim-night: #0a0b3d;
+  --dim-night-2: #14166b;
+  --dim-band: #4456ff;
+  --dim-ink: #1d2033;
+  --dim-ink-2: #3a3e58;
+  --dim-mute: #5d6180;
+  --dim-line: #e1e3ef;
+  --dim-tint: #f2f3fa;
+  --dim-page: #f6f7fb;
+  --dim-ok: #17694a;
+  --dim-ok-bg: #dcf3e8;
+  --dim-warn-bg: #fbedd5;
+  --dim-warn: #7a4a00;
+  --c1: #7b2fa8;
+  --c2: #0f7d74;
+  --c3: #c2570c;
+  --c4: #2a55c9;
+  --c5: #b0306b;
+  --c6: #5b7a12;
+  --c7: #8a5a00;
+  --c8: #3d4a9c;
+  font-family: "Noto Sans", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--dim-ink);
+  background: var(--dim-page);
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+.dim *, .dim *::before, .dim *::after { box-sizing: border-box; }
+.dim h1, .dim h2, .dim h3, .dim h4, .dim .brand, .dim .disp { font-family: "Outfit", "Noto Sans", sans-serif; }
+.dim h1, .dim h2, .dim h3, .dim h4, .dim p { margin: 0; }
+.dim button { font: inherit; }
+.dim a { color: var(--dim-nav); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Navbar: 60px, attached, the 3px signature band. */
+.nav { position: relative; height: 60px; display: flex; align-items: center; gap: 6px; padding: 0 20px; background: var(--dim-nav); color: #fff; z-index: 5; flex: none; }
+.nav::after { content: ""; position: absolute; left: 0; right: 0; bottom: -3px; height: 3px; background: var(--dim-band); }
+.brand { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; white-space: nowrap; }
+.grow { flex: 1 1 auto; min-width: 0; }
+.navlink { color: rgba(255, 255, 255, 0.86); padding: 8px 12px; border-radius: 8px; white-space: nowrap; text-decoration: none; font-size: 15px; }
+.navlink.on { color: #fff; background: rgba(255, 255, 255, 0.14); font-weight: 600; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; background: #8f96ff; color: #10124a; font-weight: 700; font-size: 13px; flex: none; }
+.ibtn { width: 40px; height: 40px; border-radius: 10px; display: inline-grid; place-items: center; border: 0; background: transparent; color: inherit; flex: none; cursor: pointer; }
+.ibtn svg { width: 22px; height: 22px; }
+
+/* Page scaffolding. */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.crumb { font-size: 13px; color: var(--dim-mute); display: flex; gap: 6px; align-items: center; }
+.eyebrow { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 700; color: var(--dim-mute); }
+.h1 { font-family: "Outfit", sans-serif; font-weight: 800; font-size: 34px; line-height: 1.1; letter-spacing: -0.01em; }
+.h2 { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 21px; line-height: 1.2; }
+.h3 { font-family: "Outfit", sans-serif; font-weight: 700; font-size: 16.5px; line-height: 1.25; }
+.lede { color: var(--dim-ink-2); font-size: 15.5px; max-width: 60ch; }
+.small { font-size: 13px; color: var(--dim-mute); }
+.card { background: #fff; border: 1px solid var(--dim-line); border-radius: 16px; }
+.pad { padding: 20px 22px; }
+.row { display: flex; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.sep { height: 1px; background: var(--dim-line); }
+
+/* Hero: the template's own colour (local_dimensions custombgcolor) or the theme navy. */
+.hero { position: relative; color: #fff; overflow: hidden; }
+.hero .wrap { position: relative; z-index: 1; }
+.hero .lede { color: rgba(255, 255, 255, 0.86); }
+.hero .crumb { color: rgba(255, 255, 255, 0.75); }
+.hero-art { position: absolute; inset: 0; pointer-events: none; }
+
+/* Chips, pills and buttons. */
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: var(--dim-tint); color: var(--dim-ink); white-space: nowrap; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; display: block; flex: none; }
+.chip.ok { background: var(--dim-ok-bg); color: var(--dim-ok); }
+.chip.warm { background: var(--dim-warn-bg); color: var(--dim-warn); }
+.chip.glass { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.chip.line { background: transparent; border: 1px solid var(--dim-line); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 12px; font-weight: 700; font-size: 14.5px; border: 0; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn svg { width: 18px; height: 18px; }
+.btn.primary { background: var(--dim-nav); color: #fff; }
+.btn.line { background: #fff; color: var(--dim-nav); border: 1.5px solid var(--dim-line); }
+.btn.glass { background: rgba(255, 255, 255, 0.14); color: #fff; border: 1px solid rgba(255, 255, 255, 0.28); }
+.btn.sm { height: 36px; padding: 0 14px; font-size: 13.5px; border-radius: 10px; }
+.seg { display: inline-flex; background: var(--dim-tint); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg span { padding: 7px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--dim-mute); white-space: nowrap; }
+.seg span.on { background: #fff; color: var(--dim-ink); box-shadow: 0 1px 3px rgba(10, 12, 50, 0.12); }
+.seg.dark { background: rgba(255, 255, 255, 0.1); }
+.seg.dark span { color: rgba(255, 255, 255, 0.75); }
+.seg.dark span.on { background: rgba(255, 255, 255, 0.95); color: var(--dim-night); }
+
+/* The night panel: the only surface where glow and blur are allowed (over the navy). */
+.night { background: radial-gradient(120% 90% at 30% 20%, var(--dim-night-2), var(--dim-night) 70%); color: #fff; border-radius: 20px; position: relative; overflow: hidden; }
+.night .small { color: rgba(255, 255, 255, 0.72); }
+.night .eyebrow { color: rgba(255, 255, 255, 0.66); }
+
+/* The journey (diario de bordo): stations on a trail. */
+.trail { position: relative; display: flex; flex-direction: column; }
+.stop { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; padding: 10px 0; align-items: start; }
+.stop::before { content: ""; position: absolute; left: 21px; top: 0; bottom: 0; width: 2px; background: var(--dim-line); }
+.stop:first-child::before { top: 24px; }
+.stop:last-child::before { bottom: calc(100% - 24px); }
+.stop .mk { position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: #fff; border: 1.5px solid var(--dim-line); color: var(--dim-nav); }
+.stop .mk svg { width: 20px; height: 20px; }
+.stop .mk.ok { background: var(--dim-ok-bg); border-color: #a9dcc3; color: var(--dim-ok); }
+.stop .mk.rate { background: #ece9ff; border-color: #cfc8ff; color: #3b2fb3; }
+.stop .mk.ahead { border-style: dashed; color: var(--dim-mute); background: var(--dim-page); }
+.stop .mk.here { background: var(--dim-nav); color: #fff; border-color: var(--dim-nav); box-shadow: 0 0 0 5px rgba(68, 86, 255, 0.18); }
+.stop b { font-weight: 600; display: block; }
+.stop .meta { font-size: 12.5px; color: var(--dim-mute); }
+.stop .when { font-size: 12.5px; color: var(--dim-mute); white-space: nowrap; padding-top: 3px; }
+.stop.ahead b { color: var(--dim-ink-2); }
+.trail-gap { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 700; color: var(--dim-mute); padding: 10px 0 4px 58px; }
+
+/* The scale as steps of a climb (never a pass/fail bar). */
+.steps { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 6px; align-items: end; }
+.step { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.step .bar { border-radius: 8px 8px 4px 4px; background: var(--dim-tint); border: 1px solid var(--dim-line); position: relative; }
+.step .bar.on { background: var(--sc, var(--c1)); border-color: transparent; }
+.step .bar.flag::after { content: ""; position: absolute; top: -12px; left: 50%; width: 2px; height: 12px; background: var(--dim-ink); }
+.step span { font-size: 12px; text-align: center; color: var(--dim-mute); }
+.step.cur span { color: var(--dim-ink); font-weight: 700; }
+
+/* The rose: one petal per competency, its length the level, its colour the competency's. */
+.pt { stroke-width: 1.5; stroke-linejoin: round; }
+.pt-on { fill-opacity: 0.95; stroke-opacity: 0; }
+.pt-mid { fill-opacity: 0.5; stroke-opacity: 0.9; }
+.pt-off { fill-opacity: 0; stroke-opacity: 0.8; stroke-dasharray: 3 3; }
+.pt-ghost { fill-opacity: 0.07; stroke-opacity: 0; }
+.night .pt-ghost { fill-opacity: 0.12; }
+
+/* Stars of the constellation. */
+.sk-line { stroke: rgba(255, 255, 255, 0.28); stroke-width: 1.2; fill: none; }
+.sk-trail { stroke: #8f9bff; stroke-width: 2; fill: none; stroke-dasharray: 2 6; stroke-linecap: round; }
+.sk-off { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.4; stroke-dasharray: 2.5 3; }
+.sk-lab { fill: rgba(255, 255, 255, 0.86); font-size: 12px; font-family: "Noto Sans", sans-serif; }
+.sk-group { fill: rgba(255, 255, 255, 0.55); font-size: 10.5px; letter-spacing: 0.12em; font-weight: 700; font-family: "Noto Sans", sans-serif; }
+.sk-date { fill: #b9c0ff; font-size: 10px; font-family: "Noto Sans", sans-serif; }
+
+/* Rings, trails and the river share these strokes. */
+.ax { stroke: var(--dim-line); stroke-width: 1; fill: none; }
+.ax-strong { stroke: #c9cce0; stroke-width: 1; fill: none; }
+.lab { fill: var(--dim-mute); font-size: 11.5px; font-family: "Noto Sans", sans-serif; }
+.lab-ink { fill: var(--dim-ink); font-size: 12.5px; font-weight: 600; font-family: "Noto Sans", sans-serif; }
+.metro { fill: none; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.metro-ahead { fill: none; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-opacity: 0.3; stroke-dasharray: 1 14; }
+
+/* Annotation chips drawn on the comps (ids that the brainstorm page refers to). */
+.tagid { position: absolute; z-index: 30; background: #ffd84d; color: #3b2f00; font-family: "Outfit", sans-serif; font-weight: 800; font-size: 12px; padding: 2px 8px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18); }
+
+/* Phone frame helpers. */
+.phone { width: 390px; height: 844px; display: flex; flex-direction: column; }
+.phone .nav { padding: 0 8px 0 6px; }
+.scroll { flex: 1 1 auto; overflow: hidden; }

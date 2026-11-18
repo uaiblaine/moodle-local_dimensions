@@ -622,20 +622,17 @@ ever emitted either.
 `theme_boost`'s `before_html_attributes` listener plus a head script resolving `auto` with
 `matchMedia`, gated behind `theme_boost/enablecolourmodes` (**default off**, and absent entirely
 before 5.3). Whether a page is dark is not server-knowable, so `classes/local/colour_mode.php` is
-**constants only** — `HOST_ATTRIBUTE`, `DARK`, `LIGHT`, `MEDIA_OPTIN_ATTRIBUTE` — and deliberately
+**constants only** — `HOST_ATTRIBUTE`, `DARK`, `LIGHT` — and deliberately
 exposes no `is_dark()`-style helper. Only Behat may name the attribute, because a scenario exercises
 the host's side of the contract; a test fails the build if any shipped file writes it.
 
-**The `@media (prefers-color-scheme: dark)` block is written and deliberately inert.** Every selector
-in it is gated on `[data-dimensions-media-optin]`, which nothing in either plugin ever writes.
-Switch-on is **one edit**: delete `[data-dimensions-media-optin]` from that selector, nothing else.
-It is inert because the OS preference is the wrong signal on its own — core treats it as an *input*
-to `data-bs-theme`, never as an independent trigger, so firing on it directly would override an
-explicit user choice and would let the plugin be dark inside a light page. **That exact defect used
-to ship here**: the WCAG contrast panel carried its own live `prefers-color-scheme` rules and flipped
-from the OS preference while the rest of the Moodle page stayed light. Preferred retirement, once
-`$plugin->supported`'s **minimum** reaches 503: delete the block outright, since core resolves `auto`
-itself from 5.3 on.
+**No `@media (prefers-color-scheme: dark)` block.** The OS preference is the wrong signal on its own:
+core treats it as an *input* to `data-bs-theme`, never as an independent trigger, so firing on it
+directly would override an explicit user choice and would let the plugin be dark inside a light page.
+That defect once shipped here (the WCAG contrast panel flipped from the OS preference while the page
+stayed light). Until 5.3 the sheet carried an inert, opt-in block for it; on `main` (5.3 only) it was
+deleted, since core resolves `auto` itself, and `colour_tokens_test::test_no_prefers_color_scheme_block`
+keeps it out. `MOODLE_405_STABLE` still carries the inert block.
 
 **Two names are transport, not tokens.** `--dimension-custombgcolor` and
 `--dimension-customtextcolor` carry *admin instance data* — a colour a site chose. They are

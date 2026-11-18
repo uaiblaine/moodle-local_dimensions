@@ -88,6 +88,7 @@ class search_linkable_courses extends external_api {
         // site-level default.
         $frameworkcontext = (new competency($competencyid))->get_context();
         self::validate_context($frameworkcontext);
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:competencyview', $frameworkcontext);
 
         $manageable = helper::manageable_course_ids();

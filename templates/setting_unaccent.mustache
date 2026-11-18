@@ -1,0 +1,42 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/setting_unaccent
+
+    The state of the PostgreSQL unaccent extension in the plugin settings, with the button that
+    creates it when it is missing.
+
+    Context variables required:
+    * state (string) - Localised sentence stating the current state.
+
+    Context variables optional:
+    * control (string) - Rendered create button; trusted HTML from the core renderer, empty when
+      there is nothing to offer.
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "state": "The unaccent extension is not installed.",
+        "control": "<button type=\"submit\" class=\"btn btn-primary\">Create the extension</button>"
+    }
+}}
+<p class="mb-2">{{state}}</p>
+{{#control}}
+    {{{control}}}
+{{/control}}

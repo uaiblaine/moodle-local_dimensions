@@ -92,19 +92,22 @@ final class calculator_visibility_test extends \advanced_testcase {
     }
 
     /**
-     * An activity available but not listed on the course page is still work the learner owes.
+     * An activity available but not listed on the course page is not counted, as core does not count it.
      *
-     * A stealth activity is openable but not listed, so is_visible_on_course_page() alone would
-     * drop it. The hidden activity is the control: neither listed nor openable, it must stay out.
+     * Core's progress counts what the course page shows the learner
+     * ({@see \completion_info::get_user_activities_with_completion()}); a stealth activity ("Make
+     * available but don't show on course page") is openable but not shown, so it stays out, with the
+     * hidden one. The open activity is the control: it proves the learner's workload is measured at all.
      *
      * @return void
      */
-    public function test_a_stealth_activity_counts(): void {
+    public function test_a_stealth_activity_does_not_count(): void {
         global $CFG;
         $this->build_course();
         $CFG->allowstealth = 1;
 
         $done = $this->add_activity();
+        $this->add_activity();
         $stealth = $this->add_activity();
         $hidden = $this->add_activity();
         $this->complete([$done]);
@@ -113,42 +116,44 @@ final class calculator_visibility_test extends \advanced_testcase {
         set_coursemodule_visible($hidden, 0);
         $this->refresh();
 
-        // One of the two that are the learner's to do; the hidden one is nobody's.
+        $modinfo = get_fast_modinfo($this->course->id, (int) $this->user->id);
+        // Precondition: the stealth activity is open to the learner, just not shown.
+        $this->assertTrue($modinfo->get_cm($stealth)->uservisible);
+        $this->assertFalse($modinfo->get_cm($stealth)->is_visible_on_course_page());
+
+        // One of the two shown on the course page; stealth and hidden are left out.
         $this->assertSame(50, $this->bar());
         $this->assertSame(50, $this->ring());
     }
 
     /**
-     * A hidden activity stays out even for a learner who is allowed to see hidden activities.
+     * A learner who may see hidden activities has them counted, as core counts them for that learner.
      *
-     * With moodle/course:viewhiddenactivities, uservisible is true for a hidden activity, so only
-     * the explicit $cm->visible test keeps the workload from depending on who is looking. The
-     * plain activity is the control: it proves the elevated learner is measured at all.
+     * With moodle/course:viewhiddenactivities the course page shows the hidden activity to this learner,
+     * so core's rule counts it; the workload follows the learner the card describes. The plain student
+     * beside them, the control, does not have it counted.
      *
      * @return void
      */
-    public function test_a_hidden_activity_stays_out_even_for_a_learner_who_may_see_it(): void {
+    public function test_a_hidden_activity_counts_for_a_learner_who_may_see_it(): void {
         $this->build_course();
         $done = $this->add_activity();
         $hidden = $this->add_activity();
         $this->complete([$done]);
 
         set_coursemodule_visible($hidden, 0);
+        $this->refresh();
+        // The control: a plain student, for whom the hidden activity is nobody's work.
+        $this->assertSame(100, $this->bar());
 
         // Still a tracked student, but one who may look behind the eye icon.
         $context = \core\context\course::instance($this->course->id);
-        $studentroleid = $this->get_student_role_id();
-        role_change_permission($studentroleid, $context, 'moodle/course:viewhiddenactivities', CAP_ALLOW);
-
+        role_change_permission($this->get_student_role_id(), $context, 'moodle/course:viewhiddenactivities', CAP_ALLOW);
         $this->refresh();
 
-        $modinfo = get_fast_modinfo($this->course->id, (int) $this->user->id);
-        // Precondition: without the $cm->visible test the union really would admit this one.
-        $this->assertTrue($modinfo->get_cm($hidden)->uservisible);
-
-        // The hidden activity is nobody's work, however privileged the viewer.
-        $this->assertSame(100, $this->bar());
-        $this->assertSame(100, $this->ring());
+        $this->assertTrue(get_fast_modinfo($this->course->id, (int) $this->user->id)->get_cm($hidden)->is_visible_on_course_page());
+        $this->assertSame(50, $this->bar());
+        $this->assertSame(50, $this->ring());
     }
 
     /**
@@ -190,9 +195,9 @@ final class calculator_visibility_test extends \advanced_testcase {
         set_coursemodule_visible($hidden, 0);
         $this->refresh();
 
-        // Counted: done, open, greyed, stealth. Not counted: hide-entirely, hidden.
-        $this->assertSame(25, $this->bar());
-        $this->assertSame(25, $this->ring());
+        // Counted: done, open, greyed. Not counted: hide-entirely, stealth, hidden.
+        $this->assertSame(33, $this->bar());
+        $this->assertSame(33, $this->ring());
     }
 
     /**

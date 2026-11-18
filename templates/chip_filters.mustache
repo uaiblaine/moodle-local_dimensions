@@ -21,9 +21,10 @@
     local_dimensions/chip_filters AMD module wires the click handlers and
     delegates the actual filtering to a host-page callback.
 
-    Each chip carries an empty count (local-dimensions-chip-count) the host
-    paints through chip_filters' paintCounts(): what pressing the chip would
-    leave, which hides a chip that would leave nothing unless it is pressed.
+    Each chip carries an empty count slot (data-region local-dimensions-chip-count)
+    that the host fills through chip_filters' paintCounts() with the number of
+    items pressing the chip would leave; a chip that would leave none is hidden
+    unless it is pressed.
 
     Context variables required:
     * id (string) - DOM id used by host code to scope queries.

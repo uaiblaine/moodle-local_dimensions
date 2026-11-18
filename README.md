@@ -34,8 +34,8 @@ Less plugin, more Moodle: the plugin uses what Moodle already stores and already
 and avoids depending on non-core plugins wherever a native path exists.
 
 
-Documentation / Documentação
------------------------------
+Documentation
+-------------
 
 Full user and administrator documentation is available online in English and Portuguese:
 **[Competency Dimensions Documentation (GitHub Pages)](https://uaiblaine.github.io/moodle-local_dimensions-docs/)**
@@ -63,6 +63,31 @@ category only. It is locked to the category: no switch, the category and its sub
 
 The hub has three tabs: **Structures** (frameworks), **Competencies** and **Learning plans**. The
 selected row's actions sit in a bar at the foot of the page.
+
+### Competency hub v2 (preview)
+
+**Site administration > Competencies > Competency Dimensions > Competency hub v2**
+(`local/dimensions/hubv2.php`, same capability as the hub, site entry only) draws one framework's
+tree as a canvas of nodes, beside the hub it does not replace while it is being validated: the
+framework at the left, a column per level, each card with its colour, name, taxonomy or rule and a
+count, parent-child edges in the rule's colour under a competency with a rule, and dotted edges to
+the selected competency's related ones. The tree loads lazily (25 children at a time), pans and
+zooms, and has an overview map. The panel beside it shows the selected competency (path, where it
+is used, scale and rule, appearance, description, related competencies) and its actions, which are
+the hub's own dialogues: edit, add a child, rule, courses and activities, relate, move (pick the
+new parent on the canvas), move up or down, and delete. Delete first asks the page's read-only
+`local_dimensions_competency_delete_check` service: when core would refuse (the competency or one
+of its descendants is in a learning plan template, a learning plan or a course, has a user's record
+or rating, or is a badge criterion) a dialogue lists the reasons, with counts that are exact only for a
+site-level manager (a course category's manager sees which reasons apply); otherwise the confirmation says
+that the competency and every descendant, their relations and their prior-learning links are
+deleted permanently; the hub's Competencies tab deletes through the same check and dialogues. *List view* opens the same framework in the
+hub's Competencies tab, the accessible alternative to the canvas. The page keeps nothing of its own:
+no table, no preference written, the layout recomputed on every visit.
+
+The canvas is a React component built into one file, `js/esm/build/bundle.js`, which inlines
+**React Flow** (`@xyflow/react` 12.12.1, MIT), vendored under `js/esm/vendor/xyflow` and declared in
+`thirdpartylibs.xml`; its README says how it was built. Nothing needs to be installed on the site.
 
 ### Structures
 
@@ -215,6 +240,11 @@ included), a **Continue** shortcut to the first started but unfinished section, 
 seal on a finished course. A course that amounts to a single activity or section links straight to
 it, and an optional redirect skips the grid when the learner has a single active enrolment.
 
+The cards describe the plan's owner, not the viewer. A viewer of someone else's plan who holds
+`moodle/competency:usercompetencyview` over the learner (a reviewer, mentor or parent role) sees the
+plan owner's course progress and section names on the tracker, also in courses the viewer cannot open
+themselves.
+
 ![A locked course card in Learn more mode: blurred sections, a Learn more button and the date the course opens](docs/screenshots/tracker-locked.png)
 
 A course the learner cannot open yet keeps its frame (dashed border, blurred sections) and names
@@ -302,12 +332,12 @@ Requirements
 
 One branch per Moodle version, each declaring `$plugin->supported` for exactly that version:
 
-| Branch | Moodle | Version | Release |
-|---|---|---|---|
-| `MOODLE_405_STABLE` | 4.5 LTS | 2024100711 | v4.5-r1 |
-| `MOODLE_501_STABLE` | 5.1 | 2025100611 | v5.1-r1 |
-| `MOODLE_502_STABLE` | 5.2 | 2026042011 | v5.2-r1 |
-| `main` (= `MOODLE_503_STABLE`) | 5.3 | 2026100515 | v5.3-r1 |
+| Branch | Moodle | Latest release |
+|---|---|---|
+| `MOODLE_405_STABLE` | 4.5 LTS | v4.5-r1 |
+| `MOODLE_501_STABLE` | 5.1 | v5.1-r1 |
+| `MOODLE_502_STABLE` | 5.2 | v5.2-r1 |
+| `main` (= `MOODLE_503_STABLE`) | 5.3 | v5.3-r1 |
 
 The 4.5, 5.1 and 5.2 branches carry the same features; the 5.3 line (`main`) takes new work first
 and uses PHP 8.3 syntax. This README and its pictures describe `main` on Moodle 5.3. Moodle 5.0 has
@@ -315,6 +345,8 @@ no branch.
 
 - Core competencies enabled (`core_competency`).
 - No required plugin: `version.php` declares no dependency.
+- Bundled, not installed: React Flow (`@xyflow/react` 12.12.1, MIT) for the Competency hub v2's
+  canvas, vendored under `js/esm/vendor/xyflow`.
 - Optional, each reached only through a runtime guard, so the plugin installs and behaves the same
   without them:
   - `enrol_apply`: a locked course card recognises an application as a way in and shows one
@@ -396,16 +428,23 @@ Accent-insensitive search
 
 Competency, plan and course searches in the Competency hub are accent-insensitive ("lingua" also
 matches "língua"). On MySQL/MariaDB this works out of the box via the database collation. On
-**PostgreSQL** it uses the `unaccent` extension, which the plugin creates automatically
-(`CREATE EXTENSION IF NOT EXISTS unaccent`) at install and on every upgrade where the database
-user has permission (a search never creates it); on supported PostgreSQL (13+) `unaccent` is a *trusted* extension the database
-owner may create without superuser rights.
+**PostgreSQL** it uses the `unaccent` extension, and **the plugin never creates it by itself**: not
+at install, not on upgrade, not from a search. Until it exists, searches work but are
+accent-sensitive.
 
-If your instance is locked down and the plugin cannot create it, run this once as a database
-superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade
-gracefully to accent-sensitive):
+An administrator creates it in one of two ways:
 
-    CREATE EXTENSION unaccent;
+- With the **Create the unaccent extension** button in the plugin settings (*Site administration >
+  Competencies > Competency Dimensions > Competency Dimensions settings*, section *Accent-insensitive
+  search*). It runs `CREATE EXTENSION IF NOT EXISTS unaccent` with the database account Moodle uses,
+  so that account must be allowed to create it. On supported PostgreSQL (13+) `unaccent` is a
+  *trusted* extension the database owner may create without superuser rights.
+- Or with this SQL, run once as a database superuser:
+
+        CREATE EXTENSION unaccent;
+
+*Site administration > Reports > System status* reports the state: OK when installed, a warning when
+missing, and not applicable on other databases.
 
 
 Capabilities
@@ -500,6 +539,10 @@ The plugin has no database tables of its own (no `db/install.xml`). It keeps:
   plan's competencies with the owner's proficiency for five minutes and is cleared when a rating
   changes; and `returncontext`, a session cache of the plan a learner came from, which expires
   after four hours.
+- **Browser storage**, in the user's own browser only and never sent to the site: the widths of
+  the Competency hub's two resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
+  `local_dimensions_plans_master_width`), and the position of the *Return to plan* button in
+  `sessionStorage` (`local_dimensions_fab_pos`), which the browser drops when the tab closes.
 - **Events** in the standard log for the hub's administrative decisions (cohort attach and detach,
   links, duplication, cohort roles, bulk enrolment methods, custom field changes). The log store
   keeps and exports them.

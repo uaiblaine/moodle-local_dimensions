@@ -69,4 +69,23 @@ final class export_framework_test extends \advanced_testcase {
         $result = \core_external\external_api::clean_returnvalue(export_framework::execute_returns(), $result);
         $this->assertStringContainsString('CAT-1', $result['content']);
     }
+
+    /**
+     * Exporting is a management action: a user who reads the framework (competencyview, every
+     * user's default) but does not manage it is refused; the administrator (the control, the two
+     * tests above) exports.
+     *
+     * @return void
+     */
+    public function test_a_reader_who_does_not_manage_is_refused(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $framework = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_framework();
+        $reader = $this->getDataGenerator()->create_user();
+        $this->setUser($reader);
+        $this->assertTrue(\core_competency\competency_framework::can_read_context($framework->get_context()));
+
+        $this->expectException(\required_capability_exception::class);
+        export_framework::execute((int) $framework->get('id'));
+    }
 }

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo: Leituras, turma</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+<link rel="stylesheet" href="./flow.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.fl button.pick{min-height:44px;cursor:pointer}
+.ws select.input{width:285px;font-size:14px}
+.ws .find{width:335px;min-width:0}
+.find input{flex:1 1 auto;min-width:0;min-height:42px;border:0;background:transparent;font:inherit;color:#1c2233}
+.find input::placeholder{color:#596079;opacity:1}
+.people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.person .head{display:flex;align-items:center;gap:10px}
+.brought{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:#f6f7fb;font-size:14.5px}
+.brought b{font-weight:700;line-height:1.3}
+.recog{display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:12px;background:#dcf3e8;font-size:14px}
+.recog .lead{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#17694a}
+.recog .lead svg{width:16px;height:16px;flex:none}
+.oneline{font-family:"Outfit",sans-serif;font-size:15px;color:#1c2233}
+.prows{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:#3d445c}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) 16px auto;gap:8px;align-items:center}
+.prow .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow svg{width:16px;height:16px;color:#17694a}
+.foot{display:flex;align-items:center;gap:10px}
+.foot .btn{min-height:44px;padding:0 18px}
+.tlink{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:14px;font-weight:600}
+.tlink svg{width:16px;height:16px}
+.quiet{border:1.5px dashed #8b92ab;border-radius:16px;background:#fafbfe;padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+</style>
+</helmet>
+<div class="ln fl" style="width: 1280px; height: 1100px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="DLer.dc.html" aria-current="page">Leituras</a>
+    <span class="grow"></span>
+    <span class="avatar" title="Renato Dias">RD</span>
+  </nav>
+
+  <header class="ws">
+    <div class="wrap">
+      <h1>Leituras</h1>
+      <nav class="tabs" aria-label="Leituras">
+        <a href="DLer.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13h5l2 3h4l2-3h5"></path><path d="M5.5 5h13L21 13v6H3v-6z"></path></svg>Ler<span class="count">5</span></a>
+        <a class="on" href="DTurma.dc.html" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path><circle cx="17" cy="9" r="2.5"></circle><path d="M16.5 14.6c2.4.3 4.2 2 4.9 4.9"></path></svg>Turma</a>
+        <a href="DPlanejar.dc.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1.5"></rect><rect x="10" y="4" width="5" height="11" rx="1.5"></rect><rect x="17" y="4" width="4" height="7" rx="1.5"></rect></svg>Planejar</a>
+      </nav>
+      <span class="grow"></span>
+      <select class="input" aria-label="Curso"><option selected>Avaliação com tecnologias digitais</option><option>Ensinar com recursos digitais</option></select>
+      <label class="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="search" aria-label="Buscar aluno, competência ou atividade" placeholder="Buscar aluno, competência ou atividade"><span class="kbd">⌘K</span></label>
+    </div>
+  </header>
+
+  <main class="wrap col" style="gap: 18px; padding-top: 20px; padding-bottom: 20px;">
+    <div class="row" style="gap: 8px;">
+      <div class="row" style="gap: 8px;" role="group" aria-label="Mostrar a competência">
+        <button type="button" class="pick on" aria-pressed="true">Todas as competências</button>
+        <button type="button" class="pick" aria-pressed="false" aria-label="4.1 Estratégias de avaliação" title="4.1 Estratégias de avaliação"><i style="background: #2449ad;"></i>4.1</button>
+        <button type="button" class="pick" aria-pressed="false" aria-label="4.3 Feedback e planificação" title="4.3 Feedback e planificação"><i style="background: #2449ad;"></i>4.3</button>
+        <button type="button" class="pick" aria-pressed="false" aria-label="3.3 Aprendizagem colaborativa" title="3.3 Aprendizagem colaborativa"><i style="background: #6a2892;"></i>3.3</button>
+      </div>
+      <span class="grow"></span>
+      <p class="small" style="font-size: 14px;">24 alunos · ordenados por quem trouxe algo novo</p>
+    </div>
+
+    <section class="col" style="gap: 10px;" aria-labelledby="dt-g1">
+      <div class="row" style="gap: 10px;">
+        <h2 class="h3" id="dt-g1">Trouxeram algo novo</h2>
+        <span class="small">5 desde a sua última leitura</span>
+        <span class="grow"></span>
+        <a class="tlink" href="DLer.dc.html">Júlia e Sofia estão na lista de Ler</a>
+      </div>
+      <div class="people">
+        <article class="person" aria-labelledby="dt-ma">
+          <div class="head"><span class="avatar" style="background: #f3e9f8; color: #6a2892;" aria-hidden="true">MA</span><h3 class="h3" id="dt-ma">Marina Alves</h3></div>
+          <div class="brought"><span class="small">Trouxe em 28 out · 4.3 Feedback e planificação</span><b>Devolutivas em áudio para a turma B</b></div>
+          <ul class="prows">
+            <li class="prow"><span class="nm">4.1 Estratégias de avaliação</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">4.3 Feedback e planificação</span><span></span><span class="pips" role="img" aria-label="Em construção, Recém-chegado (A1)"><i class="on"></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">3.3 Aprendizagem colaborativa</span><span></span><span class="pips" role="img" aria-label="Por explorar"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+          </ul>
+          <div class="foot"><a class="btn primary" href="DLer.dc.html" aria-label="Ler a evidência de Marina Alves">Ler</a><span class="small">pediu uma leitura</span></div>
+        </article>
+        <article class="person" aria-labelledby="dt-cr">
+          <div class="head"><span class="avatar" style="background: #e2f3f1; color: #0c5f59;" aria-hidden="true">CR</span><h3 class="h3" id="dt-cr">Caio Ribeiro</h3></div>
+          <div class="brought"><span class="small">Trouxe em 27 out · 4.1 Estratégias de avaliação</span><b>Rubrica do seminário em três níveis</b></div>
+          <ul class="prows">
+            <li class="prow"><span class="nm">4.1 Estratégias de avaliação</span><span></span><span class="pips" role="img" aria-label="Em construção, Recém-chegado (A1)"><i class="on"></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">4.3 Feedback e planificação</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">3.3 Aprendizagem colaborativa</span><span></span><span class="pips" role="img" aria-label="Por explorar"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+          </ul>
+          <div class="foot"><a class="btn primary" href="DLer.dc.html" aria-label="Ler a evidência de Caio Ribeiro">Ler</a><span class="small">evidência nova</span></div>
+        </article>
+        <article class="person" aria-labelledby="dt-pl">
+          <div class="head"><span class="avatar" style="background: #fbeee2; color: #96430a;" aria-hidden="true">PL</span><h3 class="h3" id="dt-pl">Pedro Lins</h3></div>
+          <div class="brought"><span class="small">Trouxe em 25 out · 3.3 Aprendizagem colaborativa</span><b>Histórico de revisões do documento do grupo</b></div>
+          <ul class="prows">
+            <li class="prow"><span class="nm">4.1 Estratégias de avaliação</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">4.3 Feedback e planificação</span><span></span><span class="pips" role="img" aria-label="Por explorar"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">3.3 Aprendizagem colaborativa</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+          </ul>
+          <div class="foot"><a class="btn primary" href="DLer.dc.html" aria-label="Ler a evidência de Pedro Lins">Ler</a><span class="small">evidência nova</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="col" style="gap: 10px;" aria-labelledby="dt-g2">
+      <h2 class="h3" id="dt-g2">Reconhecidas há pouco</h2>
+      <div class="people">
+        <article class="person" aria-labelledby="dt-bm">
+          <div class="head"><span class="avatar" style="background: #e8f0f8; color: #073560;" aria-hidden="true">BM</span><h3 class="h3" id="dt-bm">Bruno Melo</h3><span class="grow"></span><a class="tlink" href="#" aria-label="Ver a jornada de Bruno Melo">Ver a jornada</a></div>
+          <div class="recog">
+            <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"></circle><path d="m8.5 14-1.5 7 5-2.5 5 2.5-1.5-7"></path></svg>Reconhecida em Integrador (B1) · 30 out</span>
+            <b>3.3 Aprendizagem colaborativa</b>
+            <p class="oneline" title="O documento do grupo mostra cada voz e a revisão entre pares.">“O documento do grupo mostra cada voz e a revisão entre pares.”</p>
+            <span class="small">Renato Dias</span>
+          </div>
+          <ul class="prows">
+            <li class="prow"><span class="nm">4.1 Estratégias de avaliação</span><span></span><span class="pips" role="img" aria-label="Em construção, Recém-chegado (A1)"><i class="on"></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">4.3 Feedback e planificação</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">3.3 Aprendizagem colaborativa</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg><span class="pips" role="img" aria-label="Reconhecida, Integrador (B1)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span></li>
+          </ul>
+        </article>
+        <article class="person" aria-labelledby="dt-lf">
+          <div class="head"><span class="avatar" style="background: #f3e9f8; color: #6a2892;" aria-hidden="true">LF</span><h3 class="h3" id="dt-lf">Luiza Freitas</h3><span class="grow"></span><a class="tlink" href="#" aria-label="Ver a jornada de Luiza Freitas">Ver a jornada</a></div>
+          <div class="recog">
+            <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"></circle><path d="m8.5 14-1.5 7 5-2.5 5 2.5-1.5-7"></path></svg>Reconhecida em Especialista (B2) · 24 out</span>
+            <b>4.1 Estratégias de avaliação</b>
+            <p class="oneline" title="A rubrica mede o que a tarefa pede, e a turma já a usa sozinha.">“A rubrica mede o que a tarefa pede, e a turma já a usa sozinha.”</p>
+            <span class="small">Renato Dias</span>
+          </div>
+          <ul class="prows">
+            <li class="prow"><span class="nm">4.1 Estratégias de avaliação</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg><span class="pips" role="img" aria-label="Reconhecida, Especialista (B2)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i class="on"></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">4.3 Feedback e planificação</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg><span class="pips" role="img" aria-label="Reconhecida, Integrador (B1)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">3.3 Aprendizagem colaborativa</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+          </ul>
+        </article>
+        <article class="person" aria-labelledby="dt-ac">
+          <div class="head"><span class="avatar" style="background: #fbedd5; color: #7a4a00;" aria-hidden="true">AC</span><h3 class="h3" id="dt-ac">Ana Costa</h3><span class="grow"></span><a class="tlink" href="#" aria-label="Ver a jornada de Ana Costa">Ver a jornada</a></div>
+          <div class="recog">
+            <span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"></circle><path d="m8.5 14-1.5 7 5-2.5 5 2.5-1.5-7"></path></svg>Reconhecida em Integrador (B1) · 21 out</span>
+            <b>4.3 Feedback e planificação</b>
+            <p class="oneline" title="Cada devolutiva termina com o próximo passo do aluno, e as reescritas mostram que ele foi dado.">“Cada devolutiva termina com o próximo passo do aluno, e as reescritas mostram que ele foi dado.”</p>
+            <span class="small">Lúcia Prado</span>
+          </div>
+          <ul class="prows">
+            <li class="prow"><span class="nm">4.1 Estratégias de avaliação</span><span></span><span class="pips" role="img" aria-label="Em construção, Explorador (A2)"><i class="on"></i><i class="on"></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">4.3 Feedback e planificação</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"></path></svg><span class="pips" role="img" aria-label="Reconhecida, Integrador (B1)"><i class="on"></i><i class="on"></i><i class="on goal"></i><i></i><i></i><i></i></span></li>
+            <li class="prow"><span class="nm">3.3 Aprendizagem colaborativa</span><span></span><span class="pips" role="img" aria-label="Por explorar"><i></i><i></i><i class="goal"></i><i></i><i></i><i></i></span></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="col" style="gap: 10px;" aria-labelledby="dt-g3">
+      <div class="row" style="gap: 10px;">
+        <h2 class="h3" id="dt-g3">Ainda sem registros neste curso</h2>
+        <span class="grow"></span>
+        <p class="small">Os outros 12 alunos não trouxeram nada novo desde a sua última leitura. <a href="#">Ver a turma inteira</a></p>
+      </div>
+      <div class="quiet">
+        <ul class="row" style="gap: 20px; flex-wrap: wrap;">
+          <li class="who"><span class="avatar" style="background: #f1f3f9; color: #3d445c;" aria-hidden="true">EM</span>Elisa Moura</li>
+          <li class="who"><span class="avatar" style="background: #f1f3f9; color: #3d445c;" aria-hidden="true">TN</span>Tiago Nunes</li>
+          <li class="who"><span class="avatar" style="background: #f1f3f9; color: #3d445c;" aria-hidden="true">RS</span>Rafael Souza</li>
+          <li class="who"><span class="avatar" style="background: #f1f3f9; color: #3d445c;" aria-hidden="true">HP</span>Helena Paiva</li>
+        </ul>
+        <div class="row" style="gap: 16px;">
+          <p style="font-size: 14.5px; color: #3d445c;">Nenhuma evidência chegou ainda; a Oficina de rubricas digitais costuma ser a primeira.</p>
+          <span class="grow"></span>
+          <a class="tlink" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"></path><path d="M10 20.5a2 2 0 0 0 4 0"></path></svg>Enviar um lembrete gentil</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

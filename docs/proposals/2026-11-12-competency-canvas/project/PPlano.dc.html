@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno de jornada: plano acompanhado</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.month{font-family:"Outfit",sans-serif;font-weight:700;font-size:15px;color:#596079;padding:4px 0 2px 112px}
+.entry{display:grid;grid-template-columns:84px 28px minmax(0,1fr);position:relative}
+.entry .when{font-size:13px;color:#596079;text-align:right;padding-top:18px}
+.entry .rail{position:relative;display:flex;justify-content:center}
+.entry .rail::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:#dfe2ec}
+.entry .dot{position:relative;margin-top:20px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #0a4a85}
+.entry.mile .dot{width:22px;height:22px;margin-top:16px;background:#17694a;border-color:#17694a;display:grid;place-items:center;color:#fff}
+.entry .body{padding:8px 0 8px 8px}
+.mile .box{background:#dcf3e8;border:1px solid #a9dcc3;border-radius:16px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.ev{background:#fff;border:1px solid #dfe2ec;border-radius:16px;padding:14px 16px;display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:start}
+.ev.new{border-color:#7a4a00;box-shadow:0 0 0 3px #fbedd5}
+.quote{font-family:"Outfit",sans-serif;font-size:17px;line-height:1.35;color:#1c2233}
+.feeds{font-size:13px;color:#596079}
+.state{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end}
+.state .scale li{font-size:13px}
+.groups{display:flex;flex-direction:column;gap:12px}
+.gh{display:flex;align-items:center;gap:8px;font-family:"Noto Sans",sans-serif;font-size:13.5px;font-weight:700;color:#1c2233}
+.gh i{width:10px;height:10px;border-radius:50%;display:block;flex:none}
+.names{display:flex;flex-direction:column;gap:6px;font-size:14px;padding-left:18px;margin-top:6px}
+.names li{display:flex;gap:8px;align-items:baseline}
+.names .small{margin-left:auto;white-space:nowrap}
+.msg{background:#f6f7fb;border:1px solid #dfe2ec;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.msg p{font-size:14px;color:#1c2233}
+.reply{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
+.reply .note{min-height:64px}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1100px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink" href="PMesa.dc.html">Mesa de leitura</a>
+    <span class="grow"></span>
+    <span class="avatar">RD</span>
+  </nav>
+
+  <div class="viewing"><div class="wrap">Você acompanha o plano de Marina Alves · <a href="PMesa.dc.html" style="color: inherit;">voltar à Mesa de leitura</a></div></div>
+
+  <header style="background: #fff; border-bottom: 1px solid #dfe2ec; padding: 22px 0 20px; flex: none;">
+    <div class="wrap col" style="gap: 16px;">
+      <div class="col" style="gap: 6px;">
+        <nav class="crumb" aria-label="Você está em"><a href="#">Planos que você acompanha</a><span>/</span><span>Marina Alves</span></nav>
+        <h1 class="h1">Docência digital (DigCompEdu)</h1>
+        <p class="small" style="font-size: 14px;">Plano de Marina Alves · ativo desde 12 de março de 2026, até 12 de dezembro de 2026 · nove competências, quatro já reconhecidas</p>
+      </div>
+      <div class="state">
+        <div class="col" style="gap: 8px;">
+          <span class="small" style="font-weight: 600; color: #1c2233;">Por onde o plano passou</span>
+          <ol class="scale" aria-label="Estados do plano">
+            <li class="past">Rascunho</li>
+            <li class="past">Aguardando leitura</li>
+            <li class="past">Em leitura</li>
+            <li class="here" aria-current="step">Ativo</li>
+            <li>Concluído</li>
+          </ol>
+        </div>
+        <div class="row" style="gap: 10px;">
+          <button type="button" class="btn primary">Concluir o plano <span style="font-weight: 400;">(guarda as competências como estão)</span></button>
+          <button type="button" class="btn line">Voltar para rascunho</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap" style="display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; padding-top: 22px; flex: 1 1 auto;">
+    <main class="col" style="gap: 4px;">
+      <div class="row" style="padding: 0 0 6px 112px;"><h2 class="h2">O caderno do plano</h2><span class="small">o que chegou por último</span></div>
+      <h3 class="month">Outubro de 2026</h3>
+
+      <article class="entry">
+        <span class="when num">28 out</span>
+        <span class="rail"><span class="dot" style="border-color: #7a4a00; background: #fbedd5;"></span></span>
+        <div class="body"><div class="ev new">
+          <span class="pic" style="width: 64px; height: 64px; background: #fbeee2; color: #96430a;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path><path d="M10 13h6M10 17h6"></path></svg></span>
+          <div class="col" style="gap: 6px;">
+            <div class="row" style="gap: 8px;"><span class="chip warm">Aguardando a sua leitura</span><span class="small">registrada por Marina · 2 arquivos</span></div>
+            <div class="row" style="gap: 12px; align-items: flex-start;">
+              <div class="col grow" style="gap: 4px;">
+                <h4 class="h3">Devolutivas da turma B</h4>
+                <p class="feeds">Alimenta 4.3 Feedback e planificação e 4.1 Estratégias de avaliação</p>
+              </div>
+              <a class="btn primary" href="PMesa.dc.html" aria-label="Ler Devolutivas da turma B">Ler</a>
+            </div>
+          </div>
+        </div></div>
+      </article>
+
+      <article class="entry mile">
+        <span class="when num">16 out</span>
+        <span class="rail"><span class="dot"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></span>
+        <div class="body"><div class="box">
+          <span class="label" style="color: #17694a;">Competência reconhecida</span>
+          <h4 class="h2"><a href="ACompetencia.dc.html" style="color: inherit; text-decoration: none;">3.1 Ensino</a></h4>
+          <blockquote class="quote">“O plano da unidade 3 mostra objetivos claros e uma avaliação que a turma entende.”</blockquote>
+          <span class="small" style="color: #17694a; font-weight: 600;">Renato Dias · nível Integrador (B1)</span>
+        </div></div>
+      </article>
+
+      <article class="entry">
+        <span class="when num">9 out</span>
+        <span class="rail"><span class="dot"></span></span>
+        <div class="body"><div class="ev">
+          <span class="pic" style="width: 64px; height: 64px; background: #f3e9f8; color: #7b2fa8;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path><path d="M10 13h6M10 17h6"></path></svg></span>
+          <div class="col" style="gap: 4px;">
+            <span class="small">Evidência registrada por Marina</span>
+            <h4 class="h3">Plano de aula da unidade 3</h4>
+            <p style="font-size: 14px; color: #3d445c;">Sequência de quatro aulas sobre leitura crítica, com a rubrica usada na avaliação.</p>
+            <p class="feeds">Alimenta 3.1 Ensino e 4.1 Estratégias de avaliação</p>
+          </div>
+        </div></div>
+      </article>
+
+      <div style="padding: 10px 0 0 112px;"><a class="btn line" href="Main.dc.html">Abrir o caderno inteiro</a></div>
+    </main>
+
+    <aside class="col" style="gap: 16px;">
+      <section class="card pad col" aria-labelledby="pp-c" style="gap: 12px;">
+        <h2 class="h3" id="pp-c">Competências do plano</h2>
+        <div class="groups">
+          <div>
+            <h3 class="gh"><i style="background: #17694a;"></i>Reconhecidas · 4</h3>
+            <ul class="names">
+              <li><a href="ACompetencia.dc.html">3.1 Ensino</a><span class="small">16 out</span></li>
+              <li><a href="#">2.2 Criação e modificação</a><span class="small">18 set</span></li>
+              <li><a href="#">2.1 Seleção</a><span class="small">2 jun</span></li>
+              <li><a href="#">2.3 Gestão, proteção e partilha</a><span class="small">14 abr</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="gh"><i style="background: #7a4a00;"></i>Em construção · 2</h3>
+            <ul class="names">
+              <li><a href="#">4.1 Estratégias de avaliação</a><span class="small">2 evidências</span></li>
+              <li><a href="PMesa.dc.html">4.3 Feedback e planificação</a><span class="small">1 evidência</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="gh"><i style="background: #ffffff; border: 1.5px dashed #596079;"></i>Por explorar · 3</h3>
+            <ul class="names">
+              <li><a href="#">5.1 Acessibilidade e inclusão</a></li>
+              <li><a href="#">5.3 Envolvimento ativo</a></li>
+              <li><a href="#">3.3 Aprendizagem colaborativa</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <p class="small" style="display: flex; gap: 16px;"><a href="#">Acrescentar competência</a><a href="#">Reordenar</a></p>
+      </section>
+
+      <section class="card pad col" aria-labelledby="pp-t" style="gap: 10px;">
+        <h2 class="h3" id="pp-t">Conversa</h2>
+        <div class="msg">
+          <div class="row" style="gap: 8px;"><span class="avatar" style="width: 24px; height: 24px; font-size: 10px; background: #f3e9f8; color: #6a2892;" aria-hidden="true">MA</span><span class="small" style="font-weight: 600; color: #1c2233;">Marina Alves</span><span class="small">· 28 out</span></div>
+          <p>Enviei as devolutivas da turma B. Mudei o jeito de comentar depois da leitura da Lúcia; queria saber se a pergunta no fim funciona.</p>
+        </div>
+        <div class="reply">
+          <div class="col" style="gap: 6px;">
+            <label for="pp-reply" class="small" style="font-weight: 600; color: #1c2233;">Responder a Marina</label>
+            <textarea class="note" id="pp-reply"></textarea>
+          </div>
+          <button type="button" class="btn line">Enviar</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

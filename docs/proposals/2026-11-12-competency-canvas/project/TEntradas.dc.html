@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno de jornada: pontos de entrada</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.board{padding:28px 48px 0;display:flex;flex-direction:column;gap:22px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 24px;align-items:start}
+.grp{display:flex;flex-direction:column;gap:10px;min-width:0}
+.grp.wide{grid-column:1 / -1}
+.cap{display:flex;flex-direction:column;gap:2px}
+.mile{background:#dcf3e8;border:1px solid #a9dcc3;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.mile .seal{width:22px;height:22px;border-radius:50%;background:#17694a;color:#fff;display:grid;place-items:center;flex:none}
+.quote{font-family:"Outfit",sans-serif;font-size:16px;line-height:1.35;color:#1c2233}
+.sub{font-family:"Noto Sans",sans-serif;font-size:13.5px;font-weight:700;color:#1c2233}
+.mini{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;align-items:center;text-decoration:none;color:#1c2233}
+.mini .sq{width:56px;height:56px;border-radius:12px;display:grid;place-items:center;color:#fff}
+.mini b{font-size:14px;line-height:1.3;display:block}
+.waiting{background:#fbedd5;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;color:#7a4a00;font-size:13.5px}
+.course{background:#fff;border:1px solid #dfe2ec;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.course .cover{height:120px;display:grid;place-items:center}
+.course .cover svg{width:34px;height:34px}
+.course .txt{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px}
+.slot{display:flex;gap:6px;align-items:baseline;font-size:13px;color:#3d445c}
+.dot-a{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.notice{display:grid;grid-template-columns:40px minmax(0,1fr);gap:12px;padding:14px 16px;align-items:start}
+.notice .ic{width:40px;height:40px;border-radius:50%;background:#dcf3e8;color:#17694a;display:grid;place-items:center}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1200px;">
+  <div class="board">
+    <header class="col" style="gap: 4px;">
+      <h1 class="h1" style="font-size: 28px;">Onde a jornada aparece</h1>
+      <p class="small">Cada peça leva para Minha jornada. Abaixo de cada título, o lugar da plataforma em que ela vive.</p>
+    </header>
+
+    <div class="grid2">
+      <section class="grp" aria-labelledby="en-a">
+        <div class="cap"><h2 class="h3" id="en-a">Painel (block_compass e bloco de planos)</h2><span class="small">No topo do painel, para quem tem um plano ativo.</span></div>
+        <article class="card pad col" style="gap: 12px; padding: 18px 20px;">
+          <div class="row" style="gap: 10px;"><h3 class="h3">Sua jornada</h3><span class="grow"></span><span class="small">Docência digital (DigCompEdu)</span></div>
+          <div class="mile">
+            <div class="row" style="gap: 10px;"><span class="seal"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span style="font-size: 14.5px;"><a href="CCompetencia.dc.html" style="font-weight: 700;">3.1 Ensino</a> reconhecida em 16 out</span></div>
+            <blockquote class="quote">“O plano da unidade 3 mostra objetivos claros e uma avaliação que a turma entende.”</blockquote>
+            <span class="small" style="color: #17694a; font-weight: 600;">Renato Dias · nível Integrador (B1)</span>
+          </div>
+          <div class="col" style="gap: 6px;">
+            <h4 class="sub" style="margin: 0;">Em construção</h4>
+            <p style="font-size: 14.5px;"><a href="#" style="font-weight: 600;">4.1 Estratégias de avaliação</a> <span class="small">· 2 evidências até aqui</span></p>
+            <p style="font-size: 14.5px;"><a href="#" style="font-weight: 600;">4.3 Feedback e planificação</a> <span class="small">· aguardando leitura</span></p>
+          </div>
+          <a class="btn primary" href="Main.dc.html" style="align-self: flex-start;">Abrir minha jornada</a>
+        </article>
+      </section>
+
+      <section class="grp" aria-labelledby="en-b">
+        <div class="cap"><h2 class="h3" id="en-b">Bloco no curso</h2><span class="small">Na coluna de blocos do curso Avaliação com tecnologias digitais.</span></div>
+        <article class="card col" style="width: 340px; gap: 12px; padding: 18px 20px;">
+          <h3 class="h3">Este curso na sua jornada</h3>
+          <ul class="col" style="gap: 10px;">
+            <li class="col" style="gap: 4px;"><a href="#" style="font-weight: 600; font-size: 14.5px;">4.1 Estratégias de avaliação</a><span class="chip warm" style="align-self: flex-start;">Em construção</span></li>
+            <li class="col" style="gap: 4px;"><a href="#" style="font-weight: 600; font-size: 14.5px;">4.3 Feedback e planificação</a><span class="chip warm" style="align-self: flex-start;">Aguardando leitura</span></li>
+          </ul>
+          <div class="sep"></div>
+          <div class="col" style="gap: 2px;">
+            <span class="sub">Próxima atividade ligada</span>
+            <a href="#" style="font-size: 14.5px;">Questionário: feedback e notas</a>
+            <span class="small">Módulo 2 · alimenta 4.1 Estratégias de avaliação</span>
+          </div>
+          <a href="TCursoAluno.dc.html" style="font-size: 14px; font-weight: 600;">Ver o que este curso desenvolve</a>
+        </article>
+      </section>
+
+      <section class="grp wide" aria-labelledby="en-c">
+        <div class="cap"><h2 class="h3" id="en-c">Perfil</h2><span class="small">Na página de perfil, ao lado dos dados de contato.</span></div>
+        <div class="grid2" style="gap: 24px;">
+          <div class="col" style="gap: 6px;">
+            <span class="small">No seu perfil</span>
+            <article class="card col" style="gap: 12px; padding: 18px 20px;">
+              <div class="row"><h3 class="h3">Minha jornada</h3><span class="grow"></span><a href="CPlano.dc.html" style="font-size: 14px; font-weight: 600;">Ver todas</a></div>
+              <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;">
+                <a class="mini" href="CCompetencia.dc.html"><span class="sq" style="background: #6a2892;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span><span><b>3.1 Ensino</b><span class="small">16 out</span></span></a>
+                <a class="mini" href="#"><span class="sq" style="background: #0c5f59;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span><span><b>2.2 Criação e modificação</b><span class="small">18 set</span></span></a>
+                <a class="mini" href="#"><span class="sq" style="background: #0c5f59;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span><span><b>2.1 Seleção</b><span class="small">2 jun</span></span></a>
+              </div>
+              <span class="small">As mais recentes de Docência digital (DigCompEdu).</span>
+            </article>
+          </div>
+          <div class="col" style="gap: 6px;">
+            <span class="small">No perfil de Marina, visto por Renato Dias, que acompanha o plano</span>
+            <article class="card col" style="gap: 12px; padding: 18px 20px;">
+              <div class="row" style="gap: 12px;"><span class="avatar">MA</span><div class="col" style="gap: 0;"><h3 class="h3">Jornada de Marina neste plano</h3><span class="small">Docência digital (DigCompEdu) · ativo até 12 dez 2026</span></div></div>
+              <div class="waiting"><b style="font-size: 14.5px;">1 evidência aguardando a sua leitura</b><span>Devolutivas da turma B, enviada em 28 out</span></div>
+              <a class="btn primary" href="#" style="align-self: flex-start;">Abrir a mesa de leitura</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="grp" aria-labelledby="en-d">
+        <div class="cap"><h2 class="h3" id="en-d">Cartão de curso</h2><span class="small">Na linha do plugin, em Meus cursos e na vitrine de categorias.</span></div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+          <article class="course">
+            <span class="cover" style="background: #e8eefb; color: #2449ad;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 15l4-4 3 3 6-7"></path></svg></span>
+            <div class="txt">
+              <span class="small">Formação docente</span>
+              <h3 class="h3"><a href="TCursoAluno.dc.html" style="color: inherit; text-decoration: none;">Avaliação com tecnologias digitais</a></h3>
+              <div class="sep" style="margin: 6px 0;"></div>
+              <p class="slot"><span class="dot-a" style="background: #2449ad;"></span><span>Desenvolve: <a href="#">4.1 Estratégias de avaliação</a></span></p>
+              <p class="small" style="color: #17694a; font-weight: 600;">Uma atividade daqui já virou evidência</p>
+            </div>
+          </article>
+          <article class="course">
+            <span class="cover" style="background: #e2f3f1; color: #0c5f59;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path><path d="M10 13h6M10 17h6"></path></svg></span>
+            <div class="txt">
+              <span class="small">Formação docente</span>
+              <h3 class="h3"><a href="#" style="color: inherit; text-decoration: none;">Rubricas e critérios</a></h3>
+              <div class="sep" style="margin: 6px 0;"></div>
+              <p class="slot"><span class="dot-a" style="background: #2449ad;"></span><span>Desenvolve: <a href="#">4.1 Estratégias de avaliação</a></span></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="grp" aria-labelledby="en-e">
+        <div class="cap"><h2 class="h3" id="en-e">Aviso</h2><span class="small">Nas notificações e no e-mail do dia.</span></div>
+        <article class="card notice">
+          <span class="ic"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span>
+          <div class="col" style="gap: 4px;">
+            <p style="font-size: 14.5px;"><b>Renato Dias</b> reconheceu <b>3.1 Ensino</b></p>
+            <p style="font-size: 14px; color: #3d445c;">“O plano da unidade 3 mostra objetivos claros e uma avaliação que a turma entende.”</p>
+            <p class="row" style="gap: 10px; font-size: 13.5px;"><span class="small">16 out · nível Integrador (B1)</span><a href="CCompetencia.dc.html" style="font-weight: 600;">Ver o reconhecimento</a></p>
+          </div>
+        </article>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1200}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

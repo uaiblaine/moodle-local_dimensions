@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Hub: árvore em nós</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.htabs{display:flex;gap:2px;border-bottom:1px solid #e1e3ef;padding:0 28px;background:#fff}
+.htabs span{padding:12px 14px;font-size:14.5px;color:#5d6180;border-bottom:2.5px solid transparent}
+.htabs span.on{color:#070093;border-bottom-color:#070093;font-weight:700}
+.tool{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:10px;border:1px solid #e1e3ef;background:#fff;font:600 13px "Noto Sans",sans-serif;color:#1d2033;cursor:pointer;white-space:nowrap}
+.tool svg{width:16px;height:16px}
+.tool[disabled]{color:#9a9eb8;cursor:default}
+.canvas{position:relative;overflow:hidden;background-color:#f6f7fb;background-image:radial-gradient(#d4d7e6 1px,transparent 1px);background-size:18px 18px}
+.nd{position:absolute;width:230px;border:1.5px solid #e1e3ef;background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(10,12,50,.08);text-align:left;padding:0;cursor:pointer;font-family:inherit;color:#1d2033}
+.nd:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.nd.sel{border:2px solid #070093;box-shadow:0 0 0 4px rgba(68,86,255,.16)}
+.nd .hd{display:flex;align-items:center;gap:8px;padding:9px 10px;border-bottom:1px solid #eef0f6}
+.nd .ic{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:#fff;flex:none}
+.nd .ic svg{width:13px;height:13px}
+.nd .tt{font:700 13.5px/1.25 "Noto Sans",sans-serif;flex:1;min-width:0}
+.nd .st{width:8px;height:8px;border-radius:50%;flex:none}
+.nd .bd{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;font-size:12.5px;color:#5d6180}
+.nd .bd b{min-width:22px;height:20px;border-radius:10px;background:#f2f3fa;color:#1d2033;font-size:11.5px;display:grid;place-items:center;padding:0 6px}
+.elab{position:absolute;transform:translate(-50%,-50%);font:700 10.5px "Noto Sans",sans-serif;padding:2px 7px;border-radius:999px;background:#fff;border:1px solid #e1e3ef;color:#3a3e58;white-space:nowrap}
+.ctrl{position:absolute;left:16px;bottom:150px;display:flex;flex-direction:column;background:#fff;border:1px solid #e1e3ef;border-radius:10px;overflow:hidden}
+.ctrl button{width:36px;height:36px;border:0;border-bottom:1px solid #eef0f6;background:#fff;display:grid;place-items:center;color:#3a3e58;cursor:pointer}
+.ctrl button:last-child{border-bottom:0}
+.mini{position:absolute;left:16px;bottom:16px;width:190px;height:122px;background:#fff;border:1px solid #e1e3ef;border-radius:10px}
+.panel{background:#fff;border-left:1px solid #e1e3ef;display:flex;flex-direction:column;min-height:0}
+.panel .sec{padding:16px 20px;border-bottom:1px solid #eef0f6;display:flex;flex-direction:column;gap:8px}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;font-size:13.5px;align-items:center}
+.kv span:nth-child(odd){color:#5d6180}
+.usage{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.usage div{border:1px solid #e1e3ef;border-radius:10px;padding:8px;text-align:center}
+.usage b{display:block;font:700 18px "Outfit",sans-serif}
+.usage span{font-size:11.5px;color:#5d6180}
+</style>
+</helmet>
+<div class="dim" style="width: 1600px; height: 1040px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink on" href="#" aria-current="page">Administração do site</a>
+    <span class="grow"></span>
+    <span class="avatar" style="background: #ffd84d;">CO</span>
+  </nav>
+  <div style="background: #fff; padding: 18px 28px 6px;" class="row">
+    <div class="col" style="gap: 4px;"><span class="crumb">Competências / Hub</span><h1 class="h1" style="font-size: 28px;">Padrões de indução docente</h1></div>
+    <span class="grow"></span>
+    <span class="chip">Contexto: Sistema</span>
+  </div>
+  <div class="htabs"><span>Estruturas</span><span class="on">Árvore</span><span>Modelos de plano</span></div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1fr) 400px; flex: 1 1 auto; min-height: 0;">
+    <div style="display: flex; flex-direction: column; min-width: 0;">
+      <div class="row" style="gap: 8px; padding: 10px 16px; background: #fff; border-bottom: 1px solid #e1e3ef; flex-wrap: wrap;">
+        <label class="row" style="gap: 8px; height: 36px; padding: 0 12px; border: 1px solid #e1e3ef; border-radius: 10px; width: 250px; color: var(--dim-mute); font-size: 13.5px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg><span>Buscar na árvore</span></label>
+        <button class="tool" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Competência</button>
+        <button class="tool" type="button">Filha</button>
+        <button class="tool" type="button">Relacionar</button>
+        <button class="tool" type="button">Regra</button>
+        <button class="tool" type="button">Cursos e atividades</button>
+        <button class="tool" type="button">Mover</button>
+        <span class="grow"></span>
+        <div class="seg"><span class="on">Árvore</span><span>Livre</span><span>Lista</span></div>
+      </div>
+      <div class="canvas" style="flex: 1 1 auto;">
+        <svg style="position: absolute; inset: 0; width: 100%; height: 100%;" aria-hidden="true">
+          <path d="{{e.tree}}" fill="none" stroke="#b9bdd6" stroke-width="1.6"></path>
+          <path d="{{e.rule}}" fill="none" stroke="#7b2fa8" stroke-width="1.8"></path>
+          <path d="{{e.course}}" fill="none" stroke="#5d6180" stroke-width="1.6" stroke-dasharray="5 4"></path>
+          <path d="{{e.related}}" fill="none" stroke="#c2570c" stroke-width="1.8" stroke-dasharray="2 5" stroke-linecap="round"></path>
+        </svg>
+        <sc-for list="{{labels}}" as="lb" hint-placeholder-count="5">
+          <span class="elab" style="left: {{lb.x}}px; top: {{lb.y}}px;">{{lb.text}}</span>
+        </sc-for>
+        <sc-for list="{{nodes}}" as="n" hint-placeholder-count="12">
+          <button type="button" class="nd {{n.cls}}" style="left: {{n.x}}px; top: {{n.y}}px;" onClick="{{n.pick}}" aria-pressed="{{n.pressed}}">
+            <span class="hd"><span class="ic" style="background: {{n.color}};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="{{n.icon}}"></path></svg></span><span class="tt">{{n.title}}</span><span class="st" style="background: {{n.dot}};"></span></span>
+            <span class="bd"><span>{{n.label}}</span><b>{{n.count}}</b></span>
+          </button>
+        </sc-for>
+        <div class="ctrl" aria-label="Controles do mapa">
+          <button type="button" aria-label="Aproximar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+          <button type="button" aria-label="Afastar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+          <button type="button" aria-label="Ajustar à tela"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+          <button type="button" aria-label="Travar edição"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 018 0v3"></path></svg></button>
+        </div>
+        <div class="mini" aria-hidden="true">
+          <svg viewBox="0 0 190 122" style="width: 100%; height: 100%;">
+            <rect x="8" y="56" width="30" height="10" rx="2" fill="#070093"></rect>
+            <rect x="50" y="20" width="30" height="10" rx="2" fill="#0f7d74"></rect><rect x="50" y="56" width="30" height="10" rx="2" fill="#7b2fa8"></rect><rect x="50" y="92" width="30" height="10" rx="2" fill="#c2570c"></rect>
+            <rect x="94" y="40" width="30" height="8" rx="2" fill="#9446bf"></rect><rect x="94" y="56" width="30" height="8" rx="2" fill="#9446bf"></rect><rect x="94" y="72" width="30" height="8" rx="2" fill="#9446bf"></rect>
+            <rect x="138" y="24" width="30" height="7" rx="2" fill="#c9cce0"></rect><rect x="138" y="36" width="30" height="7" rx="2" fill="#c9cce0"></rect><rect x="138" y="48" width="30" height="7" rx="2" fill="#c9cce0"></rect><rect x="138" y="60" width="30" height="7" rx="2" fill="#c9cce0"></rect><rect x="138" y="80" width="30" height="7" rx="2" fill="#5d6180"></rect>
+            <rect x="4" y="12" width="176" height="100" rx="4" fill="#4456ff" fill-opacity="0.06" stroke="#4456ff" stroke-width="1.5"></rect>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="sec" style="border-top: 4px solid {{s.color}};">
+        <div class="row"><span class="eyebrow">{{s.kind}}</span><span class="grow"></span><span class="small">{{s.idnumber}}</span></div>
+        <h2 class="h2">{{s.title}}</h2>
+        <span class="small">{{s.path}}</span>
+      </div>
+      <div class="sec">
+        <span class="eyebrow">Onde é usada</span>
+        <div class="usage"><div><b>{{s.u0}}</b><span>modelos</span></div><div><b>{{s.u1}}</b><span>planos</span></div><div><b>{{s.u2}}</b><span>cursos</span></div><div><b>{{s.u3}}</b><span>atividades</span></div></div>
+      </div>
+      <div class="sec">
+        <span class="eyebrow">Avaliação</span>
+        <div class="kv"><span>Escala</span><span>{{s.scale}}</span><span>Proficiente a partir de</span><span>{{s.prof}}</span><span>Regra</span><span>{{s.rule}}</span></div>
+      </div>
+      <div class="sec">
+        <span class="eyebrow">Aparência (local_dimensions)</span>
+        <div class="kv"><span>Cor</span><span class="row" style="gap: 6px;"><i style="width: 16px; height: 16px; border-radius: 4px; background: {{s.color}}; display: block;"></i>{{s.color}}</span><span>Área (etiqueta 1)</span><span>{{s.tag1}}</span><span>Etapa (etiqueta 2)</span><span>{{s.tag2}}</span><span>Imagem do card</span><span>{{s.image}}</span></div>
+      </div>
+      <span class="grow"></span>
+      <div class="sec row" style="flex-direction: row; gap: 8px; border-bottom: 0; border-top: 1px solid #eef0f6;">
+        <button class="tool" type="button" style="color: #9b2c2c;">Excluir</button>
+        <span class="grow"></span>
+        <button class="tool" type="button">Duplicar</button>
+        <a class="btn primary sm" href="#">Editar</a>
+      </div>
+    </aside>
+  </div>
+  <span class="tagid" style="left: 520px; top: 104px;">R2 · Hub em nós</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1040}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'k4' };
+  }
+  renderVals() {
+    const I = {
+      fw: 'M4 6h16M4 12h16M4 18h10',
+      area: 'M4 7l8-4 8 4-8 4zM4 12l8 4 8-4M4 17l8 4 8-4',
+      comp: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
+      course: 'M4 5h16v14H4zM4 9h16'
+    };
+    const N = [
+      { id: 'f', x: 30, y: 330, t: 'Padrões de indução docente', c: '#070093', i: 'fw', l: 'Competências', n: 165, d: '#17694a' },
+      { id: 'a1', x: 300, y: 110, t: 'Primeiros passos', c: '#0f7d74', i: 'area', l: 'Filhas', n: 3, d: '#17694a' },
+      { id: 'a2', x: 300, y: 330, t: 'Prática em sala', c: '#7b2fa8', i: 'area', l: 'Filhas', n: 3, d: '#17694a' },
+      { id: 'a3', x: 300, y: 550, t: 'Crescimento profissional', c: '#c2570c', i: 'area', l: 'Filhas', n: 3, d: '#e0a100' },
+      { id: 'k4', x: 580, y: 230, t: 'Planeja aulas eficazes', c: '#9446bf', i: 'comp', l: 'Regra por pontos', n: '8', d: '#17694a' },
+      { id: 'k5', x: 580, y: 360, t: 'Trabalha com as famílias', c: '#9446bf', i: 'comp', l: 'Cursos ligados', n: 2, d: '#17694a' },
+      { id: 'k6', x: 580, y: 470, t: 'Trata cada estudante com dignidade', c: '#9446bf', i: 'comp', l: 'Cursos ligados', n: 1, d: '#e0a100' },
+      { id: 'r1', x: 860, y: 60, t: 'Define objetivos claros', c: '#b98ad8', i: 'comp', l: 'Pontos', n: 2, d: '#17694a' },
+      { id: 'r2', x: 860, y: 150, t: 'Sequencia as atividades', c: '#b98ad8', i: 'comp', l: 'Pontos', n: 2, d: '#17694a' },
+      { id: 'r3', x: 860, y: 240, t: 'Avalia durante a aula', c: '#b98ad8', i: 'comp', l: 'Pontos', n: 2, d: '#17694a' },
+      { id: 'r4', x: 860, y: 330, t: 'Adapta para a turma', c: '#b98ad8', i: 'comp', l: 'Pontos · obrigatória', n: 2, d: '#e0a100' },
+      { id: 'cs', x: 860, y: 450, t: 'Laboratório de planejamento', c: '#5d6180', i: 'course', l: 'Atividades ligadas', n: 3, d: '#17694a' }
+    ];
+    const W = 230;
+    const H = 72;
+    const by = {};
+    N.forEach((n) => { by[n.id] = n; });
+    const step = (a, b) => {
+      const x1 = a.x + W;
+      const y1 = a.y + H / 2;
+      const x2 = b.x;
+      const y2 = b.y + H / 2;
+      const mx = (x1 + x2) / 2;
+      if (Math.abs(y2 - y1) < 2) { return 'M' + x1 + ' ' + y1 + 'H' + x2; }
+      const dy = y2 > y1 ? 8 : -8;
+      return 'M' + x1 + ' ' + y1 + 'H' + (mx - 8) + 'Q' + mx + ' ' + y1 + ' ' + mx + ' ' + (y1 + dy) + 'V' + (y2 - dy) + 'Q' + mx + ' ' + y2 + ' ' + (mx + 8) + ' ' + y2 + 'H' + x2;
+    };
+    const tree = ['a1', 'a2', 'a3'].map((k) => step(by.f, by[k])).concat(['k4', 'k5', 'k6'].map((k) => step(by.a2, by[k]))).join('');
+    const rule = ['r1', 'r2', 'r3', 'r4'].map((k) => step(by.k4, by[k])).join('');
+    const course = step(by.k4, by.cs);
+    const related = 'M' + (by.k5.x + W) + ' ' + (by.k5.y + 20) + 'C' + (by.k5.x + W + 60) + ' ' + (by.k5.y + 10) + ' ' + (by.k4.x + W + 60) + ' ' + (by.k4.y + 60) + ' ' + (by.k4.x + W) + ' ' + (by.k4.y + 52);
+    const labels = [
+      { x: 845, y: 104, text: '2 pts' }, { x: 845, y: 186, text: '2 pts' }, { x: 845, y: 270, text: '2 pts' },
+      { x: 845, y: 352, text: 'obrigatória' }, { x: 845, y: 480, text: 'Ao concluir: marcar concluída' },
+      { x: 885, y: 335, text: '' }
+    ].filter((l) => l.text);
+    labels.push({ x: by.k5.x + W + 52, y: by.k5.y - 2, text: 'relacionada' });
+    const info = {
+      k4: { kind: 'Competência', title: 'Planeja aulas eficazes', idnumber: 'IND-PS-01', path: 'Padrões de indução docente / Prática em sala', u: [3, 128, 2, 5], scale: 'Indução (4 níveis)', prof: 'Consolidado', rule: 'Pontos: 8, com 1 obrigatória', color: '#7b2fa8', tag1: 'Prática em sala', tag2: '1º ano', image: 'aulas.jpg' },
+      k5: { kind: 'Competência', title: 'Trabalha com as famílias', idnumber: 'IND-PS-02', path: 'Padrões de indução docente / Prática em sala', u: [2, 96, 1, 2], scale: 'Indução (4 níveis)', prof: 'Consolidado', rule: 'Nenhuma', color: '#9446bf', tag1: 'Prática em sala', tag2: '1º ano', image: 'nenhuma' },
+      k6: { kind: 'Competência', title: 'Trata cada estudante com dignidade', idnumber: 'IND-PS-03', path: 'Padrões de indução docente / Prática em sala', u: [2, 96, 1, 4], scale: 'Indução (4 níveis)', prof: 'Consolidado', rule: 'Nenhuma', color: '#5e2183', tag1: 'Prática em sala', tag2: '2º ano', image: 'nenhuma' }
+    };
+    const pickInfo = info[this.state.sel] || info.k4;
+    const s = Object.assign({}, pickInfo, { u0: pickInfo.u[0], u1: pickInfo.u[1], u2: pickInfo.u[2], u3: pickInfo.u[3] });
+    const nodes = N.map((n) => ({
+      x: n.x, y: n.y, title: n.t, color: n.c, icon: I[n.i], label: n.l, count: n.n, dot: n.d,
+      cls: this.state.sel === n.id ? 'sel' : '',
+      pressed: this.state.sel === n.id ? 'true' : 'false',
+      pick: () => { if (info[n.id]) { this.setState({ sel: n.id }); } }
+    }));
+    return { nodes, labels, s, e: { tree, rule, course, related } };
+  }
+}
+</script>
+</body>
+</html>

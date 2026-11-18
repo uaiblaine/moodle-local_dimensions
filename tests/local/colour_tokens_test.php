@@ -815,18 +815,12 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /**
-     * The selectors of the three rules that own the colour contract.
+     * The selectors of the two rules that own the colour contract.
      *
      * @return array List of selector strings.
      */
     private function contract_block_selectors(): array {
-        return [
-            'body',
-            self::DARK_ACTIVATION_SELECTOR,
-            ':root:not([' . colour_mode::HOST_ATTRIBUTE . '="' . colour_mode::LIGHT . '"]) body['
-                . colour_mode::MEDIA_OPTIN_ATTRIBUTE . ']:not(['
-                . colour_mode::HOST_ATTRIBUTE . '="' . colour_mode::LIGHT . '"])',
-        ];
+        return ['body', self::DARK_ACTIVATION_SELECTOR];
     }
 
     /**
@@ -1246,8 +1240,8 @@ final class colour_tokens_test extends \basic_testcase {
     /**
      * Every contract token reads var(--dimensions-<same suffix>, ...) as its outermost var().
      *
-     * The token block, and the two dark redeclarations of shadow and scrim (the activation rule and
-     * the inert OS-preference block), which would otherwise win over the theme's dark value. The
+     * The token block, and the dark redeclaration of shadow and scrim (the activation rule),
+     * which would otherwise win over the theme's dark value. The
      * contract is theme_dimensions/docs/tokens.md. Tokens outside it (favourite, icon-glyph, the
      * tabs-* family and the rest) must not read a family token, and the plugin never declares a
      * --dimensions-* name nor reads one outside the contract.
@@ -1307,7 +1301,7 @@ final class colour_tokens_test extends \basic_testcase {
                 }
             }
         }
-        $this->assertSame(2, $dark, 'The shadow and scrim dark redeclarations are the mode rule and the inert media rule.');
+        $this->assertSame(1, $dark, 'The shadow and scrim dark redeclaration is the mode rule alone.');
         sort($offenders);
         $this->assertSame(
             [],
@@ -1556,21 +1550,8 @@ final class colour_tokens_test extends \basic_testcase {
         $offenders = [];
         $checked = 0;
         foreach ($this->stylesheets() as $path) {
-            /* The media block's own selectors, matched exactly. Asking whether a rule's selector
-               appears anywhere in the block's text would count the token block (body) and the
-               motion rule (:root) as members, because the gated selector contains both. */
-            $mediaselectors = [];
-            foreach ($this->at_rule_bodies($path, '@media (prefers-color-scheme') as $body) {
-                foreach (explode('}', $body) as $chunk) {
-                    if (!str_contains($chunk, '{')) {
-                        continue;
-                    }
-                    $mediaselectors[] = trim(preg_replace('/\s+/', ' ', explode('{', $chunk)[0]));
-                }
-            }
             foreach ($this->rules($path) as $rule) {
-                $inmedia = in_array($rule['selector'], $mediaselectors, true);
-                if (!str_contains($rule['selector'], colour_mode::HOST_ATTRIBUTE) && !$inmedia) {
+                if (!str_contains($rule['selector'], colour_mode::HOST_ATTRIBUTE)) {
                     continue;
                 }
                 $checked++;
@@ -1584,10 +1565,10 @@ final class colour_tokens_test extends \basic_testcase {
             }
         }
         $this->assertSame(
-            2,
+            1,
             $checked,
-            'Exactly two rules carry the mode layer - the activation block and the inert OS-preference '
-                . 'block - and this test found ' . $checked . '.'
+            'Exactly one rule carries the mode layer - the activation block - and this test found '
+                . $checked . '.'
         );
         sort($offenders);
         $this->assertSame(
@@ -1609,7 +1590,7 @@ final class colour_tokens_test extends \basic_testcase {
      * switches it. See DARK_ACTIVATION_SELECTOR.
      *
      * So a selector passes if it is body[attr...] or [attr...] body - the subject compiled by
-     * DARK_ACTIVATION_SELECTOR and by the inert media block - and fails otherwise.
+     * DARK_ACTIVATION_SELECTOR, and fails otherwise.
      *
      * Changes that must make it fail: drop " body" from the second arm, leaving the bare attribute
      * selector; put the subject back on :root, which does not see a body-scoped host; add a
@@ -1652,65 +1633,28 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /**
-     * The OS-preference fallback is written, is gated, and nothing can reach the gate.
+     * No stylesheet carries a prefers-color-scheme block.
      *
-     * Three independent assertions: the block exists, every selector in it carries the gate, and
-     * the gate attribute appears in no runtime file in this plugin or in the installed sibling.
+     * Core resolves the "auto" mode from the OS preference into data-bs-theme on the html element, and
+     * the plugin follows that attribute; a media block of its own would fire on the OS preference
+     * alone, override a user's explicit choice and make the plugin dark inside a light page.
      *
-     * Changes that must make it fail, one per assertion: delete the whole media block; drop the gate
-     * from the selector; write the attribute into any template.
+     * Changes that must make it fail: add an @media (prefers-color-scheme: dark) block to styles.css.
      *
      * @return void
      */
-    public function test_media_fallback_is_written_and_unreachable(): void {
-        $bodies = $this->at_rule_bodies($this->plugin_root() . '/styles.css', '@media (prefers-color-scheme');
-        $this->assertCount(
-            1,
-            $bodies,
-            'styles.css must carry exactly one @media (prefers-color-scheme) block: the OS-preference '
-                . 'fallback, written and ready so switching it on is one edit. Found ' . count($bodies) . '.'
-        );
-        $ungated = [];
-        foreach ($bodies as $body) {
-            foreach (explode('}', $body) as $chunk) {
-                if (!str_contains($chunk, '{')) {
-                    continue;
-                }
-                $selector = trim(preg_replace('/\s+/', ' ', explode('{', $chunk)[0]));
-                if ($selector === '') {
-                    continue;
-                }
-                if (!str_contains($selector, colour_mode::MEDIA_OPTIN_ATTRIBUTE)) {
-                    $ungated[] = $selector;
-                }
+    public function test_no_prefers_color_scheme_block(): void {
+        $found = [];
+        foreach ($this->stylesheets() as $path) {
+            if ($this->at_rule_bodies($path, '@media (prefers-color-scheme') !== []) {
+                $found[] = basename($path);
             }
         }
         $this->assertSame(
             [],
-            $ungated,
-            'Every selector in the OS-preference block must carry [' . colour_mode::MEDIA_OPTIN_ATTRIBUTE
-                . ']; these do not, so the block can fire: ' . implode('; ', $ungated)
-        );
-        $writers = [];
-        foreach ($this->family_roots() as $component => $root) {
-            foreach ($this->source_files($root) as $path) {
-                if (basename($path) === 'colour_mode.php' || str_contains($path, '/tests/')) {
-                    /* colour_mode.php only declares the name and tests only read it; neither puts
-                       the attribute on a page. */
-                    continue;
-                }
-                if (str_contains(file_get_contents($path), colour_mode::MEDIA_OPTIN_ATTRIBUTE)) {
-                    $writers[] = $component . '/' . basename($path);
-                }
-            }
-        }
-        sort($writers);
-        $this->assertSame(
-            [],
-            $writers,
-            'Nothing may write [' . colour_mode::MEDIA_OPTIN_ATTRIBUTE . ']: the OS preference is an input '
-                . 'to the host\'s own colour mode, never an independent trigger, and a plugin that fires on '
-                . 'it directly is dark inside a light page. Found in: ' . implode(', ', $writers)
+            $found,
+            'The OS preference is an input to the host\'s own colour mode, never an independent trigger. '
+                . 'Found a prefers-color-scheme block in: ' . implode(', ', $found)
         );
     }
 
@@ -2187,8 +2131,7 @@ final class colour_tokens_test extends \basic_testcase {
         $offenders = [];
         foreach ($this->stylesheets() as $path) {
             foreach ($this->rules($path) as $rule) {
-                $ismode = str_contains($rule['selector'], colour_mode::HOST_ATTRIBUTE)
-                    || str_contains($rule['selector'], colour_mode::MEDIA_OPTIN_ATTRIBUTE);
+                $ismode = str_contains($rule['selector'], colour_mode::HOST_ATTRIBUTE);
                 foreach (array_keys($this->declarations($rule['body'])) as $property) {
                     if (!in_array($property, self::ADMIN_COLOUR_NAMES, true)) {
                         continue;

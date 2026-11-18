@@ -21,7 +21,7 @@
  * instead of 'localplugins' to integrate with the native competency navigation.
  *
  * @package   local_dimensions
- * @copyright 2026 Anderson Blaine (anderson@blaine.com.br)
+ * @copyright 2026 Anderson Blaine
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -317,6 +317,19 @@ if (get_config('core_competency', 'enabled')) {
         PARAM_TEXT
     ));
 
+    // The unaccent row reads the database only when the settings page renders.
+    $settings->add(new admin_setting_heading(
+        'local_dimensions/unaccentheading',
+        get_string('unaccentheading', 'local_dimensions'),
+        get_string('unaccentheading_desc', 'local_dimensions')
+    ));
+
+    $settings->add(new \local_dimensions\admin\setting_unaccent(
+        'local_dimensions/unaccent',
+        get_string('unaccent', 'local_dimensions'),
+        get_string('unaccent_desc', 'local_dimensions')
+    ));
+
     if ($hassiteconfig) {
         $ADMIN->add('local_dimensions', $settings);
     }
@@ -327,6 +340,15 @@ if (get_config('core_competency', 'enabled')) {
         'local_dimensions_central',
         get_string('central', 'local_dimensions'),
         new moodle_url('/local/dimensions/central.php'),
+        'moodle/competency:competencymanage'
+    ));
+
+    // Competency hub v2: the framework's tree as a canvas of nodes, a page beside the hub. Same
+    // capability as the hub's site entry; unlike the hub, it has no course category entry.
+    $ADMIN->add('local_dimensions', new admin_externalpage(
+        'local_dimensions_centralv2',
+        get_string('hubv2', 'local_dimensions'),
+        new moodle_url('/local/dimensions/hubv2.php'),
         'moodle/competency:competencymanage'
     ));
 

@@ -53,6 +53,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass(\local_dimensions\external\get_competency_rule_data::class)]
 #[CoversClass(\local_dimensions\external\search_competencies::class)]
 #[CoversClass(\local_dimensions\external\competency_usage::class)]
+#[CoversClass(\local_dimensions\external\competency_delete_check::class)]
 #[CoversClass(\local_dimensions\external\search_structure::class)]
 #[CoversClass(\local_dimensions\external\browse_competencies::class)]
 #[CoversClass(\local_dimensions\external\browse_structure::class)]
@@ -133,6 +134,7 @@ final class readonly_session_test extends \advanced_testcase {
             'local_dimensions_get_competency_rule_data' => ['competencyid' => $f['parentid'], 'planid' => $f['planid']],
             'local_dimensions_search_competencies' => ['query' => 'Probe child'],
             'local_dimensions_competency_usage' => ['competencyid' => $f['childid']],
+            'local_dimensions_competency_delete_check' => ['competencyid' => $f['parentid']],
             'local_dimensions_search_structure' => ['frameworkid' => $f['frameworkid'], 'query' => 'Probe child'],
             'local_dimensions_browse_competencies' => ['frameworkid' => $f['frameworkid'], 'query' => 'Probe child'],
             'local_dimensions_browse_structure' => ['frameworkid' => $f['frameworkid'], 'parentid' => $f['parentid']],
@@ -231,7 +233,7 @@ final class readonly_session_test extends \advanced_testcase {
         $exercised = array_keys(self::read_only_calls(array_fill_keys(self::FIXTURE_KEYS, 0)));
         sort($exercised);
 
-        $this->assertCount(27, $declared);
+        $this->assertCount(28, $declared);
         $this->assertSame($exercised, $declared);
     }
 
@@ -350,6 +352,11 @@ final class readonly_session_test extends \advanced_testcase {
                 $this->assertSame([$f['course1']], self::ids($data['courses'], 'id'), $name);
                 $this->assertSame([$f['cm1']], self::ids($data['activities'], 'cmid'), $name);
                 $this->assertSame([$f['templateid']], self::ids($data['templates'], 'id'), $name);
+                break;
+            case 'competency_delete_check':
+                $this->assertGreaterThanOrEqual(1, (int) $data['descendants'], $name);
+                $this->assertGreaterThanOrEqual(1, (int) $data['courses'], $name);
+                $this->assertFalse((bool) $data['candelete'], $name);
                 break;
             case 'get_structure_node':
                 $this->assertSame($f['childid'], (int) $data['node']['id'], $name);

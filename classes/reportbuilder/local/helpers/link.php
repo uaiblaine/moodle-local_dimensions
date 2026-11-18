@@ -46,8 +46,8 @@ final class link {
     /**
      * A stored, user-supplied URL as a link, or as plain text when it is not a web URL.
      *
-     * The value is cleaned with PARAM_URL, which accepts only http, https, ftp and mailto
-     * addresses, so a stored `javascript:` value never reaches an href.
+     * The value is cleaned with PARAM_URL, which accepts only http, https and ftp addresses and
+     * scheme-less paths, so a stored `javascript:` (or `mailto:`) value never reaches an href.
      *
      * @param string|null $url The stored value.
      * @return string The link, or the escaped value alone, as HTML.

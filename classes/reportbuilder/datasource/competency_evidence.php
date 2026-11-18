@@ -107,7 +107,8 @@ class competency_evidence extends datasource {
             ->add_join($usercompetencyjoin)
             ->add_join("JOIN {user} {$useralias} ON {$useralias}.id = {$usercompetencyalias}.userid"));
 
-        // The user whose action produced the evidence (a teacher, a rule, the learner).
+        // The user whose action produced the evidence (a teacher, the learner); none for evidence
+        // core adds itself, such as a competency rule's or an activity completion's.
         $authorentity = (new user())
             ->set_entity_name('evidenceauthor')
             ->set_entity_title(new lang_string('entityname_evidenceauthor', 'local_dimensions'));

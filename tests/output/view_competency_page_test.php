@@ -220,4 +220,59 @@ final class view_competency_page_test extends \advanced_testcase {
         $this->assertFalse($hero['hasstatusbadges']);
         $this->assertSame([], $hero['statusbadges']);
     }
+    /**
+     * Each card's skeleton has as many rows as its timeline has top-level visible sections, from three to twelve.
+     *
+     * A skeleton of the body's height keeps the cards below from jumping when the body arrives (2026-11-17
+     * fixture: the layout shift of a six-course tracker of nine-section courses fell from 0.109 with three
+     * rows to 0.011). Subsections and hidden sections are not timeline rows; a locked card draws the overlay.
+     *
+     * Changes that must make it fail: drop the component or visible filter of the count; drop the cap or
+     * the floor; give a locked card its sections' rows.
+     *
+     * @return void
+     */
+    public function test_the_skeleton_has_a_row_per_timeline_section(): void {
+        global $DB, $PAGE;
+        $this->learner(null);
+        $generator = $this->getDataGenerator();
+        $ccg = $generator->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework();
+        $competencyid = (int) $ccg->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
+        $competency = $DB->get_record('competency', ['id' => $competencyid], '*', MUST_EXIST);
+
+        // Sections 0-5, section 5 hidden, a subsection in section 1: five timeline rows.
+        $five = $generator->create_course(['numsections' => 5, 'enablecompletion' => 1]);
+        // A column write, not set_section_visible() (deprecated in 5.2): the count reads the column, and the
+        // same line runs on every branch this test is cherry-picked to.
+        $DB->set_field('course_sections', 'visible', 0, ['course' => $five->id, 'section' => 5]);
+        \core_plugin_manager::resolve_plugininfo_class('mod')::enable_plugin('subsection', 1);
+        $generator->create_module('subsection', ['course' => $five->id, 'section' => 1]);
+        $many = $generator->create_course(['numsections' => 15]);
+        $one = $generator->create_course(['numsections' => 0]);
+        $locked = $generator->create_course(['numsections' => 8]);
+        foreach ([$five, $many, $one] as $course) {
+            $generator->enrol_user((int) $this->learner->id, (int) $course->id, 'student');
+        }
+        $this->assertSame(
+            1,
+            $DB->count_records_select('course_sections', 'course = ? AND component IS NOT NULL', [$five->id]),
+            'the subsection made no delegated section, so the component filter is not exercised'
+        );
+
+        $courses = [];
+        foreach ([$five, $many, $one, $locked] as $course) {
+            $courses[(int) $course->id] = get_course((int) $course->id);
+        }
+        $page = new view_competency_page($competency, $courses, (int) $this->learner->id);
+        $rows = [];
+        foreach ($page->export_for_template($PAGE->get_renderer('core'))['courses'] as $card) {
+            $rows[(int) $card['courseid']] = count($card['skeletonrows']);
+        }
+
+        $this->assertSame(5, $rows[(int) $five->id]);
+        $this->assertSame(12, $rows[(int) $many->id]);
+        $this->assertSame(3, $rows[(int) $one->id]);
+        $this->assertSame(3, $rows[(int) $locked->id]);
+    }
 }

@@ -57,15 +57,11 @@ class get_course_progress extends external_api {
             ),
             'planid' => new external_value(
                 PARAM_INT,
-                'A learning plan the caller may read, whose owner the cards describe; 0 for the caller\'s own cards',
-                VALUE_DEFAULT,
-                0
+                'A learning plan the caller may read, whose owner the cards describe'
             ),
             'competencyid' => new external_value(
                 PARAM_INT,
-                'The competency of the plan whose linked courses are asked for; read only with a plan',
-                VALUE_DEFAULT,
-                0
+                'The competency of the plan whose linked courses are asked for'
             ),
         ]);
     }
@@ -77,29 +73,30 @@ class get_course_progress extends external_api {
      * accordion's do: see calculator::get_course_section_progress() for what stays the viewer's.
      *
      * @param array $courseids List of course IDs to calculate progress for.
-     * @param int $planid The learning plan whose owner the cards describe, 0 for the caller's own cards.
-     * @param int $competencyid The plan's competency the courses are linked to, read only with a plan.
+     * @param int $planid The learning plan whose owner the cards describe.
+     * @param int $competencyid The plan's competency the courses are linked to.
      * @return array List of course progress results.
      * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does
      *     not reach the competency.
      * @throws \required_capability_exception When the current user may not read the plan or its owner's user
      *     competencies.
      */
-    public static function execute($courseids, $planid = 0, $competencyid = 0) {
+    public static function execute($courseids, $planid, $competencyid) {
         // Automatic parameter validation.
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseids' => $courseids,
             'planid' => $planid,
             'competencyid' => $competencyid,
         ]);
-        $courseids = $params['courseids'];
+        // Each id once: the loop below computes a card per id, so a repeated id would repeat the work.
+        $courseids = array_values(array_unique(array_map('intval', $params['courseids'])));
 
         /* local/dimensions:view is granted to every authenticated user by default, so it only
            admits the caller to the tracker. The course ids come from the client, so each one is
-           gated below (helper::readable_competency_courses()) before any of its structure is read.
-           A plan adds the accordion's gates and the link to its competency (plan_access::tracker_courses()). */
+           gated by plan_access::tracker_courses() before any of its structure is read. */
         $systemcontext = context_system::instance();
         self::validate_context($systemcontext);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $systemcontext);
 
         $cards = plan_access::tracker_courses($params['planid'], $params['competencyid'], $courseids);
@@ -152,6 +149,7 @@ class get_course_progress extends external_api {
                 $row = [
                     'courseid' => $courseid,
                     'enabled' => $data['enabled'],
+                    'tracked' => $data['tracked'] ?? true,
                     'locked' => $data['locked'] ?? false,
                     'formatted_start_date' => $startyields ? '' : ($data['formatted_start_date'] ?? ''),
                     'state' => enrolment_state::export($facts),
@@ -178,6 +176,7 @@ class get_course_progress extends external_api {
                 $results[] = [
                     'courseid' => $courseid,
                     'enabled' => false,
+                    'tracked' => true,
                     'locked' => false,
                     'formatted_start_date' => '',
                     'state' => enrolment_state::export(enrolment_provider::none_state((int) $courseid)),
@@ -236,6 +235,7 @@ class get_course_progress extends external_api {
         return [
             'courseid' => $courseid,
             'enabled' => false,
+            'tracked' => true,
             'locked' => true,
             'formatted_start_date' => '',
             'state' => enrolment_state::export(enrolment_provider::none_state($courseid)),
@@ -262,6 +262,10 @@ class get_course_progress extends external_api {
                 'enabled' => new external_value(
                     PARAM_BOOL,
                     get_string('api_completion_enabled', 'local_dimensions'),
+                ),
+                'tracked' => new external_value(
+                    PARAM_BOOL,
+                    'Whether core tracks the completion of the learner the card describes in this course',
                 ),
                 'cardmode' => new external_value(
                     PARAM_ALPHA,

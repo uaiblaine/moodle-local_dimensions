@@ -163,6 +163,73 @@ final class template_csv_serializer_test extends \advanced_testcase {
     }
 
     /**
+     * A framework the viewer cannot read stays withheld for every competency, and is checked once.
+     *
+     * Behaviour: each link row carries empty framework cells and no companion framework is
+     * offered. Cost: the database reads of an export do not grow with the number of competencies
+     * of the same unreadable framework (the counter counts statements, so the two exports are
+     * compared with each other, after a warm-up).
+     *
+     * @return void
+     */
+    public function test_unreadable_framework_is_withheld_and_checked_once(): void {
+        global $DB;
+        $this->resetAfterTest();
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+
+        $this->setAdminUser();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['shortname' => 'Hidden', 'idnumber' => 'FW-HIDDEN']);
+        $frameworkid = (int) $framework->get('id');
+        $templates = [];
+        foreach ([1, 4] as $count) {
+            $template = $ccg->create_template(['shortname' => 'T' . $count]);
+            for ($i = 0; $i < $count; $i++) {
+                $competency = $ccg->create_competency([
+                    'competencyframeworkid' => $frameworkid,
+                    'idnumber' => "C{$count}-{$i}",
+                ]);
+                $ccg->create_template_competency([
+                    'templateid' => (int) $template->get('id'),
+                    'competencyid' => (int) $competency->get('id'),
+                ]);
+            }
+            $templates[$count] = (int) $template->get('id');
+        }
+
+        // A viewer who reads templates but not competency frameworks.
+        $viewer = $this->getDataGenerator()->create_user();
+        $syscontext = \context_system::instance();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templateview', CAP_ALLOW, $roleid, $syscontext->id);
+        role_assign($roleid, $viewer->id, $syscontext->id);
+        $userroleid = (int) $DB->get_field('role', 'id', ['shortname' => 'user']);
+        assign_capability('moodle/competency:competencyview', CAP_PROHIBIT, $userroleid, $syscontext->id, true);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->setUser($viewer);
+
+        // Warm-up, so caches filled by the first export do not count.
+        template_csv_serializer::export_templates([$templates[1]], false);
+
+        $before = $DB->perf_get_reads();
+        $one = template_csv_serializer::export_templates([$templates[1]], false);
+        $readsone = $DB->perf_get_reads() - $before;
+        $before = $DB->perf_get_reads();
+        $four = template_csv_serializer::export_templates([$templates[4]], false);
+        $readsfour = $DB->perf_get_reads() - $before;
+
+        $this->assertSame([], $four['frameworks']);
+        $links = template_csv_serializer::parse($four['content'])['links'];
+        $this->assertCount(4, $links);
+        foreach ($links as $link) {
+            $this->assertSame('', $link->frameworkidnumber);
+            $this->assertSame('', $link->frameworkshortname);
+        }
+        $this->assertStringNotContainsString('FW-HIDDEN', $one['content'] . $four['content']);
+        $this->assertSame($readsone, $readsfour, 'Reads must not grow with the competencies of one unreadable framework.');
+    }
+
+    /**
      * A template with no competencies exports one template row and no link rows.
      *
      * @return void

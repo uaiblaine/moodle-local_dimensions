@@ -132,9 +132,16 @@ class plans extends \core\output\dynamic_tabs\base {
                 api::list_templates('shortname', 'ASC', 0, 0, $context, $includes, !$canmanage)
             );
             foreach ($listed as $template) {
-                if (template::can_read_context($template->get_context())) {
-                    $templates[(int) $template->get('id')] = $template;
+                $templatecontext = $template->get_context();
+                if (!template::can_read_context($templatecontext)) {
+                    continue;
                 }
+                /* $canmanage was read at the entry's context; a subcategory where the viewer only
+                   reads templates keeps its hidden ones out, as the list would at that entry. */
+                if (!$template->get('visible') && !template::can_manage_context($templatecontext)) {
+                    continue;
+                }
+                $templates[(int) $template->get('id')] = $template;
             }
         }
 

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno de jornada: gaveta de evidências</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.behind{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.vlist{background:#fff;border:1px solid #dfe2ec;border-radius:16px;display:flex;flex-direction:column}
+.vrow{display:grid;grid-template-columns:260px 300px minmax(0,1fr);gap:18px;align-items:center;padding:14px 18px;border-top:1px solid #dfe2ec;font-size:14.5px}
+.vrow:first-child{border-top:0}
+.vrow.open{background:#e8f0f8}
+.vhead{font-size:13px;font-weight:700;color:#596079;padding:12px 18px}
+.scrim{position:absolute;inset:0;background:rgba(28,34,51,.5);z-index:5}
+.sheet{position:absolute;top:0;right:0;bottom:0;width:520px;background:#fff;z-index:6;display:flex;flex-direction:column;box-shadow:-12px 0 32px rgba(10,12,50,.22)}
+.sh-head{display:grid;grid-template-columns:48px minmax(0,1fr) 40px;gap:14px;align-items:center;padding:20px 24px 16px;border-bottom:1px solid #dfe2ec;flex:none}
+.sh-head .avatar{width:48px;height:48px;font-size:16px}
+.iconbtn{width:40px;height:40px;border-radius:10px;border:1px solid #dfe2ec;background:#fff;color:#1c2233;display:grid;place-items:center;cursor:pointer}
+.iconbtn svg{width:18px;height:18px}
+.sh-body{flex:1 1 auto;min-height:0;overflow:hidden;padding:18px 24px;display:flex;flex-direction:column;gap:20px}
+.sh-foot{flex:none;border-top:1px solid #dfe2ec;padding:16px 24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.vig{border:1px solid #e6c98f;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 18px;font-size:14px}
+.facts dt{color:#596079}
+.facts dd{margin:0;font-weight:600}
+.files{display:flex;flex-direction:column;gap:6px}
+.file{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:5px 10px 5px 5px;border:1px solid #dfe2ec;border-radius:10px;background:#f6f7fb;font-size:14px}
+.file .ic{width:34px;height:34px;border-radius:8px;background:#e2f3f1;color:#0c5f59;display:grid;place-items:center}
+.file .ic svg{width:18px;height:18px}
+.entry{display:grid;grid-template-columns:76px 24px minmax(0,1fr);position:relative}
+.entry .when{font-size:13px;color:#596079;text-align:right;padding-top:16px;line-height:1.3}
+.entry .rail{position:relative;display:flex;justify-content:center}
+.entry .rail::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:#dfe2ec}
+.entry .dot{position:relative;margin-top:18px;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid #0c5f59}
+.entry.start .dot{border-style:dashed;border-color:#596079}
+.entry .body{padding:5px 0 5px 8px}
+.mini{background:#fff;border:1px solid #dfe2ec;border-radius:12px;padding:9px 12px;display:flex;flex-direction:column;gap:2px}
+.mini b{font-size:14.5px}
+.gapnote{border:1.5px dashed #8b92ab;border-radius:12px;padding:9px 12px;font-size:14px;color:#3d445c;background:#fafbfe}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1100px;">
+  <div class="behind" aria-hidden="true">
+    <div class="nav">
+      <span class="brand">Dimensions</span>
+      <span class="navlink">Painel</span>
+      <span class="navlink">Meus cursos</span>
+      <span class="navlink">Mesa de leitura</span>
+      <span class="grow"></span>
+      <span class="avatar">RD</span>
+    </div>
+    <div style="background: #fff; border-bottom: 1px solid #dfe2ec; padding: 26px 0 22px; flex: none;">
+      <div class="wrap col" style="gap: 8px;">
+        <span class="crumb">Evidências</span>
+        <span class="h1 disp">Evidências com validade</span>
+        <span class="lede">Certificados e registros que valem por um tempo, e até quando cada um vale.</span>
+      </div>
+    </div>
+    <div class="wrap" style="padding-top: 22px;">
+      <div class="vlist">
+        <div class="vrow vhead" style="border-top: 0;"><span>Pessoa</span><span>Competência</span><span>Situação</span></div>
+        <div class="vrow open"><span class="who"><span class="avatar" style="background: #dcf3e8; color: #17694a;">SG</span>Sofia Guedes</span><span>Proteção de dados na escola (LGPD)</span><span>Vence em 40 dias</span></div>
+        <div class="vrow"><span class="who"><span class="avatar" style="background: #f3e9f8; color: #6a2892;">MA</span>Marina Alves</span><span>Proteção de dados na escola (LGPD)</span><span>Válida até 14 mar 2027</span></div>
+        <div class="vrow"><span class="who"><span class="avatar" style="background: #e8eefb; color: #2449ad;">JT</span>Júlia Tanaka</span><span>Proteção de dados na escola (LGPD)</span><span>Válida até 2 ago 2027</span></div>
+        <div class="vrow"><span class="who"><span class="avatar" style="background: #fbeee2; color: #96430a;">PL</span>Pedro Lins</span><span>Uso responsável de tecnologias digitais</span><span>Válida até 30 set 2027</span></div>
+        <div class="vrow"><span class="who"><span class="avatar" style="background: #e2f3f1; color: #0c5f59;">CR</span>Caio Ribeiro</span><span>Uso responsável de tecnologias digitais</span><span>Sem evidência em vigor</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scrim" aria-hidden="true"></div>
+
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="pg-name">
+    <div class="sh-head">
+      <span class="avatar" style="background: #dcf3e8; color: #17694a;" aria-hidden="true">SG</span>
+      <div class="col" style="gap: 2px;">
+        <h2 class="h2" id="pg-name">Sofia Guedes</h2>
+        <p style="font-size: 14.5px; color: #3d445c;">Proteção de dados na escola (LGPD)</p>
+      </div>
+      <button type="button" class="iconbtn" aria-label="Fechar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+    </div>
+
+    <div class="sh-body">
+      <section class="col" style="gap: 10px;" aria-labelledby="pg-now">
+        <h3 class="h3" id="pg-now">Em vigor</h3>
+        <article class="vig">
+          <div class="row" style="gap: 10px;"><b style="font-size: 16px;">Certificado de proteção de dados</b><span class="grow"></span><span class="chip warm">Vence em 40 dias</span></div>
+          <dl class="facts">
+            <dt>Emitido por</dt><dd>Escola Nacional de Administração Pública</dd>
+            <dt>Em</dt><dd>21 de junho de 2025</dd>
+            <dt>Vale até</dt><dd>21 de dezembro de 2026</dd>
+            <dt>Carga horária</dt><dd>16 horas, presencial</dd>
+            <dt>Conferida por</dt><dd>Lúcia Prado, em 30 de junho de 2025</dd>
+          </dl>
+          <ul class="files" aria-label="Arquivos do certificado">
+            <li class="file"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path></svg></span><span>certificado-protecao-de-dados.pdf <span class="small">· 420 KB</span></span><a href="#" aria-label="Abrir certificado-protecao-de-dados.pdf">Abrir</a></li>
+            <li class="file"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path></svg></span><span>lista-de-presenca.pdf <span class="small">· 180 KB</span></span><a href="#" aria-label="Abrir lista-de-presenca.pdf">Abrir</a></li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="col" style="gap: 8px;" aria-labelledby="pg-line">
+        <h3 class="h3" id="pg-line">Linha do tempo</h3>
+        <div class="col" style="gap: 0;">
+          <article class="entry start">
+            <span class="when num">mar a jun 2025</span>
+            <span class="rail"><span class="dot"></span></span>
+            <div class="body"><p class="gapnote">Entre mar e jun de 2025 não houve evidência em vigor.</p></div>
+          </article>
+          <article class="entry">
+            <span class="when num">1 set 2023</span>
+            <span class="rail"><span class="dot"></span></span>
+            <div class="body"><div class="mini"><b>Certificado de proteção de dados</b><span class="small">16 horas · valeu até 1 mar 2025</span></div></div>
+          </article>
+          <article class="entry">
+            <span class="when num">2 mai 2023</span>
+            <span class="rail"><span class="dot"></span></span>
+            <div class="body"><div class="mini"><b>Oficina de segurança de contas</b><span class="small">4 horas · complemento, não renova a competência</span></div></div>
+          </article>
+          <article class="entry">
+            <span class="when num">10 mar 2022</span>
+            <span class="rail"><span class="dot"></span></span>
+            <div class="body"><div class="mini"><b>Certificado de proteção de dados</b><span class="small">16 horas · valeu até 10 set 2023</span></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="col" style="gap: 6px;" aria-labelledby="pg-rule">
+        <h3 class="h3" id="pg-rule">Regra desta competência</h3>
+        <p style="font-size: 14px; color: #3d445c;">Vale um certificado presencial de pelo menos 8 horas, por 18 meses a partir da emissão; a pessoa é avisada 60 dias antes de vencer.</p>
+      </section>
+    </div>
+
+    <div class="sh-foot">
+      <button type="button" class="btn primary">Conferir</button>
+      <button type="button" class="btn line">Devolver com um pedido</button>
+      <button type="button" class="btn line">Registrar uma renovação</button>
+      <a class="btn line" href="#">Abrir no plano</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1100}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

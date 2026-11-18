@@ -1,0 +1,4 @@
+{
+    "entry": "src/hubv2/Hub.tsx",
+    "outfile": "build/bundle.js"
+}

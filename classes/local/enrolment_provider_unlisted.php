@@ -36,9 +36,9 @@ namespace local_dimensions\local;
  * with no relationship, the next action is the state.
  *
  * The plugin's values are strings, and they are mapped from literals here rather than from its
- * class constants, because this class is loaded on Moodle 4.5 and 5.1, where that plugin cannot
- * install and naming one of its constants would throw. enrolment_provider_unlisted_test holds the
- * literals against the constants wherever the plugin is installed. {@see enrolment_provider::get()}
+ * class constants, because the plugin is optional and naming a constant of a class that is not
+ * installed throws. enrolment_provider_unlisted_test holds the literals against the constants
+ * wherever the plugin is installed. {@see enrolment_provider::get()}
  * selects this class only when {@see enrolment_provider::unlisted_available()} says the API is there.
  *
  * Destinations: an offer or a route leads to the course's enrolment page, where the method's own
@@ -76,8 +76,7 @@ class enrolment_provider_unlisted extends enrolment_provider {
 
     /**
      * @var array local_unlistedcourses' next-action values (access::NEXT_*) => this plugin's state.
-     *            guest is resolved by the kind of guest access; blocked reads as none, as it does on
-     *            the theme's card.
+     *            guest is resolved by the kind of guest access; blocked reads as none.
      */
     public const array NEXT_ACTIONS = [
         'open' => self::STATE_OPEN,

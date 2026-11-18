@@ -29,18 +29,18 @@ use local_dimensions\calculator;
 /**
  * The frozen rule: the states this plugin has always told apart, and no new ones.
  *
- * Three facts, each a calculator predicate the cards asked before this class existed: an enrolment
- * that starts later ({@see calculator::get_enrolment_start_date()}), an enrol_apply application
- * awaiting a decision ({@see calculator::has_pending_application()}) and a self or apply route
- * open to the current user ({@see calculator::current_user_can_enrol()}). Nothing is added here:
+ * Three facts, each a calculator predicate: an enrolment that starts later
+ * ({@see calculator::get_enrolment_start_date()}), an enrol_apply application awaiting a decision
+ * ({@see calculator::has_pending_application()}) and a self or apply route open to the current
+ * user ({@see calculator::current_user_can_enrol()}). Nothing is added here:
  * a site that wants the waiting list, suspended and ended enrolments, guest access or a
  * prerequisite installs local_unlistedcourses and switches on {@see enrolment_provider_unlisted},
  * which owns that rule.
  *
  * The facts are read as the shared state area reads them: a relationship (scheduled, then pending)
  * is the state and an open route beside it is the route line; with no relationship, an open route
- * is the state. Every destination is the course page, as it always was, which core forwards a
- * viewer who is not enrolled to the enrolment page.
+ * is the state. Every destination is the course page, which core forwards a viewer who is not
+ * enrolled to the enrolment page.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

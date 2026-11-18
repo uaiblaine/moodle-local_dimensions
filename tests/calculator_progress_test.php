@@ -280,4 +280,48 @@ final class calculator_progress_test extends \advanced_testcase {
         rebuild_course_cache($course->id, true);
         \course_modinfo::clear_instance_cache();
     }
+
+    /**
+     * Only a tracked user's progress is counted: a teacher's card has no rings, a student's has.
+     *
+     * Core tracks completion for users enrolled with moodle/course:isincompletionreports (the student
+     * archetype), and the plan overview's bar asks the same, so the tracker must not draw rings for
+     * an owner enrolled as a teacher. The student beside them is the control: same course, rings drawn.
+     * An owner who is not enrolled keeps the locked card, which this answer must not touch.
+     *
+     * Changes that must make it fail: drop the is_tracked_user() test; apply it to an owner who is not
+     * enrolled; stop returning the tracked flag.
+     *
+     * @return void
+     */
+    public function test_only_a_tracked_user_gets_progress(): void {
+        $this->resetAfterTest();
+        $generator = $this->getDataGenerator();
+        $course = $generator->create_course(['enablecompletion' => 1, 'numsections' => 1]);
+        $generator->create_module('page', ['course' => $course->id, 'section' => 1, 'completion' => 1]);
+        $student = $generator->create_user();
+        $teacher = $generator->create_user();
+        $outsider = $generator->create_user();
+        $generator->enrol_user((int) $student->id, (int) $course->id, 'student');
+        $generator->enrol_user((int) $teacher->id, (int) $course->id, 'editingteacher');
+
+        $this->setUser($student);
+        $data = calculator::get_course_section_progress((int) $course->id);
+        $this->assertTrue($data['enabled']);
+        $this->assertTrue($data['tracked']);
+        $this->assertNotEmpty($data['sections']);
+
+        $this->setUser($teacher);
+        $data = calculator::get_course_section_progress((int) $course->id);
+        $this->assertFalse($data['enabled']);
+        $this->assertFalse($data['tracked']);
+        $this->assertFalse($data['locked']);
+        $this->assertSame([], $data['sections']);
+
+        $this->setUser($outsider);
+        $data = calculator::get_course_section_progress((int) $course->id);
+        $this->assertTrue($data['locked']);
+        $this->assertTrue($data['tracked']);
+        $this->assertNotEmpty($data['sections'], 'the locked card keeps its nameless timeline');
+    }
 }

@@ -30,9 +30,10 @@ use local_dimensions\reportbuilder\local\entities\{competency_details, competenc
 /**
  * Competency ratings in courses datasource.
  *
- * One row per rating a user received for a competency inside a course
- * (`competency_usercompcourse`): the rating and proficiency, the user and their cohorts, the
- * course and its category, and the competency with its framework and Dimensions custom fields.
+ * One row per user competency in a course (`competency_usercompcourse`): the rating and
+ * proficiency, the user and their cohorts, the course and its category, and the competency with
+ * its framework and Dimensions custom fields. A row is not proof of a rating: core also creates
+ * it, unrated, when the user's competencies in the course are first listed.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

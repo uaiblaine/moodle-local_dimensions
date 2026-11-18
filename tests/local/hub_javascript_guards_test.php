@@ -178,17 +178,33 @@ final class hub_javascript_guards_test extends \basic_testcase {
     /**
      * Only a transport failure is routed to the connection-lost toast.
      *
-     * core/ajax rejects a dropped connection with jQuery's bare errorThrown, a string. Everything
-     * else is an object that must reach the exception dialogue, including a script's own TypeError
-     * and core/ajax's Error('missing response'), neither of which carries an errorcode.
+     * Moodle 5.3's fetch-based core/ajax rejects a lost connection with fetch's TypeError, a timeout
+     * with an AbortError and a non-2xx answer with Error('HTTP <status>: <text>'). A web-service
+     * exception carries an errorcode, and a script's own TypeError or core/ajax's
+     * Error('missing response') are application errors that must reach the exception dialogue.
      *
      * @return void
      */
     public function test_only_a_transport_failure_counts_as_a_network_error(): void {
-        $check = $this->body($this->source('errors'), 'isNetworkError');
-        $this->assertMatchesRegularExpression('/return typeof error === \'string\' \|\| !error;\s*$/', $check);
-        $this->assertStringNotContainsString('errorcode', $check);
-        $this->assertStringNotContainsString("typeof error === 'object'", $check);
+        $source = $this->source('errors');
+        $check = $this->body($source, 'isNetworkError');
+        $this->assertStringContainsString("'AbortError'", $check, 'The timeout shape (AbortError) is not recognised.');
+        $this->assertStringContainsString("startsWith('HTTP ')", $check, 'The non-2xx shape (Error HTTP n) is not recognised.');
+        $this->assertStringContainsString('isFetchFailure(error)', $check, 'The dropped-connection shape is not checked.');
+        $this->assertStringContainsString('error.errorcode', $check, 'A web-service exception is not excluded.');
+        $this->assertStringContainsString("typeof error === 'string'", $check, 'The legacy string rejection is not kept.');
+
+        $fetch = $this->body($source, 'isFetchFailure');
+        $this->assertStringContainsString('instanceof TypeError', $fetch, 'A fetch failure is not required to be a TypeError.');
+        foreach (['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed'] as $message) {
+            $this->assertStringContainsString("'{$message}'", $fetch, "The engine message '{$message}' is not matched.");
+        }
+
+        $this->assertStringNotContainsString(
+            'errorThrown',
+            (string) file_get_contents(__DIR__ . '/../../amd/src/central/errors.js'),
+            'The stale jQuery errorThrown mechanism is described again.'
+        );
     }
 
     /**
@@ -289,6 +305,23 @@ final class hub_javascript_guards_test extends \basic_testcase {
             $dispatch
         );
         $this->assertSame(1, substr_count($source, 'showRuleConfig(activeRow)'));
+    }
+
+    /**
+     * The context bar binds the tab event natively and imports no jQuery.
+     *
+     * Bootstrap 5 dispatches `shown.bs.tab` as a DOM event (core/dynamic_tabs binds it the same
+     * way), so a jQuery listener adds a dependency for nothing.
+     *
+     * Change that must make it fail: re-add `import $ from 'jquery';` to amd/src/central/context.js.
+     *
+     * @return void
+     */
+    public function test_context_bar_imports_no_jquery(): void {
+        $source = $this->source('context');
+        $this->assertStringNotContainsString("'jquery'", $source);
+        // Control: the native listener this replaces the jQuery one with is there.
+        $this->assertStringContainsString("addEventListener('shown.bs.tab'", $source);
     }
 
     /**

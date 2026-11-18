@@ -175,8 +175,8 @@ define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
         /**
          * Wire a Filter button to the panel holding this container.
          *
-         * Both learner views open their chips from a toolbar button rather than showing them
-         * inline, so the toggle lives here instead of being written twice in the hosts.
+         * Both learner views open their chips from the filter line's Filter button rather than
+         * showing them inline, so the toggle lives here instead of being written twice in the hosts.
          *
          * The panel is a plain block toggled through the hidden attribute: no Bootstrap
          * component, so nothing depends on the 4.5 / 5.x data-attribute split, and the
@@ -220,10 +220,10 @@ define(['local_dimensions/filter_tabs_nav'], function(FilterTabsNav) {
         /**
          * Paint each chip's count and hide a chip that would leave nothing, unless it is pressed.
          *
-         * The filter line's panel puts a count on every option and draws no zero option unless it
-         * is the chosen one (moodle-dev/docs/filter-line/CONTRACT.md, section 4). The host knows
-         * what each chip would leave; this only writes it. A group left with no chip to draw is
-         * hidden with them, so no label stands over an empty track.
+         * As in the filter line's panel, every option shows a count and a zero option is drawn only
+         * while it is the chosen one. The host knows what each chip would leave; this only writes
+         * it. A group left with no chip to draw is hidden with them, so no label stands over an
+         * empty track.
          *
          * @param {string} containerId DOM id of the [data-chip-filters] node.
          * @param {Function} countFor Receives a chip, returns the number of items it would leave, or null.

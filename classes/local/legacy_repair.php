@@ -105,7 +105,6 @@ class legacy_repair {
         foreach (self::RETIRED_SETTINGS as $name) {
             unset_config($name, 'local_dimensions');
         }
-        helper::ensure_unaccent();
     }
 
     /**

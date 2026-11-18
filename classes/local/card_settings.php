@@ -25,13 +25,13 @@
 namespace local_dimensions\local;
 
 /**
- * The one reader of the three Boost Union settings that decide a course card (the course card contract, section 8).
+ * The one reader of the three Boost Union settings that decide a course card.
  *
  * The settings apply while the request's theme is Boost Union or names it among its parents, and Boost Union is
  * installed; under any other theme every answer is the plugin's own rule: the progress row drawn, the cover drawn,
  * and a course with no image left to the cover fallback token, with no generated image asked for. The same rules as
- * block_compass' card_settings and theme_dimensions' boost_union reader, copied rather than called: the plugin works
- * under any theme (contract D1).
+ * block_compass' card_settings and theme_dimensions' boost_union reader, copied rather than called: the plugin
+ * depends on neither and works under any theme.
  *
  * An instance holds whether the settings apply, decided once from the theme ({@see of_request()}); the readers then
  * read get_config(), which the config cache serves without a database read. Every value is compared with literals
@@ -40,7 +40,7 @@ namespace local_dimensions\local;
  * that has not run yet must not hide a card's progress or its cover.
  *
  * The plan view has one card surface, the "Related content" carousel, which is a card view: the list and summary
- * views of Boost Union's image setting change nothing here (D15).
+ * views of Boost Union's image setting change nothing here.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -77,7 +77,7 @@ final class card_settings {
     /** @var string The list view: no plan surface is one. */
     public const string VIEW_LIST = 'list';
 
-    /** @var string The summary view: no plan surface is one (D15). */
+    /** @var string The summary view: no plan surface is one. */
     public const string VIEW_SUMMARY = 'summary';
 
     /** @var string[] The views of {@see SETTING_IMAGES}, all three on by default. */
@@ -134,7 +134,7 @@ final class card_settings {
     /**
      * Whether the cards draw the progress row and its percentage.
      *
-     * Only the row: the completed seal and the green base stay whatever this says (D13).
+     * Only the row: the completed seal and the green base stay whatever this says.
      *
      * @return bool False only when Boost Union applies and its setting says anything but "yes".
      */
@@ -191,7 +191,8 @@ final class card_settings {
     }
 
     /**
-     * What the plan's cards need, as get_competency_courses ships it on every course row.
+     * What the plan's cards need: get_competency_courses ships progress and cover on every course row (as
+     * showprogress and showcover) and reads generated itself.
      *
      * @return array progress (the progress row and its percentage), cover (the card draws a cover) and generated (a
      *     course with no image gets the theme renderer's: Boost Union applies and the card view still draws a

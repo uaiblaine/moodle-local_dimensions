@@ -106,6 +106,7 @@ class queue_enrol_action extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
         if (!enrol_methods::cohort_linked($template->get('id'), $params['cohortid'])) {
             throw new \moodle_exception('central_roles_cohortnotlinked', 'local_dimensions');
@@ -120,7 +121,8 @@ class queue_enrol_action extends external_api {
             }
         }
 
-        // A course qualifies when it is linked to the template and the user may configure it.
+        /* A course qualifies when it is linked to the template and the user may configure it; an apply
+           also needs the role and cohort to be usable there (enrol_methods::can_apply_to_course()). */
         $bycompetency = enrol_methods::competency_course_ids($template->get('id'));
         $linked = [];
         foreach ($bycompetency as $ids) {

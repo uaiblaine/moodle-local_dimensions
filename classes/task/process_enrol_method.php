@@ -33,7 +33,9 @@ use local_dimensions\local\enrol_methods;
  * pending_map() keeps the same combination unavailable for re-queueing until it completes. The
  * task is idempotent (apply creates only where missing, remove deletes only what exists) and
  * exits silently when the course/cohort vanished, the enrol plugin was disabled or the
- * requesting user lost the course-level enrolment capabilities between queueing and execution.
+ * requesting user lost the course-level enrolment capabilities between queueing and execution;
+ * an apply also exits when that user can no longer assign the role or see the cohort from the
+ * course ({@see enrol_methods::can_apply_to_course()}).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

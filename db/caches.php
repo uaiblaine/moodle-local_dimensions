@@ -18,7 +18,7 @@
  * Cache definitions for local_dimensions.
  *
  * @package    local_dimensions
- * @copyright  2026 Anderson Blaine (anderson@blaine.com.br)
+ * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -126,7 +126,8 @@ $definitions = [
         'ttl' => 600, // 10 minutes defensive TTL.
     ],
 
-    // Cache for the icon picker's Font Awesome map, when Boost Union's own cached map is absent.
+    // Cache for the icon picker's Font Awesome map built from core, used when Boost Union (whose
+    // theme_boost_union_build_fa_icon_map() caches its own map) is not installed.
     // Key: iconmap
     // Value: map of icon key => ['class' => string, 'source' => string].
     // No TTL or invalidation: the map is built from core code only, and an upgrade purges all caches.

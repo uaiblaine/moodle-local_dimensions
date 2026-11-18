@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Plano como mapa de trilhas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.stn{fill:#fff;stroke-width:5}
+.stn-off{fill:#fff;stroke-width:3;stroke-dasharray:4 4}
+.cs{fill:#fff;stroke:#1d2033;stroke-width:2.5}
+.cs-ahead{fill:#fff;stroke:#8a8fa8;stroke-width:2;stroke-dasharray:2 2}
+.sn{font:700 12.5px "Noto Sans",sans-serif;fill:#1d2033}
+.sn-off{font:600 12.5px "Noto Sans",sans-serif;fill:#5d6180}
+.cn{font:400 11px "Noto Sans",sans-serif;fill:#5d6180}
+.ln{font:700 10.5px "Noto Sans",sans-serif;letter-spacing:.12em}
+</style>
+</helmet>
+<div class="dim" style="width: 1280px; height: 1040px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minhas competências</a>
+    <span class="grow"></span>
+    <span class="avatar">AM</span>
+  </nav>
+
+  <header class="hero" style="background: #4a1c7a; padding: 30px 0 26px;">
+    <div class="wrap" style="display: flex; align-items: flex-end; gap: 24px;">
+      <div class="col" style="gap: 10px; flex: 1 1 auto;">
+        <nav class="crumb" aria-label="Trilha"><a href="#" style="color: inherit;">Meus planos</a><span>/</span><span>Trilha de indução 2026</span></nav>
+        <h1 class="h1">Trilha de indução 2026</h1>
+        <div class="row" style="gap: 8px;"><span class="chip glass">9 Etapas</span><span class="chip glass">Ativo</span><span class="chip glass">Até 14 jun 2027</span></div>
+      </div>
+      <div class="seg dark" role="group" aria-label="Ver como"><span>Constelação</span><span>Anéis</span><span class="on">Trilhas</span><span>Lista</span></div>
+    </div>
+  </header>
+
+  <main class="wrap" style="width: 100%; padding-top: 24px; display: flex; flex-direction: column; gap: 20px;">
+    <section class="card" style="padding: 16px 18px 10px;">
+      <div class="row" style="padding: 0 6px;">
+        <h2 class="h3">Mapa de trilhas</h2>
+        <span class="small" style="margin-left: 8px;">cada área é uma linha · competências são estações · cursos e atividades ligados são paradas</span>
+        <span class="grow"></span>
+        <span class="chip line">Mostrar só o que vem pela frente</span>
+      </div>
+      <svg viewBox="0 0 1180 450" style="width: 100%; height: 450px; display: block;" role="img" aria-label="Mapa de trilhas do plano com três linhas, a sua posição na linha Crescimento profissional e as próximas paradas">
+        <text x="40" y="56" class="ln" fill="#0f7d74">PRIMEIROS PASSOS</text>
+        <text x="40" y="176" class="ln" fill="#7b2fa8">PRÁTICA EM SALA</text>
+        <text x="40" y="336" class="ln" fill="#c2570c">CRESCIMENTO PROFISSIONAL</text>
+
+        <path class="metro" stroke="#0f7d74" d="M60 80H560"></path>
+        <path d="M560 68V92" stroke="#0f7d74" stroke-width="6" stroke-linecap="round"></path>
+
+        <path class="metro" stroke="#7b2fa8" d="M60 200H560"></path>
+        <path class="metro-ahead" stroke="#7b2fa8" d="M560 200H620L680 260H980" style="stroke-opacity: 0.5; stroke-dasharray: 12 10; stroke-linecap: butt;"></path>
+        <path d="M980 248V272" stroke="#7b2fa8" stroke-opacity="0.5" stroke-width="6" stroke-linecap="round"></path>
+
+        <path class="metro" stroke="#c2570c" d="M60 360H360"></path>
+        <path class="metro-ahead" stroke="#c2570c" d="M360 360H1100" style="stroke-opacity: 0.5; stroke-dasharray: 12 10; stroke-linecap: butt;"></path>
+        <path d="M1100 348V372" stroke="#c2570c" stroke-opacity="0.5" stroke-width="6" stroke-linecap="round"></path>
+
+        <rect x="751" y="249" width="18" height="122" rx="9" fill="#fff" stroke="#1d2033" stroke-width="2.5"></rect>
+        <text x="782" y="316" class="cn" style="font-weight: 600; fill: #1d2033;">Mentoria entre pares</text>
+        <text x="782" y="330" class="cn">serve às duas linhas</text>
+
+        <circle cx="200" cy="80" r="7" class="cs"></circle><text x="200" y="108" text-anchor="middle" class="cn">Boas-vindas à escola</text>
+        <circle cx="380" cy="80" r="7" class="cs"></circle><text x="380" y="108" text-anchor="middle" class="cn">Rotinas e protocolos</text>
+        <circle cx="110" cy="80" r="16" class="stn" stroke="#0f7d74"></circle><circle cx="110" cy="80" r="8" fill="#0f7d74"></circle>
+        <text x="110" y="52" text-anchor="middle" class="sn">Rotinas</text>
+        <circle cx="290" cy="80" r="16" class="stn" stroke="#1f9488"></circle><circle cx="290" cy="80" r="8" fill="#1f9488"></circle>
+        <text x="290" y="52" text-anchor="middle" class="sn">Relações</text>
+        <circle cx="470" cy="80" r="16" class="stn" stroke="#0b5f58"></circle><circle cx="470" cy="80" r="8" fill="#0b5f58"></circle>
+        <text x="470" y="52" text-anchor="middle" class="sn">Comportamento</text>
+
+        <circle cx="160" cy="200" r="7" class="cs"></circle><text x="160" y="228" text-anchor="middle" class="cn">Laboratório de planejamento</text>
+        <circle cx="430" cy="200" r="7" class="cs"></circle><text x="430" y="228" text-anchor="middle" class="cn">Diálogo com famílias</text>
+        <circle cx="300" cy="200" r="16" class="stn" stroke="#7b2fa8"></circle><circle cx="300" cy="200" r="8" fill="#7b2fa8"></circle>
+        <text x="300" y="172" text-anchor="middle" class="sn">Planejamento</text>
+        <circle cx="560" cy="200" r="16" class="stn" stroke="#9446bf"></circle><circle cx="560" cy="200" r="8" fill="#9446bf"></circle>
+        <text x="560" y="172" text-anchor="middle" class="sn">Famílias</text>
+        <circle cx="900" cy="260" r="16" class="stn-off" stroke="#5e2183"></circle>
+        <text x="900" y="232" text-anchor="middle" class="sn-off">Dignidade</text>
+        <circle cx="840" cy="260" r="7" class="cs-ahead"></circle><text x="840" y="288" text-anchor="middle" class="cn">Escuta ativa</text>
+
+        <circle cx="200" cy="360" r="7" class="cs"></circle><text x="200" y="388" text-anchor="middle" class="cn">Diário reflexivo</text>
+        <circle cx="520" cy="360" r="7" class="cs-ahead"></circle><text x="520" y="388" text-anchor="middle" class="cn">Plano de desenvolvimento</text>
+        <text x="520" y="402" text-anchor="middle" class="cn" style="fill: #7a4a00;">em andamento · 40%</text>
+        <circle cx="900" cy="360" r="7" class="cs-ahead"></circle><text x="900" y="388" text-anchor="middle" class="cn">Ética e convivência</text>
+        <circle cx="360" cy="360" r="16" class="stn" stroke="#c2570c"></circle><circle cx="360" cy="360" r="8" fill="#c2570c" fill-opacity="0.5"></circle>
+        <text x="360" y="396" text-anchor="middle" class="sn">Reflexão</text>
+        <text x="360" y="410" text-anchor="middle" class="cn">Em desenvolvimento</text>
+        <circle cx="640" cy="360" r="16" class="stn-off" stroke="#d9701f"></circle><circle cx="640" cy="360" r="3" fill="#d9701f"></circle>
+        <text x="640" y="396" text-anchor="middle" class="sn-off">Metas</text>
+        <text x="640" y="410" text-anchor="middle" class="cn">1 evidência</text>
+        <circle cx="1040" cy="360" r="16" class="stn-off" stroke="#9c4307"></circle>
+        <text x="1040" y="396" text-anchor="middle" class="sn-off">Limites</text>
+
+        <g transform="translate(360 304)">
+          <path d="M0 22c-9-10-14-16-14-23a14 14 0 0128 0c0 7-5 13-14 23z" fill="#070093"></path>
+          <circle cx="0" cy="-1" r="5" fill="#fff"></circle>
+        </g>
+        <rect x="292" y="252" width="136" height="26" rx="13" fill="#070093"></rect>
+        <text x="360" y="269" text-anchor="middle" style="font: 700 12px 'Noto Sans', sans-serif; fill: #fff;">Você está aqui</text>
+      </svg>
+      <div class="row" style="gap: 18px; font-size: 12.5px; color: var(--dim-mute); padding: 4px 6px 6px; flex-wrap: wrap;">
+        <span class="row" style="gap: 6px;"><svg width="22" height="12" aria-hidden="true"><circle cx="11" cy="6" r="5" fill="#fff" stroke="#7b2fa8" stroke-width="3"></circle></svg>Estação: uma competência (cheia = proficiente)</span>
+        <span class="row" style="gap: 6px;"><svg width="22" height="12" aria-hidden="true"><circle cx="11" cy="6" r="4" fill="#fff" stroke="#1d2033" stroke-width="2"></circle></svg>Parada: curso ou atividade ligado</span>
+        <span class="row" style="gap: 6px;"><svg width="30" height="12" aria-hidden="true"><path d="M2 6H28" stroke="#7b2fa8" stroke-width="6" stroke-opacity="0.5" stroke-dasharray="7 5"></path></svg>Trecho pela frente</span>
+        <span class="row" style="gap: 6px;"><svg width="14" height="22" aria-hidden="true"><rect x="3" y="2" width="8" height="18" rx="4" fill="#fff" stroke="#1d2033" stroke-width="2"></rect></svg>Baldeação: um curso que serve a duas áreas</span>
+      </div>
+    </section>
+
+    <section class="col" style="gap: 12px;">
+      <div class="row"><h2 class="h2">Próximas paradas</h2><span class="small" style="margin-left: 10px;">a partir de onde você está</span></div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;">
+        <a href="#" class="card pad col" style="gap: 8px; text-decoration: none; color: inherit;">
+          <span class="row" style="gap: 8px;"><i style="width: 10px; height: 10px; border-radius: 50%; background: #c2570c; display: block;"></i><span class="small">Reflexão → Metas</span></span>
+          <b class="h3">Plano de desenvolvimento</b>
+          <span class="small">Curso em andamento · seção 2 de 5</span>
+          <div style="height: 6px; border-radius: 3px; background: var(--dim-tint);"><div style="width: 40%; height: 100%; border-radius: 3px; background: #c2570c;"></div></div>
+          <span class="btn primary sm" style="align-self: flex-start; margin-top: 4px;">Continuar</span>
+        </a>
+        <a href="#" class="card pad col" style="gap: 8px; text-decoration: none; color: inherit;">
+          <span class="row" style="gap: 8px;"><i style="width: 10px; height: 10px; border-radius: 50%; background: #5e2183; display: block;"></i><i style="width: 10px; height: 10px; border-radius: 50%; background: #d9701f; display: block;"></i><span class="small">Baldeação · Dignidade e Metas</span></span>
+          <b class="h3">Mentoria entre pares</b>
+          <span class="small">Inscrições abrem em 3 nov</span>
+          <span class="chip" style="align-self: flex-start;">Agendado</span>
+        </a>
+        <a href="#" class="card pad col" style="gap: 8px; text-decoration: none; color: inherit;">
+          <span class="row" style="gap: 8px;"><i style="width: 10px; height: 10px; border-radius: 50%; background: #5e2183; display: block;"></i><span class="small">Dignidade · a descobrir</span></span>
+          <b class="h3">Escuta ativa na sala</b>
+          <span class="small">4 atividades · inscrições abertas</span>
+          <span class="btn line sm" style="align-self: flex-start; margin-top: 4px;">Inscrever-se</span>
+        </a>
+      </div>
+    </section>
+  </main>
+  <span class="tagid" style="left: 640px; top: 96px;">1C</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

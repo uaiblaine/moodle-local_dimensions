@@ -224,3 +224,16 @@ function local_dimensions_pre_course_category_delete_move(
 ): void {
     \local_dimensions\local\category_lifecycle::move_contents((int) $category->id, (int) $newparentcat->id);
 }
+
+/**
+ * The plugin's checks on Reports > System status.
+ *
+ * Core collects them through this callback, not a hook or a db/ file, and caches the list of
+ * plugins that define it under the site's all-versions hash: a release that adds the callback
+ * ships a version bump.
+ *
+ * @return \core\check\check[] The unaccent extension check.
+ */
+function local_dimensions_status_checks(): array {
+    return [new \local_dimensions\check\unaccent()];
+}

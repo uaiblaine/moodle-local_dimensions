@@ -30,7 +30,7 @@ use stdClass;
  * User competency in course entity.
  *
  * Wraps the core `competency_usercompcourse` table: the rating a user received for a competency
- * inside one course, and whether it made them proficient.
+ * inside one course, and whether that rating is proficient on the competency's scale.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

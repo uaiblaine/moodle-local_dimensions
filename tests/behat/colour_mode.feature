@@ -8,10 +8,9 @@ Feature: The plugin's colours follow the host page and nothing else
   # surface), so they hold on every supported branch with no skip and no branch tag. Only the last
   # needs a real dark palette, and it detects one at runtime rather than from the version number.
   #
-  # These scenarios do not prove that the prefers-color-scheme block in styles.css is inert:
-  # headless Chrome reports light, so such a scenario would pass vacuously.
-  # colour_tokens_test::test_media_fallback_is_written_and_unreachable covers it instead: every
-  # selector in that block carries a gate attribute that no runtime file writes.
+  # These scenarios do not prove that styles.css carries no prefers-color-scheme block: headless
+  # Chrome reports light, so such a scenario would pass vacuously.
+  # colour_tokens_test::test_no_prefers_color_scheme_block covers it instead.
 
   # themedesignermode is on because Behat saves the compiled theme CSS when the site is initialised
   # and restores it before every JavaScript scenario (behat_util::restore_saved_themes()), so
