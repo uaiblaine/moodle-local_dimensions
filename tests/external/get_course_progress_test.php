@@ -605,4 +605,22 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->assertFalse($row['locked']);
         $this->assertSame([], $row['sections']);
     }
+
+    /**
+     * A course id repeated in the request is answered once: each answer costs the course's
+     * structure and completion reads, so repeats must not multiply them. Two distinct ids (the
+     * control) get two rows.
+     *
+     * @return void
+     */
+    public function test_a_repeated_course_id_is_answered_once(): void {
+        $this->resetAfterTest();
+        $first = $this->getDataGenerator()->create_course();
+        $second = $this->getDataGenerator()->create_course();
+        $this->link_competency((int) $first->id, (int) $second->id);
+        $this->setUser($this->getDataGenerator()->create_user());
+
+        $this->assertCount(1, get_course_progress::execute([(int) $first->id, (int) $first->id, (int) $first->id]));
+        $this->assertCount(2, get_course_progress::execute([(int) $first->id, (int) $second->id, (int) $first->id]));
+    }
 }

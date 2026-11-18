@@ -150,7 +150,8 @@ class observer {
      *  2. Short-circuit when no customfield_* fields are present in the payload
      *     (mirrors the optimisation inside core_customfield\handler). The hub's
      *     dynamic forms save their own fields and submit through a web service
-     *     call, so this observer finds no customfield_* keys there and never
+     *     call, whose form data core parses into a local array and never into
+     *     $_POST, so this observer finds no customfield_* keys there and never
      *     double-writes their data.
      *  3. Inject the authoritative instance id from the event before calling
      *     the handler.
@@ -214,17 +215,7 @@ class observer {
      */
     private static function validate_customfields(handler $handler, \stdClass $formdata): array {
         $data = (array) $formdata;
-        $instanceid = (int) $formdata->id;
-        $errors = [];
-        $fields = $handler->get_instance_fields_data($handler->get_editable_fields($instanceid), $instanceid);
-        foreach ($fields as $field) {
-            $name = $field->get_form_element_name();
-            if (!array_key_exists($name, $data) && !array_key_exists($name . '_editor', $data)) {
-                continue;
-            }
-            $errors += $field->instance_form_validation($data, []);
-        }
-        return array_values($errors + helper::validate_customscss($data));
+        return array_values(helper::validate_present_customfields($handler, $data, []) + helper::validate_customscss($data));
     }
 
     /**
