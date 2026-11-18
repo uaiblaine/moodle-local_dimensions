@@ -317,6 +317,19 @@ if (get_config('core_competency', 'enabled')) {
         PARAM_TEXT
     ));
 
+    // The unaccent row reads the database only when the settings page renders.
+    $settings->add(new admin_setting_heading(
+        'local_dimensions/unaccentheading',
+        get_string('unaccentheading', 'local_dimensions'),
+        get_string('unaccentheading_desc', 'local_dimensions')
+    ));
+
+    $settings->add(new \local_dimensions\admin\setting_unaccent(
+        'local_dimensions/unaccent',
+        get_string('unaccent', 'local_dimensions'),
+        get_string('unaccent_desc', 'local_dimensions')
+    ));
+
     if ($hassiteconfig) {
         $ADMIN->add('local_dimensions', $settings);
     }
