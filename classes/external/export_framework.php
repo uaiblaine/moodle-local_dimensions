@@ -62,6 +62,7 @@ class export_framework extends external_api {
         $framework = new competency_framework($params['frameworkid']);
         // Context comes from the framework itself, so a course-category framework validates here.
         self::validate_context($framework->get_context());
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:competencyview', $framework->get_context());
 
         \core_php_time_limit::raise();

@@ -32,6 +32,7 @@ use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
 use local_dimensions\helper;
+use local_dimensions\local\unlisted_categories;
 
 /**
  * Web service: paginated competency search (cross-framework, readable frameworks only).
@@ -86,14 +87,18 @@ class search_competencies extends external_api {
         // only searches that category's frameworks and nothing else.
         $context = context_system::instance();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
 
         if (\core_text::strlen($query) < self::MIN_QUERY_LENGTH) {
             return ['items' => [], 'total' => 0];
         }
 
         // Readable frameworks → id => display tag (frameworks are few; filter by context readability).
+        // A framework in a category local_unlistedcourses withholds from the viewer is left out, as
+        // the hub's Structure and Frameworks tabs leave it out; hidden ones stay, as they stay there.
         $tags = [];
-        foreach (competency_framework::get_records([], 'shortname', 'ASC') as $framework) {
+        $listed = unlisted_categories::filter_by_context(competency_framework::get_records([], 'shortname', 'ASC'));
+        foreach ($listed as $framework) {
             if (competency_framework::can_read_context($framework->get_context())) {
                 $idnumber = (string) $framework->get('idnumber');
                 $tags[(int) $framework->get('id')] = $idnumber !== '' ? $idnumber : $framework->get('shortname');

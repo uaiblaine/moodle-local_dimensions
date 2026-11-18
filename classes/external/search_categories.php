@@ -79,6 +79,7 @@ class search_categories extends external_api {
             'limitnum' => $limitnum,
         ]);
         self::validate_context(context_system::instance());
+        \core_competency\api::require_enabled();
 
         $limit = $params['limitnum'] > 0 ? min($params['limitnum'], self::MAX_LIMIT) : 25;
         $items = helper::central_category_search($params['query'], (bool) $params['includehidden'], $limit);

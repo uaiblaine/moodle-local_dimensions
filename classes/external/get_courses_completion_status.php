@@ -93,6 +93,7 @@ class get_courses_completion_status extends external_api {
 
         $context = context_system::instance();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $context);
 
         /* The same gate as get_course_progress::execute(): the two services feed one card list and must

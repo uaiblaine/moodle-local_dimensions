@@ -77,6 +77,7 @@ class competency_usage extends external_api {
         );
         $context = $framework->get_context();
         self::validate_context($context);
+        api::require_enabled();
         if (!competency_framework::can_read_context($context)) {
             throw new \required_capability_exception($context, 'moodle/competency:competencyview', 'nopermissions', '');
         }
