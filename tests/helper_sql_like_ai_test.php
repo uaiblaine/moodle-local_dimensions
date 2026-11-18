@@ -32,6 +32,12 @@ use advanced_testcase;
  * @covers \local_dimensions\helper::sql_like_ai
  */
 final class helper_sql_like_ai_test extends advanced_testcase {
+    protected function tearDown(): void {
+        // PostgreSQL rolls back the extension this test may create; the memo must not outlive it.
+        helper::reset_unaccent_memo();
+        parent::tearDown();
+    }
+
     /**
      * A search without accents matches a stored value that has accents.
      *

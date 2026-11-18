@@ -209,11 +209,20 @@ final class learner_plain_names_test extends \advanced_testcase {
         global $OUTPUT;
         $this->resetAfterTest();
         $fixture = $this->create_fixture();
+        // The tracker names a plan of the learner's that holds the courses' competency.
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $planid = (int) $ccg->create_plan([
+            'userid' => $fixture['user']->id,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ])->get('id');
+        $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $fixture['competencyid']]);
         $this->setUser($fixture['user']);
 
         $rows = array_column(
             $this->call_service('local_dimensions_get_course_progress', [
                 'courseids' => [(int) $fixture['activitycourse']->id, (int) $fixture['sectioncourse']->id],
+                'planid' => $planid,
+                'competencyid' => $fixture['competencyid'],
             ]),
             null,
             'courseid'

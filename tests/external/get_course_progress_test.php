@@ -29,6 +29,12 @@ use local_dimensions\local\enrolment_state;
  * @covers     \local_dimensions\external\get_course_progress
  */
 final class get_course_progress_test extends \advanced_testcase {
+    /** @var int The competency link_competency() linked the courses to. */
+    private int $competencyid = 0;
+
+    /** @var int[] User id => the plan plan_args() made for them. */
+    private array $plans = [];
+
     /**
      * Run the service for one course and clean the payload through the returns structure.
      *
@@ -41,7 +47,7 @@ final class get_course_progress_test extends \advanced_testcase {
     private function cleaned_row_for(int $courseid): array {
         $result = external_api::clean_returnvalue(
             get_course_progress::execute_returns(),
-            get_course_progress::execute([$courseid])
+            get_course_progress::execute([$courseid], ...$this->plan_args())
         );
 
         return $result[0];
@@ -67,8 +73,38 @@ final class get_course_progress_test extends \advanced_testcase {
         foreach ($courseids as $courseid) {
             \core_competency\api::add_competency_to_course($courseid, (int) $competency->get('id'));
         }
+        $this->competencyid = (int) $competency->get('id');
+        $this->plans = [];
 
         $this->setUser(null);
+    }
+
+    /**
+     * The plan arguments of a tracker call for the current user: a plan of theirs holding the
+     * competency link_competency() linked, created once per user.
+     *
+     * The card services describe a plan's owner and answer only for courses linked to the plan's
+     * competency, so every call names one.
+     *
+     * @return array [planid, competencyid]
+     */
+    private function plan_args(): array {
+        global $USER;
+        $userid = (int) $USER->id;
+        if (!isset($this->plans[$userid])) {
+            $this->setAdminUser();
+            $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+            if ($this->competencyid === 0) {
+                // The test linked no course: a competency linked to none of them.
+                $framework = $ccg->create_framework();
+                $this->competencyid = (int) $ccg->create_competency(['competencyframeworkid' => $framework->get('id')])->get('id');
+            }
+            $planid = (int) $ccg->create_plan(['userid' => $userid, 'status' => \core_competency\plan::STATUS_ACTIVE])->get('id');
+            $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $this->competencyid]);
+            $this->setUser($userid);
+            $this->plans[$userid] = $planid;
+        }
+        return [$this->plans[$userid], $this->competencyid];
     }
 
     /**
@@ -568,7 +604,7 @@ final class get_course_progress_test extends \advanced_testcase {
 
         $rows = external_api::clean_returnvalue(
             get_course_progress::execute_returns(),
-            $service::execute([(int) $broken->id, (int) $healthy->id])
+            $service::execute([(int) $broken->id, (int) $healthy->id], ...$this->plan_args())
         );
 
         $this->assertCount(2, $rows);
@@ -619,7 +655,30 @@ final class get_course_progress_test extends \advanced_testcase {
         $this->link_competency((int) $first->id, (int) $second->id);
         $this->setUser($this->getDataGenerator()->create_user());
 
-        $this->assertCount(1, get_course_progress::execute([(int) $first->id, (int) $first->id, (int) $first->id]));
-        $this->assertCount(2, get_course_progress::execute([(int) $first->id, (int) $second->id, (int) $first->id]));
+        $plan = $this->plan_args();
+        $this->assertCount(1, get_course_progress::execute([(int) $first->id, (int) $first->id, (int) $first->id], ...$plan));
+        $this->assertCount(2, get_course_progress::execute([(int) $first->id, (int) $second->id, (int) $first->id], ...$plan));
+    }
+
+    /**
+     * A call without a plan is refused before any course is read: with plan id 0 the only rule
+     * left was "the course carries some competency link", which handed any user the section names
+     * of any such course. The same course through the caller's own plan (the control) is answered.
+     *
+     * @return void
+     */
+    public function test_a_call_without_a_plan_is_refused(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $this->link_competency((int) $course->id);
+        $this->setUser($this->getDataGenerator()->create_user());
+
+        try {
+            get_course_progress::execute([(int) $course->id], 0, 0);
+            $this->fail('A call without a plan was answered.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('invalidplan', $e->errorcode);
+        }
+        $this->assertCount(1, get_course_progress::execute([(int) $course->id], ...$this->plan_args()));
     }
 }

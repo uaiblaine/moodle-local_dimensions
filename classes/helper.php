@@ -46,6 +46,9 @@ use local_dimensions\customfield\competency_handler;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
+    /** @var bool|null The remembered answer of has_unaccent() for this request; null when not asked yet. */
+    private static ?bool $unaccent = null;
+
     /** @var string Area for learning plan templates */
     const AREA_LP = 'lp';
 
@@ -2071,9 +2074,10 @@ class helper {
     /**
      * Whether the PostgreSQL `unaccent` extension is installed and usable right now.
      *
-     * Read-only (one pg_extension lookup), so it is safe on a request path. Returns false on
-     * other databases, where accent-insensitivity comes from the collation. The extension is
-     * created only by {@see self::ensure_unaccent()}, at install and upgrade.
+     * Read-only (one pg_extension lookup, remembered for the rest of the request), so it is safe
+     * on a request path. Returns false on other databases, where accent-insensitivity comes from
+     * the collation. The extension is created only by {@see self::ensure_unaccent()}, which an
+     * administrator triggers from the plugin settings; no install, upgrade or search creates it.
      *
      * @return bool True when unaccent() can be used in SQL (PostgreSQL only).
      */
@@ -2082,41 +2086,59 @@ class helper {
         if ($DB->get_dbfamily() !== 'postgres') {
             return false;
         }
-        // Not cached: on PostgreSQL, advanced_testcase runs each test in a transaction it rolls
-        // back, CREATE EXTENSION included, so a cached flag would outlive the extension.
-        return $DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'");
+        // The answer is remembered per request. PHPUnit is the exception that needs care: each
+        // test runs in a transaction PostgreSQL rolls back, CREATE EXTENSION included, so a test
+        // that creates or drops the extension calls {@see self::reset_unaccent_memo()}.
+        self::$unaccent ??= $DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'");
+        return self::$unaccent;
+    }
+
+    /**
+     * Forget the remembered answer of {@see self::has_unaccent()}.
+     *
+     * Called by ensure_unaccent() once it has tried to change the state, and by tests that change
+     * the extension's state themselves.
+     *
+     * @return void
+     */
+    public static function reset_unaccent_memo(): void {
+        self::$unaccent = null;
     }
 
     /**
      * Provision the PostgreSQL `unaccent` extension, creating it when it is missing.
      *
-     * DDL, so call it from install and upgrade only. A least-privilege database account cannot
-     * create extensions, so failure is swallowed: the site keeps accent-sensitive search, which
-     * sql_like_ai() learns from has_unaccent().
+     * DDL, so it runs only on an administrator's request (the button in the plugin settings,
+     * {@see \local_dimensions\local\unaccent_admin}), never at install or upgrade. A
+     * least-privilege database account cannot create extensions: that is reported as false, and
+     * the site keeps accent-sensitive search, which sql_like_ai() learns from has_unaccent().
      *
      * @return bool True when unaccent() can be used in SQL afterwards (PostgreSQL only).
      */
     public static function ensure_unaccent(): bool {
         global $DB;
-        if (self::has_unaccent()) {
-            return true;
-        }
+        self::reset_unaccent_memo();
         if ($DB->get_dbfamily() !== 'postgres') {
             return false;
         }
+        if (self::has_unaccent()) {
+            return true;
+        }
         try {
             $DB->execute('CREATE EXTENSION IF NOT EXISTS unaccent');
-            return true;
         } catch (\Throwable $e) {
+            // The account may not create extensions: the caller is told, the site stays as it was.
             return false;
         }
+        self::reset_unaccent_memo();
+        return self::has_unaccent();
     }
 
     /**
      * Return a case- and accent-insensitive LIKE fragment for MySQL/MariaDB and PostgreSQL.
      *
      * On PostgreSQL both operands are wrapped in unaccent() when the extension is installed
-     * (never installed from here: this runs in search web services); without it the comparison
+     * (never created from here: this runs in search web services); without it the comparison
      * stays accent-sensitive. Other databases rely on the collation via core sql_like(). The
      * caller builds the bound value with sql_like_escape() and its own wildcards.
      *

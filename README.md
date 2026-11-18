@@ -56,6 +56,11 @@ The linked courses of one competency as a responsive grid of course cards: real-
 where `enrol_apply` is installed — shows an **application already lodged** as its own state while
 it waits for a decision, and otherwise gives the date the course opens. Courses that amount to a single activity or a single section link straight to it. An optional redirect skips the grid entirely when the learner has a single active enrolment.
 
+The cards describe the plan's owner, not the viewer. A viewer of someone else's plan who holds
+`moodle/competency:usercompetencyview` over the learner (a reviewer, mentor or parent role) sees the
+plan owner's course progress and section names on the tracker, also in courses the viewer cannot open
+themselves.
+
 ### Full plan overview
 
 All competencies of the plan as an expandable accordion, loaded lazily — or as a grid whose cards open a detail modal with a pager across competencies and a full-screen expand. Each panel can show the competency description, its taxonomy card and hierarchy path, related competencies, evidence cards with detail modals, linked course cards with progress, and a **Rules** tab that turns Moodle's competency completion rules — All/Points, outcome, earned progress, required children, proficiency status — into something learners actually understand at a glance. **Related content** adds the rule's outcome badge and the activities linked to the competency, grouped by course and drawn with core's own activity icons: a restricted activity is shown locked and leads to the course page, a hidden one is not shown at all.
@@ -187,11 +192,25 @@ Under the hood
 Accent-insensitive search
 -------------------------
 
-Competency, plan and course searches in the Competency hub are accent-insensitive ("lingua" also matches "língua"). On MySQL/MariaDB this works out of the box via the database collation. On **PostgreSQL** it uses the `unaccent` extension, which the plugin creates automatically (`CREATE EXTENSION IF NOT EXISTS unaccent`) at install and on every upgrade where the database user has permission (a search never creates it) — on supported PostgreSQL (13+) `unaccent` is a *trusted* extension the database owner may create without superuser rights.
+Competency, plan and course searches in the Competency hub are accent-insensitive ("lingua" also
+matches "língua"). On MySQL/MariaDB this works out of the box via the database collation. On
+**PostgreSQL** it uses the `unaccent` extension, and **the plugin never creates it by itself**: not
+at install, not on upgrade, not from a search. Until it exists, searches work but are
+accent-sensitive.
 
-If your instance is locked down and the plugin cannot create it, run this once as a database superuser and searches become accent-insensitive on PostgreSQL too (until then they degrade gracefully to accent-sensitive):
+An administrator creates it in one of two ways:
 
-    CREATE EXTENSION unaccent;
+- With the **Create the unaccent extension** button in the plugin settings (*Site administration >
+  Competencies > Competency Dimensions > Competency Dimensions settings*, section *Accent-insensitive
+  search*). It runs `CREATE EXTENSION IF NOT EXISTS unaccent` with the database account Moodle uses,
+  so that account must be allowed to create it. On supported PostgreSQL (13+) `unaccent` is a
+  *trusted* extension the database owner may create without superuser rights.
+- Or with this SQL, run once as a database superuser:
+
+        CREATE EXTENSION unaccent;
+
+*Site administration > Reports > System status* reports the state: OK when installed, a warning when
+missing, and not applicable on other databases.
 
 Accessibility
 -------------
