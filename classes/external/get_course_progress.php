@@ -57,15 +57,11 @@ class get_course_progress extends external_api {
             ),
             'planid' => new external_value(
                 PARAM_INT,
-                'A learning plan the caller may read, whose owner the cards describe; 0 for the caller\'s own cards',
-                VALUE_DEFAULT,
-                0
+                'A learning plan the caller may read, whose owner the cards describe'
             ),
             'competencyid' => new external_value(
                 PARAM_INT,
-                'The competency of the plan whose linked courses are asked for; read only with a plan',
-                VALUE_DEFAULT,
-                0
+                'The competency of the plan whose linked courses are asked for'
             ),
         ]);
     }
@@ -77,15 +73,15 @@ class get_course_progress extends external_api {
      * accordion's do: see calculator::get_course_section_progress() for what stays the viewer's.
      *
      * @param array $courseids List of course IDs to calculate progress for.
-     * @param int $planid The learning plan whose owner the cards describe, 0 for the caller's own cards.
-     * @param int $competencyid The plan's competency the courses are linked to, read only with a plan.
+     * @param int $planid The learning plan whose owner the cards describe.
+     * @param int $competencyid The plan's competency the courses are linked to.
      * @return array List of course progress results.
      * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does
      *     not reach the competency.
      * @throws \required_capability_exception When the current user may not read the plan or its owner's user
      *     competencies.
      */
-    public static function execute($courseids, $planid = 0, $competencyid = 0) {
+    public static function execute($courseids, $planid, $competencyid) {
         // Automatic parameter validation.
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseids' => $courseids,

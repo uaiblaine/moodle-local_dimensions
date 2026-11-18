@@ -24,6 +24,7 @@
 
 namespace local_dimensions\external;
 
+use core_competency\competency_framework;
 use core_competency\template;
 use core_external\external_api;
 use core_external\external_function_parameters;
@@ -105,10 +106,17 @@ class export_templates extends external_api {
         \core_php_time_limit::raise();
         raise_memory_limit(MEMORY_EXTRA);
 
-        return template_csv_serializer::export_templates(
+        $result = template_csv_serializer::export_templates(
             $usable,
             (bool) get_config('local_dimensions', 'enablecustomscss')
         );
+        // The modal offers each listed framework as a download through export_framework, which
+        // asks competencymanage; a framework the caller only reads stays in the CSV, not in the offer.
+        $result['frameworks'] = array_values(array_filter($result['frameworks'], static function (array $row): bool {
+            $framework = competency_framework::get_record(['id' => (int) $row['id']]);
+            return $framework && competency_framework::can_manage_context($framework->get_context());
+        }));
+        return $result;
     }
 
     /**

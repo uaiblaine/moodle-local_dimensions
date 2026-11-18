@@ -34,8 +34,7 @@ function xmldb_local_dimensions_install() {
     \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_LP);
     \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
 
-    // Records the once-only upgrade repairs as applied (on a new site they find nothing to change)
-    // and creates the unaccent extension, as on every upgrade.
+    // Records the once-only upgrade repairs as applied (on a new site they find nothing to change).
     \local_dimensions\local\legacy_repair::run();
 
     return true;

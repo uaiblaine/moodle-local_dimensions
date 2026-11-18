@@ -123,43 +123,34 @@ final class tracker_cards_owner_test extends \advanced_testcase {
     }
 
     /**
-     * Without a plan the progress service still describes its caller, on the same fixture.
-     *
-     * The teacher opens Alpha and Delta either way. Without the plan the cards describe the teacher, whom
-     * core does not track (no moodle/course:isincompletionreports), so they carry no rings, where the call
-     * with the plan above shows the learner's.
+     * A call without a plan is refused by both services: the parameters are required, and a plan
+     * id of 0 names no plan. The same caller with the plan (the control) is answered.
      *
      * @return void
      */
-    public function test_without_a_plan_the_progress_is_the_callers(): void {
+    public function test_a_call_without_a_plan_is_refused(): void {
         $f = $this->build_fixture();
-
         $this->setUser($f['teacher']);
-        $rows = $this->rows(self::PROGRESS, $f['courseids']);
+        $_POST['sesskey'] = sesskey();
 
-        // The teacher is enrolled as a teacher, whom core does not track: an open card, and no rings.
-        $this->assertFalse($rows[$f['alpha']]['locked']);
-        $this->assertFalse($rows[$f['alpha']]['tracked']);
-        $this->assertFalse($rows[$f['alpha']]['enabled']);
-        $this->assertSame([], $rows[$f['alpha']]['sections']);
-        $this->assertFalse($rows[$f['delta']]['locked']);
-        $this->assertSame(constants::CARDMODE_ACTIVITY, $rows[$f['delta']]['cardmode']);
-        $this->assertFalse($rows[$f['delta']]['activity']['completed']);
-        // Charlie starts for the teacher in two weeks and Echo is not theirs: locked on their own terms.
-        $this->assertTrue($rows[$f['charlie']]['locked']);
-        $this->assertTrue($rows[$f['echo']]['locked']);
+        foreach ([self::PROGRESS, self::STATUS] as $wsname) {
+            $missing = external_api::call_external_function($wsname, ['courseids' => $f['courseids']]);
+            $this->assertTrue($missing['error'], $wsname);
+            $this->assertSame('invalidparameter', $missing['exception']->errorcode, $wsname);
+            $zero = external_api::call_external_function(
+                $wsname,
+                ['courseids' => $f['courseids'], 'planid' => 0, 'competencyid' => 0]
+            );
+            $this->assertTrue($zero['error'], $wsname);
+            $this->assertSame('invalidplan', $zero['exception']->errorcode, $wsname);
+        }
 
-        // The control: the same caller, with the plan, gets the learner's numbers on the same cards.
         $withplan = $this->rows(self::PROGRESS, $f['courseids'], $f['planid'], $f['competencyid']);
-        $this->assertFalse($withplan[$f['alpha']]['locked']);
         $this->assertSame(50, $withplan[$f['alpha']]['sections'][1]['percentage']);
-        $this->assertTrue($withplan[$f['alpha']]['sections'][2]['locked']);
-        $this->assertTrue($withplan[$f['delta']]['activity']['completed']);
     }
 
     /**
-     * The completed-courses count is the learner's, and the lock the teacher's, with the plan; the
-     * caller's own without it.
+     * The completed-courses count is the learner's, and the lock the teacher's.
      *
      * @return void
      */
@@ -179,18 +170,10 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->assertFalse($rows[$f['alpha']]['islocked']);
         $this->assertTrue($rows[$f['charlie']]['islocked']);
         $this->assertTrue($rows[$f['echo']]['islocked']);
-
-        // The control: without the plan the completion is the teacher's own, and so is the lock.
-        $own = $this->rows(self::STATUS, $f['courseids']);
-        $this->assertFalse($own[$f['delta']]['iscompleted']);
-        $this->assertFalse($own[$f['delta']]['islocked']);
-        $this->assertFalse($own[$f['alpha']]['islocked']);
-        $this->assertTrue($own[$f['charlie']]['islocked']);
-        $this->assertTrue($own[$f['echo']]['islocked']);
     }
 
     /**
-     * On their own plan the learner gets exactly the cards they get without the plan.
+     * On their own plan the learner gets their own cards: open where they are enrolled, with their rings.
      *
      * India enrols the learner under a non-student role: an active enrolment opens the card whatever
      * the role, as on the plan accordion.
@@ -204,9 +187,7 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->setUser($f['learner']);
         $courseids = array_merge($f['courseids'], [$f['india']]);
         $withplan = $this->rows(self::PROGRESS, $courseids, $f['planid'], $f['competencyid']);
-        $without = $this->rows(self::PROGRESS, $courseids);
 
-        $this->assertSame($without, $withplan);
         $this->assertFalse($withplan[$f['india']]['locked']);
         $this->assertFalse($withplan[$f['alpha']]['locked']);
         $this->assertSame(50, $withplan[$f['alpha']]['sections'][1]['percentage']);
@@ -215,7 +196,6 @@ final class tracker_cards_owner_test extends \advanced_testcase {
         $this->assertFalse($withplan[$f['echo']]['locked']);
 
         $statuswithplan = $this->rows(self::STATUS, $courseids, $f['planid'], $f['competencyid']);
-        $this->assertSame($this->rows(self::STATUS, $courseids), $statuswithplan);
         $this->assertFalse($statuswithplan[$f['india']]['islocked']);
         $this->assertFalse($statuswithplan[$f['alpha']]['islocked']);
         $this->assertTrue($statuswithplan[$f['delta']]['iscompleted']);
@@ -427,15 +407,12 @@ final class tracker_cards_owner_test extends \advanced_testcase {
      *
      * @param string $wsname The web service name.
      * @param array $courseids The course ids.
-     * @param int|null $planid The plan id, or null to leave both optional parameters out.
-     * @param int $competencyid The competency id, sent with a plan id.
+     * @param int $planid The plan id.
+     * @param int $competencyid The competency id.
      * @return array The cleaned rows, keyed by course id.
      */
-    private function rows(string $wsname, array $courseids, ?int $planid = null, int $competencyid = 0): array {
-        $args = ['courseids' => $courseids];
-        if ($planid !== null) {
-            $args += ['planid' => $planid, 'competencyid' => $competencyid];
-        }
+    private function rows(string $wsname, array $courseids, int $planid, int $competencyid): array {
+        $args = ['courseids' => $courseids, 'planid' => $planid, 'competencyid' => $competencyid];
         $_POST['sesskey'] = sesskey();
         $response = external_api::call_external_function($wsname, $args);
         $this->assertFalse($response['error'], json_encode($response['exception'] ?? null));

@@ -239,11 +239,20 @@ final class enrolment_opens_chip_test extends \advanced_testcase {
      * @return array The row.
      */
     private function tracker_row(\stdClass $course, ?\stdClass $user = null): array {
-        $this->setUser($user ?? $this->getDataGenerator()->create_user());
+        $user = $user ?? $this->getDataGenerator()->create_user();
+        // The tracker always names a plan: one of the learner's, holding the course's competency.
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $this->setAdminUser();
+        $planid = (int) $ccg->create_plan([
+            'userid' => $user->id,
+            'status' => \core_competency\plan::STATUS_ACTIVE,
+        ])->get('id');
+        $ccg->create_plan_competency(['planid' => $planid, 'competencyid' => $course->competencyid]);
+        $this->setUser($user);
         $this->reset_unlisted_caches();
         $result = external_api::clean_returnvalue(
             get_course_progress::execute_returns(),
-            get_course_progress::execute([(int) $course->id])
+            get_course_progress::execute([(int) $course->id], $planid, $course->competencyid)
         );
         return $result[0];
     }
