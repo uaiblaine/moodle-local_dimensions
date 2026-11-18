@@ -77,6 +77,7 @@ class set_module_link_outcome extends external_api {
 
         $modcontext = context_module::instance($cmid);
         self::validate_context($modcontext);
+        api::require_enabled();
 
         $link = course_module_competency::get_record(
             ['competencyid' => $competencyid, 'cmid' => $cmid],

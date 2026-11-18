@@ -114,7 +114,12 @@ class framework_dynamic_form extends \core_form\dynamic_form {
      * @return void
      */
     protected function check_access_for_dynamic_submission(): void {
-        require_capability('moodle/competency:competencymanage', $this->get_context_for_dynamic_submission());
+        $context = $this->get_context_for_dynamic_submission();
+        // Core keeps frameworks in the system or a course-category context only.
+        if ($context->contextlevel !== CONTEXT_SYSTEM && $context->contextlevel !== CONTEXT_COURSECAT) {
+            throw new \moodle_exception('invalidcontext', 'error');
+        }
+        require_capability('moodle/competency:competencymanage', $context);
     }
 
     /**
@@ -258,7 +263,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $record->scaleconfiguration = $data->scaleconfiguration;
 
         if ($id === 0) {
-            $record->contextid = (int) $data->contextid;
+            $record->contextid = $this->get_context_for_dynamic_submission()->id;
             $id = (int) api::create_framework($record)->get('id');
         } else {
             $record->id = $id;
@@ -281,7 +286,7 @@ class framework_dynamic_form extends \core_form\dynamic_form {
         $errors = parent::validation($data, $files);
 
         $id = (int) ($data['id'] ?? 0);
-        $contextid = (int) ($data['contextid'] ?? $this->get_context_for_dynamic_submission()->id);
+        $contextid = $this->get_context_for_dynamic_submission()->id;
         $shortname = $data['shortname'] ?? '';
         if (!empty($shortname)) {
             $existing = competency_framework::get_record(['shortname' => $shortname, 'contextid' => $contextid]);

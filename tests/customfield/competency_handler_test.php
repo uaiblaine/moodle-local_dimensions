@@ -115,6 +115,25 @@ final class competency_handler_test extends \advanced_testcase {
     }
 
     /**
+     * A save ends the create form's hint, so a later create-path question in the same request is
+     * site-scoped again; before the save (the control) the hint admits the manager.
+     *
+     * @return void
+     */
+    public function test_a_save_drops_the_create_hint(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $this->setUser($f['user']);
+        $handler = competency_handler::create();
+        $field = $this->text_field();
+
+        $handler->set_edit_context_hint($f['categorycontext']);
+        $this->assertTrue($handler->can_edit($field, 0));
+        $handler->instance_form_save((object) ['id' => (int) $f['incategory']->get('id')], false);
+        $this->assertFalse($handler->can_edit($field, 0));
+    }
+
+    /**
      * A save by the category manager writes the value: core keeps only the fields can_edit() allows.
      *
      * @return void

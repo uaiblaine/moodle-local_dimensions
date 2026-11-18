@@ -69,6 +69,7 @@ class duplicate_template extends external_api {
         $template = template::get_record(['id' => $params['templateid']], MUST_EXIST);
         $context = $template->get_context();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         $duplicate = api::duplicate_template($params['templateid']);
