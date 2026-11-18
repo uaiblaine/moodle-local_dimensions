@@ -127,4 +127,37 @@ final class scope_test extends advanced_testcase {
         $this->assertSame(['Framework in child'], $this->names(frameworks::class, $childid, true, 'frameworks'));
         $this->assertSame(['Template in child'], $this->names(plans::class, $childid, true, 'templates'));
     }
+
+    /**
+     * The locked entry of a category a user manages keeps out the hidden templates of a
+     * subcategory where they only read templates; the subcategory's visible template and the
+     * parent's hidden one (which they manage) stay, as the administrator (the control) sees all.
+     *
+     * @return void
+     */
+    public function test_a_hidden_template_follows_its_own_category_rights(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $parentcontext = context_coursecat::instance((int) $f['parent']->id);
+        $childcontext = context_coursecat::instance((int) $f['child']->id);
+        $ccg->create_template(['shortname' => 'Hidden in parent', 'contextid' => $parentcontext->id, 'visible' => 0]);
+        $ccg->create_template(['shortname' => 'Hidden in child', 'contextid' => $childcontext->id, 'visible' => 0]);
+        $all = ['Hidden in child', 'Hidden in parent', 'Template in child', 'Template in parent'];
+        $this->assertSame($all, $this->names(plans::class, (int) $f['parent']->id, true, 'templates'), 'Control');
+
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $parentcontext->id);
+        assign_capability('moodle/competency:templateview', CAP_ALLOW, $roleid, $parentcontext->id);
+        assign_capability('moodle/competency:templatemanage', CAP_PROHIBIT, $roleid, $childcontext->id);
+        role_assign($roleid, (int) $user->id, $parentcontext->id);
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->setUser($user);
+
+        $this->assertSame(
+            ['Hidden in parent', 'Template in child', 'Template in parent'],
+            $this->names(plans::class, (int) $f['parent']->id, true, 'templates')
+        );
+    }
 }

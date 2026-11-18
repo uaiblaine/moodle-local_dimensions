@@ -75,6 +75,7 @@ class get_structure_node extends external_api {
             return ['found' => false, 'pathids' => []];
         }
         self::validate_context($framework->get_context());
+        \core_competency\api::require_enabled();
         if (!competency_framework::can_read_context($framework->get_context())) {
             return ['found' => false, 'pathids' => []];
         }

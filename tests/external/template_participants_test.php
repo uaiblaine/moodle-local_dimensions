@@ -228,4 +228,35 @@ final class template_participants_test extends \advanced_testcase {
             ? unlink_template_user_plan::execute($planid)
             : delete_template_user_plan::execute($planid);
     }
+
+    /**
+     * A template manager without planmanage over a user cannot learn whether that user holds a
+     * plan from the template: the call is refused whether the plan exists or not, as core refuses
+     * it. The administrator (the control) is told the plan already exists.
+     *
+     * @return void
+     */
+    public function test_add_does_not_tell_a_template_manager_who_holds_a_plan(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, , $cohortusers, $extra] = $this->fixture();
+        api::create_plan_from_template($templateid, $cohortusers[0]);
+        $this->assertFalse(add_template_user_plan::execute($templateid, $cohortusers[0])['created'], 'Control');
+
+        $manager = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        assign_capability('moodle/competency:templateview', CAP_ALLOW, $roleid, \context_system::instance()->id);
+        role_assign($roleid, (int) $manager->id, \context_system::instance()->id);
+        $this->setUser($manager);
+
+        foreach (['has a plan' => $cohortusers[0], 'has none' => $extra] as $label => $userid) {
+            try {
+                add_template_user_plan::execute($templateid, $userid);
+                $this->fail("The call answered for a user who $label.");
+            } catch (\required_capability_exception $e) {
+                $this->assertSame('nopermissions', $e->errorcode, $label);
+            }
+        }
+    }
 }

@@ -231,6 +231,8 @@ class competency_dynamic_form extends \core_form\dynamic_form {
         global $PAGE;
 
         parent::definition_after_data();
+        competency_handler::create()->set_edit_context_hint($this->get_context_for_dynamic_submission());
+        competency_handler::create()->instance_form_definition_after_data($this->_form, $this->get_competencyid());
 
         // SCSS is plain text: pin its editor to FORMAT_PLAIN so it never opens as a rich editor.
         helper::force_customscss_plain($this->_form);
@@ -283,6 +285,19 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
+     * Submitted data: force the custom SCSS field to plain format.
+     *
+     * @return object|null
+     */
+    public function get_data() {
+        $data = parent::get_data();
+        if ($data) {
+            helper::force_customscss_plain_data($data);
+        }
+        return $data;
+    }
+
+    /**
      * Create or update the competency and persist its custom fields.
      *
      * @return array{competencyid: int}
@@ -332,7 +347,7 @@ class competency_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Validate id number uniqueness within the framework.
+     * Validate id number uniqueness within the framework, the custom fields and the custom SCSS.
      *
      * @param array $data
      * @param array $files
@@ -349,6 +364,8 @@ class competency_dynamic_form extends \core_form\dynamic_form {
             $errors['idnumber'] = get_string('idnumberexists');
         }
 
+        // The fields' own rules (required, unique values, lengths), as core's forms apply them.
+        $errors = array_merge($errors, helper::validate_present_customfields(competency_handler::create(), $data, $files));
         // Block saving invalid custom SCSS (as the template modal does).
         $errors = array_merge($errors, helper::validate_customscss($data));
 

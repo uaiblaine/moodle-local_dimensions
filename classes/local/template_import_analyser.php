@@ -180,8 +180,16 @@ class template_import_analyser {
             $this->fields[$shortname] = helper::find_field_by_shortname($shortname, helper::AREA_LP);
         }
 
-        foreach (lp_handler::create()->get_editable_fields(0) as $field) {
-            $this->editable[(string) $field->get('shortname')] = true;
+        // Templates are created and matched in the target only, so their fields' editing rights
+        // resolve there; without the hint they resolve at the site and a category manager gets none.
+        $handler = lp_handler::create();
+        $handler->set_edit_context_hint($this->target);
+        try {
+            foreach ($handler->get_editable_fields(0) as $field) {
+                $this->editable[(string) $field->get('shortname')] = true;
+            }
+        } finally {
+            $handler->set_edit_context_hint(null);
         }
 
         /* 'parents' and 'children' are mutually exclusive in api::get_related_contexts(), so the

@@ -118,12 +118,25 @@ class lp_handler extends handler {
     /**
      * Check if the current user can view the custom fields.
      *
+     * For a known template the answer is {@see picture_manager::can_view()}, behind the login
+     * local_dimensions_pluginfile() requires: core's textarea and customfield_picture file
+     * callbacks ask this method and nothing else, and pluginfile.php does not require login for
+     * them, so the files embedded in a field follow the same rule as the template's own pictures.
+     * Instance 0 asks whether the field exists for the viewer at all (the report builder asks
+     * so), which every field does.
+     *
      * @param \core_customfield\field_controller $field
      * @param int $instanceid
      * @return bool
      */
     public function can_view(\core_customfield\field_controller $field, int $instanceid = 0): bool {
-        return true;
+        if ($instanceid <= 0) {
+            return true;
+        }
+        if (!isloggedin()) {
+            return false;
+        }
+        return picture_manager::can_view(picture_manager::FILEAREA_TEMPLATE, $instanceid);
     }
 
     /**
@@ -299,6 +312,8 @@ class lp_handler extends handler {
             parent::instance_form_save($instance, $isnewinstance);
         } finally {
             $this->savinginstanceid = 0;
+            // A create form's hint ends with its save, so a later call in the same request starts clean.
+            $this->editcontexthint = null;
         }
         $changed = $this->diff_instance_values($before, $this->snapshot_instance_values($instanceid));
         $this->trigger_customfields_updated(template_customfields_updated::class, $instanceid, $isnewinstance, $changed);
