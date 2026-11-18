@@ -47,6 +47,9 @@ use local_dimensions\local\unlisted_categories;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
+    /** @var bool|null The remembered answer of has_unaccent() for this request; null when not asked yet. */
+    private static ?bool $unaccent = null;
+
     /** @var string Area for learning plan templates */
     const string AREA_LP = 'lp';
 
@@ -96,8 +99,8 @@ class helper {
      * the current user's language. Callers pass an empty $description so that no text in a single
      * language is stored.
      *
-     * Only the handler's own categories qualify: on Moodle 5.1+ get_categories_with_fields() also
-     * lists the core shared categories enabled for the area, and a field created in one of those
+     * Only the handler's own categories qualify: get_categories_with_fields() also lists the core
+     * shared categories enabled for the area, and a field created in one of those
      * makes {@see self::organize_customfield_categories()} fail, because core's move_field()
      * refuses a move across components.
      *
@@ -442,9 +445,9 @@ class helper {
      *
      * Waits up to 10 s for the provisioning lock and does nothing when it is not granted.
      *
-     * The get-or-create getters belong to this method and to upgrade steps. Read paths look a
-     * field up with {@see self::find_field_by_shortname()} and fall back when it is missing, so
-     * no request creates a field outside the lock.
+     * In production code only this method calls the get-or-create getters. Read paths look a field up with
+     * {@see self::find_field_by_shortname()} and fall back when it is missing, so no request
+     * creates a field outside the lock.
      *
      * @param string $area The area (lp or competency)
      */
@@ -815,8 +818,8 @@ class helper {
         }
 
         // Decided by the number of lines, not by the label: the label is spelled in the language of
-        // whoever runs the upgrade, and db/upgrade.php calls this on every upgrade, so a field
-        // provisioned in Portuguese would gain a second fifth option on an upgrade run in English.
+        // whoever runs the upgrade, so a field provisioned in Portuguese would gain a second fifth
+        // option on an upgrade run in English.
         $lines = explode("\n", (string) $config['options']);
         if (count($lines) !== count(constants::enrollmentfilter_options()) - 1) {
             return;
@@ -2072,9 +2075,10 @@ class helper {
     /**
      * Whether the PostgreSQL `unaccent` extension is installed and usable right now.
      *
-     * Read-only (one pg_extension lookup), so it is safe on a request path. Returns false on
-     * other databases, where accent-insensitivity comes from the collation. The extension is
-     * created only by {@see self::ensure_unaccent()}, at install and upgrade.
+     * Read-only (one pg_extension lookup, remembered for the rest of the request), so it is safe
+     * on a request path. Returns false on other databases, where accent-insensitivity comes from
+     * the collation. The extension is created only by {@see self::ensure_unaccent()}, which an
+     * administrator triggers from the plugin settings; no install, upgrade or search creates it.
      *
      * @return bool True when unaccent() can be used in SQL (PostgreSQL only).
      */
@@ -2083,41 +2087,59 @@ class helper {
         if ($DB->get_dbfamily() !== 'postgres') {
             return false;
         }
-        // Not cached: on PostgreSQL, advanced_testcase runs each test in a transaction it rolls
-        // back, CREATE EXTENSION included, so a cached flag would outlive the extension.
-        return $DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'");
+        // The answer is remembered per request. PHPUnit is the exception that needs care: each
+        // test runs in a transaction PostgreSQL rolls back, CREATE EXTENSION included, so a test
+        // that creates or drops the extension calls {@see self::reset_unaccent_memo()}.
+        self::$unaccent ??= $DB->record_exists_sql("SELECT 1 FROM pg_extension WHERE extname = 'unaccent'");
+        return self::$unaccent;
+    }
+
+    /**
+     * Forget the remembered answer of {@see self::has_unaccent()}.
+     *
+     * Called by ensure_unaccent() once it has tried to change the state, and by tests that change
+     * the extension's state themselves.
+     *
+     * @return void
+     */
+    public static function reset_unaccent_memo(): void {
+        self::$unaccent = null;
     }
 
     /**
      * Provision the PostgreSQL `unaccent` extension, creating it when it is missing.
      *
-     * DDL, so call it from install and upgrade only. A least-privilege database account cannot
-     * create extensions, so failure is swallowed: the site keeps accent-sensitive search, which
-     * sql_like_ai() learns from has_unaccent().
+     * DDL, so it runs only on an administrator's request (the button in the plugin settings,
+     * {@see \local_dimensions\local\unaccent_admin}), never at install or upgrade. A
+     * least-privilege database account cannot create extensions: that is reported as false, and
+     * the site keeps accent-sensitive search, which sql_like_ai() learns from has_unaccent().
      *
      * @return bool True when unaccent() can be used in SQL afterwards (PostgreSQL only).
      */
     public static function ensure_unaccent(): bool {
         global $DB;
-        if (self::has_unaccent()) {
-            return true;
-        }
+        self::reset_unaccent_memo();
         if ($DB->get_dbfamily() !== 'postgres') {
             return false;
         }
+        if (self::has_unaccent()) {
+            return true;
+        }
         try {
             $DB->execute('CREATE EXTENSION IF NOT EXISTS unaccent');
-            return true;
         } catch (\Throwable $e) {
+            // The account may not create extensions: the caller is told, the site stays as it was.
             return false;
         }
+        self::reset_unaccent_memo();
+        return self::has_unaccent();
     }
 
     /**
      * Return a case- and accent-insensitive LIKE fragment for MySQL/MariaDB and PostgreSQL.
      *
      * On PostgreSQL both operands are wrapped in unaccent() when the extension is installed
-     * (never installed from here: this runs in search web services); without it the comparison
+     * (never created from here: this runs in search web services); without it the comparison
      * stays accent-sensitive. Other databases rely on the collation via core sql_like(). The
      * caller builds the bound value with sql_like_escape() and its own wildcards.
      *
@@ -2394,8 +2416,8 @@ class helper {
     private static function count_in_subtree(string $table, \context $context): int {
         global $DB;
         // Grouped by category so a subcategory local_unlistedcourses withholds from the viewer
-        // drops out of the sum, as it does from the tabs' lists; every context of the subtree is a
-        // course category context, since the root is one.
+        // drops out of the sum, as it does from the tabs' lists. Core keeps frameworks and templates
+        // in system or category contexts only, so below a category root every instanceid is a category id.
         $sql = "SELECT ctx.instanceid, COUNT(t.id)
                   FROM {" . $table . "} t
                   JOIN {context} ctx ON ctx.id = t.contextid
@@ -3411,6 +3433,57 @@ class helper {
         $value['text'] = $value['text'] ?? '';
         $value['format'] = FORMAT_PLAIN;
         $element->setValue($value);
+    }
+
+    /**
+     * The custom fields' own validation, for the fields a submission carries.
+     *
+     * Core's handler::instance_form_validation() reads every editable field from the data and
+     * warns for one that is absent; a submission that leaves a field out (tool_lp's own forms,
+     * which know nothing of these fields, or a partial modal post) means "unchanged", so only the
+     * fields present are validated. The editable set resolves as can_edit() does: the instance's
+     * own context, or a create form's hint for instance 0.
+     *
+     * @param \core_customfield\handler $handler The area's handler.
+     * @param array $data Submitted data, carrying the instance id under 'id' (0 on create).
+     * @param array $files Submitted files.
+     * @return array Errors keyed by form element name.
+     */
+    public static function validate_present_customfields(\core_customfield\handler $handler, array $data, array $files): array {
+        $instanceid = (int) ($data['id'] ?? 0);
+        $errors = [];
+        foreach ($handler->get_instance_fields_data($handler->get_editable_fields($instanceid), $instanceid) as $field) {
+            $name = $field->get_form_element_name();
+            if (!array_key_exists($name, $data) && !array_key_exists($name . '_editor', $data)) {
+                continue;
+            }
+            $errors += $field->instance_form_validation($data, $files);
+        }
+        return $errors;
+    }
+
+    /**
+     * Pin the submitted custom SCSS value to plain text.
+     *
+     * The data-side half of force_customscss_plain(): the format travels with the submission, so
+     * a modal form's get_data() resets it, whichever shape the field took (editor or plain, array
+     * or object). Nothing downstream reads the format today; the stored row says what it holds.
+     *
+     * @param \stdClass $data The form's submitted data, changed in place.
+     * @return void
+     */
+    public static function force_customscss_plain_data(\stdClass $data): void {
+        $name = 'customfield_' . constants::CFIELD_CUSTOMSCSS;
+        foreach ([$name . '_editor', $name] as $prop) {
+            if (isset($data->$prop) && is_array($data->$prop)) {
+                $data->{$prop}['format'] = FORMAT_PLAIN;
+                return;
+            }
+            if (isset($data->$prop) && is_object($data->$prop)) {
+                $data->$prop->format = FORMAT_PLAIN;
+                return;
+            }
+        }
     }
 
     /**

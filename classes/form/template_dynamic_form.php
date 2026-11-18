@@ -92,7 +92,12 @@ class template_dynamic_form extends \core_form\dynamic_form {
      */
     #[\Override]
     protected function check_access_for_dynamic_submission(): void {
-        require_capability('moodle/competency:templatemanage', $this->get_context_for_dynamic_submission());
+        $context = $this->get_context_for_dynamic_submission();
+        // Core keeps templates in the system or a course-category context only.
+        if ($context->contextlevel !== CONTEXT_SYSTEM && $context->contextlevel !== CONTEXT_COURSECAT) {
+            throw new \moodle_exception('invalidcontext', 'error');
+        }
+        require_capability('moodle/competency:templatemanage', $context);
     }
 
     /**
@@ -266,17 +271,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
     public function get_data() {
         $data = parent::get_data();
         if ($data) {
-            $editorprop = 'customfield_' . constants::CFIELD_CUSTOMSCSS . '_editor';
-            $plainprop = 'customfield_' . constants::CFIELD_CUSTOMSCSS;
-            if (isset($data->$editorprop) && is_array($data->$editorprop)) {
-                $data->{$editorprop}['format'] = FORMAT_PLAIN;
-            } else if (isset($data->$editorprop) && is_object($data->$editorprop)) {
-                $data->$editorprop->format = FORMAT_PLAIN;
-            } else if (isset($data->$plainprop) && is_array($data->$plainprop)) {
-                $data->{$plainprop}['format'] = FORMAT_PLAIN;
-            } else if (isset($data->$plainprop) && is_object($data->$plainprop)) {
-                $data->$plainprop->format = FORMAT_PLAIN;
-            }
+            helper::force_customscss_plain_data($data);
         }
         return $data;
     }
@@ -297,13 +292,14 @@ class template_dynamic_form extends \core_form\dynamic_form {
         $record->descriptionformat = $data->description['format'] ?? FORMAT_HTML;
         $record->visible = (int) ($data->visible ?? 1);
         $record->duedate = (int) ($data->duedate ?? 0);
-        $record->contextid = (int) $data->contextid;
 
         if ($id > 0) {
             $record->id = $id;
             api::update_template($record);
             $templateid = $id;
         } else {
+            // The context access was checked in, never the posted one; an edit keeps its own.
+            $record->contextid = $this->get_context_for_dynamic_submission()->id;
             $templateid = (int) api::create_template($record)->get('id');
         }
 
@@ -319,7 +315,7 @@ class template_dynamic_form extends \core_form\dynamic_form {
     }
 
     /**
-     * Validate shortname uniqueness within the context and the custom SCSS.
+     * Validate shortname uniqueness within the context, the custom fields and the custom SCSS.
      *
      * @param array $data
      * @param array $files
@@ -333,13 +329,15 @@ class template_dynamic_form extends \core_form\dynamic_form {
         if (!empty($shortname)) {
             $existing = template::get_record([
                 'shortname' => $shortname,
-                'contextid' => $data['contextid'],
+                'contextid' => $this->get_context_for_dynamic_submission()->id,
             ]);
             if ($existing && (int) $existing->get('id') !== (int) ($data['id'] ?? 0)) {
                 $errors['shortname'] = get_string('central_plans_import_reason_shortnametaken', 'local_dimensions');
             }
         }
 
+        // The fields' own rules (required, unique values, lengths), as core's forms apply them.
+        $errors = array_merge($errors, helper::validate_present_customfields(lp_handler::create(), $data, $files));
         // Block saving invalid custom SCSS (as the competency modal does).
         $errors = array_merge($errors, helper::validate_customscss($data));
 

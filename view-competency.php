@@ -59,10 +59,9 @@ $templateid = (int) $plan->get('templateid');
 
 /* The page describes the plan owner, who is not the viewer when staff review a learner's plan: which
    courses the enrolment filter keeps and the cards' progress are the owner's, as on the plan accordion.
-   So it asks what its card services ask before describing the owner: read_plan() accepts planviewdraft
-   alone on a draft plan, which grants nothing about the learner (plan_access::require_owner_readable()).
-   What the viewer does from here stays theirs: the single-course redirect, the return button and the
-   view log below all use $USER. */
+   Reading the plan does not imply reading the owner's user competencies; see
+   plan_access::require_owner_readable(). What the viewer does from here stays theirs: the single-course
+   redirect, the return button and the view log below all use $USER. */
 $ownerid = \local_dimensions\local\plan_access::require_owner_readable($plan);
 
 /* Reading the plan says nothing about the competency id: only one the plan reaches may be shown, which

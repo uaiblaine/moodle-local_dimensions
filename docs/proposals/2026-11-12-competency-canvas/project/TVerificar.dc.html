@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno de jornada: verificar documento</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.navlink.login{color:#fff;border:1px solid rgba(255,255,255,0.5);font-weight:600}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 22px;font-size:14.5px}
+.facts dt{color:#596079}.facts dd{margin:0;font-weight:600}
+.verified{display:inline-flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#17694a}
+.verified .seal{width:40px;height:40px;border-radius:50%;background:#dcf3e8;border:1px solid #a9dcc3;color:#17694a;display:grid;place-items:center}
+.rec{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 20px}
+.rec + .rec{border-top:1px solid #dfe2ec}
+.rec .dot-a{width:12px;height:12px;border-radius:50%}
+.code{font-variant-numeric:tabular-nums;font-family:"Noto Sans",sans-serif}
+</style>
+</helmet>
+<div class="ln" style="width: 960px; height: 900px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <span class="grow"></span>
+    <a class="navlink login" href="#">Entrar</a>
+  </nav>
+
+  <main class="col" style="width: 640px; margin: 0 auto; padding-top: 40px; gap: 22px;">
+    <div class="col" style="gap: 12px;">
+      <span class="verified"><span class="seal"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>Documento verificado</span>
+      <h1 class="h1">Docência digital (DigCompEdu)</h1>
+      <p style="color: #3d445c;">Este documento foi emitido pela plataforma e continua válido. O que está abaixo é o que ele afirma.</p>
+    </div>
+
+    <section class="card pad" aria-label="Dados do documento">
+      <dl class="facts" style="margin: 0;">
+        <dt>Em nome de</dt><dd>M. A*** <span class="small" style="font-weight: 400;">(nome reduzido)</span></dd>
+        <dt>Emitido em</dt><dd>20 de outubro de 2026</dd>
+        <dt>Código</dt><dd class="code">DIM-7Q4K-2M9P</dd>
+        <dt>Situação</dt><dd><span class="chip ok">Válido</span></dd>
+      </dl>
+    </section>
+
+    <section class="col" aria-labelledby="tv-recs" style="gap: 12px;">
+      <h2 class="h2" id="tv-recs">Competências reconhecidas neste documento</h2>
+      <ul class="card" style="overflow: hidden;">
+        <li class="rec"><span class="dot-a" style="background: #6a2892;"></span><span class="col" style="gap: 0;"><b style="font-size: 15.5px;">3.1 Ensino</b><span class="small">Ensino e aprendizagem · reconhecida em 16 de outubro de 2026</span></span><span class="chip line">Integrador (B1)</span></li>
+        <li class="rec"><span class="dot-a" style="background: #0c5f59;"></span><span class="col" style="gap: 0;"><b style="font-size: 15.5px;">2.2 Criação e modificação</b><span class="small">Recursos digitais · reconhecida em 18 de setembro de 2026</span></span><span class="chip line">Integrador (B1)</span></li>
+        <li class="rec"><span class="dot-a" style="background: #0c5f59;"></span><span class="col" style="gap: 0;"><b style="font-size: 15.5px;">2.1 Seleção</b><span class="small">Recursos digitais · reconhecida em 2 de junho de 2026</span></span><span class="chip line">Especialista (B2)</span></li>
+        <li class="rec"><span class="dot-a" style="background: #0c5f59;"></span><span class="col" style="gap: 0;"><b style="font-size: 15.5px;">2.3 Gestão, proteção e partilha</b><span class="small">Recursos digitais · reconhecida em 14 de abril de 2026</span></span><span class="chip line">Integrador (B1)</span></li>
+      </ul>
+      <p class="small">Os arquivos e as frases de quem leu cada evidência ficam só com a pessoa; esta página mostra apenas o que o documento afirma. Para saber mais, fale com quem lhe enviou o documento.</p>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":960,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

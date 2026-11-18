@@ -72,6 +72,7 @@ class link_competency_course extends external_api {
 
         $coursecontext = context_course::instance($courseid);
         self::validate_context($coursecontext);
+        api::require_enabled();
 
         // False when the link already existed: nothing was added, so nothing is logged below.
         $created = api::add_competency_to_course($courseid, $competencyid);

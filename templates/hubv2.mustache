@@ -1,0 +1,109 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/hubv2
+
+    Competency hub v2: the context and framework choice as one GET form, the link to the hub's
+    list view of the same framework (the accessible alternative to the canvas), and one React
+    mount for the canvas (the bundle built from js/esm/src/hubv2/Hub.tsx).
+
+    The mount's inner content shows until React commits, and stays when the client cannot load.
+
+    Context variables required:
+    * formaction (string) · issystem (bool) · iscoursecat (bool) · needscategory (bool)
+    * categoryoptions (array) {id, name, selected} - the selected category only, or empty
+    * hasframeworks (bool) · frameworks (array) {id, name, selected, hidden}
+    * hasframework (bool) · listurl (string) · props (string, JSON for the component)
+
+    The category field is shown without JavaScript, so the form works there. With it, the
+    local_dimensions/hubv2_toolbar module hides and disables the field while the context is System.
+    Its empty option has no content on purpose: the autocomplete drops an empty-labelled option from
+    the chips, and the browser shows the label attribute in the plain select.
+
+    Example context (json):
+    {
+        "formaction": "https://example.com/local/dimensions/hubv2.php",
+        "issystem": true,
+        "iscoursecat": false,
+        "needscategory": false,
+        "categoryoptions": [
+            {"id": 3, "name": "Sciences", "selected": true}
+        ],
+        "hasframeworks": true,
+        "frameworks": [
+            {"id": 23, "name": "DigCompEdu", "selected": true, "hidden": false}
+        ],
+        "hasframework": true,
+        "listurl": "https://example.com/local/dimensions/central.php?tab=structure",
+        "props": "{}"
+    }
+}}
+<div class="local-dimensions-hubv2-page-body">
+    <form class="local-dimensions-hubv2-toolbar d-flex flex-wrap align-items-end gap-3 mb-3" method="get" action="{{formaction}}">
+        <div>
+            <label class="form-label small text-muted mb-1" for="local-dimensions-hubv2-contexttype">{{#str}}managecompetencies_context, local_dimensions{{/str}}</label>
+            <select class="form-select form-select-sm" id="local-dimensions-hubv2-contexttype" name="contexttype">
+                <option value="system"{{#issystem}} selected{{/issystem}}>{{#str}}managecompetencies_context_system, local_dimensions{{/str}}</option>
+                <option value="coursecat"{{#iscoursecat}} selected{{/iscoursecat}}>{{#str}}managecompetencies_context_coursecat, local_dimensions{{/str}}</option>
+            </select>
+        </div>
+        <div class="local-dimensions-hubv2-category" data-region="hubv2-category">
+            <label class="form-label small text-muted mb-1" for="local-dimensions-hubv2-category">{{#str}}managecompetencies_category, local_dimensions{{/str}}</label>
+            <select class="form-select form-select-sm" id="local-dimensions-hubv2-category" name="categoryid">
+                <option value="" label="{{#str}}managecompetencies_category_placeholder, local_dimensions{{/str}}"></option>
+                {{#categoryoptions}}
+                <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}</option>
+                {{/categoryoptions}}
+            </select>
+        </div>
+        {{#hasframeworks}}
+        <div class="mw-100">
+            <label class="form-label small text-muted mb-1" for="local-dimensions-hubv2-framework">{{#str}}central_browseframeworks_framework, local_dimensions{{/str}}</label>
+            <select class="form-select form-select-sm" id="local-dimensions-hubv2-framework" name="frameworkid">
+                {{#frameworks}}
+                <option value="{{id}}"{{#selected}} selected{{/selected}}>{{name}}{{#hidden}} ({{#str}}hidden, tool_lp{{/str}}){{/hidden}}</option>
+                {{/frameworks}}
+            </select>
+        </div>
+        {{/hasframeworks}}
+        <button type="submit" class="btn btn-sm btn-secondary">{{#str}}hubv2_apply, local_dimensions{{/str}}</button>
+        {{#hasframework}}
+        <a class="btn btn-sm btn-link ms-auto" href="{{listurl}}">
+            <i class="fa fa-list me-1" aria-hidden="true"></i>{{#str}}hubv2_listview, local_dimensions{{/str}}
+        </a>
+        {{/hasframework}}
+    </form>
+    {{#needscategory}}
+    <p class="text-muted">{{#str}}managecompetencies_selectcategory_help, local_dimensions{{/str}}</p>
+    {{/needscategory}}
+    {{^needscategory}}
+    {{^hasframeworks}}
+    <p class="text-muted">{{#str}}noframeworks, local_dimensions{{/str}}</p>
+    {{/hasframeworks}}
+    {{/needscategory}}
+    {{#hasframework}}
+    <div class="local-dimensions-hubv2" data-region="hubv2">
+        {{#react}}
+        {
+            "component": "@moodle/lms/local_dimensions/bundle",
+            "props": {{{props}}}
+        }
+        <p class="local-dimensions-hubv2-fallback text-muted">{{#str}}hubv2_loading, local_dimensions{{/str}}</p>
+        {{/react}}
+    </div>
+    {{/hasframework}}
+</div>

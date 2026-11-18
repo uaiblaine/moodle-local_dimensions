@@ -53,15 +53,11 @@ class get_courses_completion_status extends external_api {
             ),
             'planid' => new external_value(
                 PARAM_INT,
-                'A learning plan the caller may read, whose owner the statuses describe; 0 for the caller\'s own',
-                VALUE_DEFAULT,
-                0
+                'A learning plan the caller may read, whose owner the statuses describe'
             ),
             'competencyid' => new external_value(
                 PARAM_INT,
-                'The competency of the plan whose linked courses are asked for; read only with a plan',
-                VALUE_DEFAULT,
-                0
+                'The competency of the plan whose linked courses are asked for'
             ),
         ]);
     }
@@ -73,27 +69,28 @@ class get_courses_completion_status extends external_api {
      * whether the caller can open the course (calculator::is_locked_for_viewer()), as on the progress cards.
      *
      * @param int[] $courseids
-     * @param int $planid The learning plan whose owner the statuses describe, 0 for the caller's own.
-     * @param int $competencyid The plan's competency the courses are linked to, read only with a plan.
+     * @param int $planid The learning plan whose owner the statuses describe.
+     * @param int $competencyid The plan's competency the courses are linked to.
      * @return array<int, array{courseid:int,iscompleted:bool,islocked:bool}>
      * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does
      *     not reach the competency.
      * @throws \required_capability_exception When the current user may not read the plan or its owner's user
      *     competencies.
      */
-    public static function execute($courseids, $planid = 0, $competencyid = 0) {
-        global $CFG, $USER;
-        require_once($CFG->libdir . '/completionlib.php');
+    public static function execute($courseids, $planid, $competencyid) {
+        global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'courseids' => $courseids,
             'planid' => $planid,
             'competencyid' => $competencyid,
         ]);
-        $courseids = $params['courseids'];
+        // Each id once: the loop below computes a card per id, so a repeated id would repeat the work.
+        $courseids = array_values(array_unique(array_map('intval', $params['courseids'])));
 
         $context = context_system::instance();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $context);
 
         /* The same gate as get_course_progress::execute(): the two services feed one card list and must
@@ -116,20 +113,9 @@ class get_courses_completion_status extends external_api {
                     continue;
                 }
 
-                $course = $readable[$cid];
-                $completion = new \completion_info($course);
-                $enabled = $completion->is_enabled();
-                $iscompleted = false;
-                if ($enabled) {
-                    $iscompleted = (bool) $completion->is_course_complete($ownerid);
-                }
-                $islocked = calculator::is_locked_for_viewer($course, $ownerid, (int) $USER->id);
-                $results[] = [
-                    'courseid' => $cid,
-                    'iscompleted' => $iscompleted,
-                    'islocked' => $islocked,
-                ];
-            } catch (\Exception $e) {
+                $results[] = static::course_status($readable[$cid], $ownerid, (int) $USER->id);
+            } catch (\Throwable $e) {
+                // An \Error included, as in get_course_progress::execute(): one course never fails the response.
                 $results[] = [
                     'courseid' => $cid,
                     'iscompleted' => false,
@@ -138,6 +124,33 @@ class get_courses_completion_status extends external_api {
             }
         }
         return $results;
+    }
+
+    /**
+     * One readable course's completion and lock status.
+     *
+     * Its own method, as get_course_progress::progress_data() is, so a test can make a single course
+     * throw and check that the others still answer.
+     *
+     * @param \stdClass $course A course the viewer may be told about.
+     * @param int $ownerid The learner the status describes: the plan owner, or the caller without a plan.
+     * @param int $viewerid The caller.
+     * @return array The row: courseid, iscompleted and islocked.
+     */
+    protected static function course_status(\stdClass $course, int $ownerid, int $viewerid): array {
+        global $CFG;
+        require_once($CFG->libdir . '/completionlib.php');
+
+        $completion = new \completion_info($course);
+        $iscompleted = false;
+        if ($completion->is_enabled()) {
+            $iscompleted = (bool) $completion->is_course_complete($ownerid);
+        }
+        return [
+            'courseid' => (int) $course->id,
+            'iscompleted' => $iscompleted,
+            'islocked' => calculator::is_locked_for_viewer($course, $ownerid, $viewerid),
+        ];
     }
 
     /**

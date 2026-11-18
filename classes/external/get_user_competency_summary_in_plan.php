@@ -85,6 +85,7 @@ class get_user_competency_summary_in_plan extends external_api {
         // Sets $PAGE's context before anything below can load theme strings.
         $context = context_system::instance();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('local/dimensions:view', $context);
 
         // A plain method call, so its return structure is never resolved. It checks access to
@@ -109,7 +110,7 @@ class get_user_competency_summary_in_plan extends external_api {
         if (!empty($result->usercompetencysummary->evidence)) {
             self::add_prior_learning_files(
                 $result->usercompetencysummary->evidence,
-                (int) api::read_plan($params['planid'])->get('userid'),
+                (int) $result->plan->userid,
                 (int) $params['competencyid']
             );
         }

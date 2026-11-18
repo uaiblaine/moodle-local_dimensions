@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Competência: linha do tempo horizontal</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.lane{font:600 11.5px "Noto Sans",sans-serif;fill:#5d6180}
+.mo{font:600 11px "Noto Sans",sans-serif;fill:#5d6180;letter-spacing:.06em}
+.ev{stroke:#fff;stroke-width:2.5}
+.ev-ahead{fill:#fff;stroke-width:2;stroke-dasharray:2 2}
+</style>
+</helmet>
+<div class="dim" style="width: 1280px; height: 920px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="#" aria-current="page">Minhas competências</a>
+    <span class="grow"></span>
+    <span class="avatar">AM</span>
+  </nav>
+  <header class="hero" style="background: #7b2fa8; padding: 24px 0 22px;">
+    <div class="wrap" style="display: flex; align-items: flex-end; gap: 24px;">
+      <div class="col" style="gap: 8px; flex: 1 1 auto;">
+        <nav class="crumb" aria-label="Trilha"><a href="#" style="color: inherit;">Trilha de indução 2026</a><span>/</span><span>Prática em sala</span></nav>
+        <h1 class="h1" style="font-size: 30px;">Planeja aulas eficazes</h1>
+      </div>
+      <span class="chip glass">Consolidado · proficiente</span>
+      <div class="seg dark" role="group" aria-label="Mostrar a jornada como"><span>Diário</span><span class="on">Linha do tempo</span></div>
+    </div>
+  </header>
+
+  <main class="wrap" style="width: 100%; padding-top: 22px; display: flex; flex-direction: column; gap: 18px;">
+    <section class="card" style="padding: 16px 18px;">
+      <div class="row" style="padding: 0 4px 6px;"><h2 class="h3">A subida e as paradas</h2><span class="small" style="margin-left: 10px;">março a outubro · e o que vem pela frente</span></div>
+      <svg viewBox="0 0 1180 430" style="width: 100%; height: 430px; display: block;" role="img" aria-label="Linha do tempo: o nível subiu de Emergente em junho para Consolidado em outubro, com seis paradas e duas pela frente">
+        <rect x="992" y="20" width="176" height="390" rx="12" fill="#f2f3fa"></rect>
+        <text x="1080" y="40" text-anchor="middle" class="mo">PELA FRENTE</text>
+        <path d="M992 20V410" stroke="#070093" stroke-width="1.5" stroke-dasharray="3 3"></path>
+        <text x="996" y="424" class="mo" style="fill: #070093;">HOJE</text>
+
+        <path class="ax" d="M80 50H990M80 90H990M80 130H990M80 170H990"></path>
+        <path d="M80 90H990" stroke="#c9cce0" stroke-dasharray="6 4"></path>
+        <text x="70" y="54" text-anchor="end" class="lab">Referência</text>
+        <text x="70" y="94" text-anchor="end" class="lab" style="font-weight: 700; fill: #1d2033;">Consolidado</text>
+        <text x="70" y="134" text-anchor="end" class="lab">Em desenv.</text>
+        <text x="70" y="174" text-anchor="end" class="lab">Emergente</text>
+
+        <path d="M80 210H456V170H488V130H984V90H992" fill="none" stroke="#7b2fa8" stroke-width="4" stroke-linejoin="round"></path>
+        <path d="M80 210H456V170H488V130H984V90H992V410H80Z" fill="#7b2fa8" fill-opacity="0.07"></path>
+        <path d="M992 90H1070V50H1160" fill="none" stroke="#7b2fa8" stroke-width="3" stroke-opacity="0.45" stroke-dasharray="5 6"></path>
+        <text x="1074" y="72" class="lab" style="font-size: 10.5px;">Referência, se quiser</text>
+
+        <path class="ax" d="M80 245H1168"></path>
+        <text x="80" y="238" class="mo">MAR</text><text x="200" y="238" class="mo">ABR</text><text x="320" y="238" class="mo">MAI</text><text x="440" y="238" class="mo">JUN</text>
+        <text x="560" y="238" class="mo">JUL</text><text x="680" y="238" class="mo">AGO</text><text x="800" y="238" class="mo">SET</text><text x="920" y="238" class="mo">OUT</text>
+
+        <text x="70" y="284" text-anchor="end" class="lane">Atividades</text>
+        <text x="70" y="319" text-anchor="end" class="lane">Cursos</text>
+        <text x="70" y="354" text-anchor="end" class="lane">Avaliações</text>
+        <text x="70" y="389" text-anchor="end" class="lane">Evidências próprias</text>
+        <path d="M80 280H1168M80 315H1168M80 350H1168M80 385H1168" stroke="#eef0f6" stroke-width="1"></path>
+
+        <path d="M456 280V170M488 315V130M984 280V90" stroke="#7b2fa8" stroke-opacity="0.4" stroke-dasharray="2 4"></path>
+        <circle cx="456" cy="280" r="9" class="ev" fill="#17694a"></circle>
+        <circle cx="984" cy="280" r="9" class="ev" fill="#17694a"></circle>
+        <circle cx="488" cy="315" r="9" class="ev" fill="#3b2fb3"></circle>
+        <circle cx="808" cy="350" r="13" fill="none" stroke="#070093" stroke-width="2"></circle>
+        <circle cx="808" cy="350" r="9" class="ev" fill="#3b2fb3"></circle>
+        <circle cx="632" cy="385" r="9" class="ev" fill="#7a4a00"></circle>
+        <circle cx="1040" cy="280" r="9" class="ev-ahead" stroke="#17694a"></circle>
+        <circle cx="1110" cy="315" r="9" class="ev-ahead" stroke="#3b2fb3"></circle>
+        <text x="1040" y="303" text-anchor="middle" class="lab" style="font-size: 10.5px;">3 aulas</text>
+        <text x="1110" y="338" text-anchor="middle" class="lab" style="font-size: 10.5px;">Oficina</text>
+      </svg>
+    </section>
+
+    <section style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px;">
+      <div class="card pad col" style="gap: 10px; border-color: #c9cce0;">
+        <div class="row"><span class="eyebrow">Parada selecionada · 2 set</span><span class="grow"></span><span class="small">← anterior · próxima →</span></div>
+        <b class="h3">Avaliação da mentoria</b>
+        <div class="row" style="gap: 10px;"><span class="avatar">BL</span><span class="col" style="gap: 0;"><b style="font-size: 14px;">Beatriz Lima</b><span class="small">Mentora · no plano</span></span><span class="grow"></span><span class="chip">Em desenvolvimento</span></div>
+        <blockquote style="margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--dim-tint); font-size: 14px; color: var(--dim-ink-2);">Objetivos claros e bem comunicados. Falta retomar com a turma no fim da aula o que foi alcançado.</blockquote>
+      </div>
+      <div class="card pad col" style="gap: 8px;">
+        <span class="eyebrow">Em palavras</span>
+        <p style="font-size: 14.5px;">Seis paradas em sete meses, de quatro tipos. A subida veio de duas atividades e de uma nota de curso; a mentoria acompanhou no meio do caminho.</p>
+        <p class="small">O texto é montado no servidor a partir das mesmas evidências: é também a alternativa textual do gráfico.</p>
+      </div>
+    </section>
+  </main>
+  <span class="tagid" style="left: 760px; top: 76px;">2B</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

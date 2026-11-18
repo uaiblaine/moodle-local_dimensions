@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Bloco Planos de aprendizagem</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.bp{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:center;padding:12px;border-radius:14px;border:1px solid #e1e3ef;text-decoration:none;color:#1d2033;background:#fff}
+.nx{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#3a3e58;margin-top:4px}
+.nx i{width:16px;height:16px;border-radius:50%;border:1.5px dashed #070093;display:block;flex:none}
+.rv{display:flex;align-items:center;gap:10px;min-height:44px;text-decoration:none;color:#1d2033;font-size:14px;border-top:1px solid #eef0f6}
+.cnt{margin-left:auto;min-width:24px;height:24px;border-radius:12px;background:#ece9ff;color:#3b2fb3;font-size:12px;font-weight:700;display:grid;place-items:center;padding:0 7px}
+</style>
+</helmet>
+<div class="dim" style="width: 400px; height: 720px; padding: 20px; background: #f6f7fb;">
+  <section class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+    <div class="row"><h2 class="h3">Planos de aprendizagem</h2><span class="grow"></span><a href="#" class="small" style="color: var(--dim-nav); font-weight: 600;">Todos</a></div>
+    <a href="#" class="bp">
+      <svg viewBox="0 0 140 140" width="64" height="64" role="img" aria-label="5 de 9 proficientes">
+        <path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g0}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g1}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g2}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g3}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g4}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g5}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g6}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g7}}"></path><path class="pt pt-ghost" fill="#4a1c7a" d="{{a.g8}}"></path>
+        <path class="pt {{a.c0}}" fill="#0f7d74" stroke="#0f7d74" d="{{a.p0}}"></path><path class="pt {{a.c1}}" fill="#1f9488" stroke="#1f9488" d="{{a.p1}}"></path><path class="pt {{a.c2}}" fill="#0b5f58" stroke="#0b5f58" d="{{a.p2}}"></path>
+        <path class="pt {{a.c3}}" fill="#7b2fa8" stroke="#7b2fa8" d="{{a.p3}}"></path><path class="pt {{a.c4}}" fill="#9446bf" stroke="#9446bf" d="{{a.p4}}"></path><path class="pt {{a.c5}}" fill="#5e2183" stroke="#5e2183" d="{{a.p5}}"></path>
+        <path class="pt {{a.c6}}" fill="#c2570c" stroke="#c2570c" d="{{a.p6}}"></path><path class="pt {{a.c7}}" fill="#d9701f" stroke="#d9701f" d="{{a.p7}}"></path><path class="pt {{a.c8}}" fill="#9c4307" stroke="#9c4307" d="{{a.p8}}"></path>
+      </svg>
+      <span class="col" style="gap: 2px;">
+        <b style="font-size: 15px;">Trilha de indução 2026</b>
+        <span class="small">9 Etapas · até jun 2027</span>
+        <span class="nx"><i></i>Próxima: Plano de desenvolvimento</span>
+      </span>
+    </a>
+    <a href="#" class="bp">
+      <svg viewBox="0 0 140 140" width="64" height="64" role="img" aria-label="1 de 6 proficiente">
+        <path class="pt pt-ghost" fill="#0f5e66" d="{{b.g0}}"></path><path class="pt pt-ghost" fill="#0f5e66" d="{{b.g1}}"></path><path class="pt pt-ghost" fill="#0f5e66" d="{{b.g2}}"></path><path class="pt pt-ghost" fill="#0f5e66" d="{{b.g3}}"></path><path class="pt pt-ghost" fill="#0f5e66" d="{{b.g4}}"></path><path class="pt pt-ghost" fill="#0f5e66" d="{{b.g5}}"></path>
+        <path class="pt {{b.c0}}" fill="#0f5e66" stroke="#0f5e66" d="{{b.p0}}"></path><path class="pt {{b.c1}}" fill="#0f5e66" stroke="#0f5e66" d="{{b.p1}}"></path><path class="pt {{b.c2}}" fill="#0f5e66" stroke="#0f5e66" d="{{b.p2}}"></path>
+        <path class="pt {{b.c3}}" fill="#0f5e66" stroke="#0f5e66" d="{{b.p3}}"></path><path class="pt {{b.c4}}" fill="#0f5e66" stroke="#0f5e66" d="{{b.p4}}"></path><path class="pt {{b.c5}}" fill="#0f5e66" stroke="#0f5e66" d="{{b.p5}}"></path>
+      </svg>
+      <span class="col" style="gap: 2px;">
+        <b style="font-size: 15px;">Liderança intermediária</b>
+        <span class="small">6 Módulos · começou há 3 semanas</span>
+        <span class="nx"><i></i>Próxima: Conversas difíceis</span>
+      </span>
+    </a>
+    <div class="col" style="gap: 0; margin-top: 4px;">
+      <span class="eyebrow" style="padding-bottom: 6px;">Como mentora</span>
+      <a href="#" class="rv">Competências para revisar<span class="cnt">2</span></a>
+      <a href="#" class="rv">Planos para revisar<span class="cnt">1</span></a>
+    </div>
+  </section>
+  <p class="small" style="margin-top: 14px;">O block_lp do core reescrito pelo tema: as mesmas três listas, com a rosa e a próxima parada no lugar do link simples. Com o block_dimensions instalado, este é o resumo; os cartões ricos ficam no bloco dele.</p>
+  <span class="tagid" style="left: 300px; top: 6px;">7</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":400,"height":720}}'>
+class Component extends DCLogic {
+  wedge(cx, cy, r, a0, a1) {
+    const rad = (d) => (d - 90) * Math.PI / 180;
+    const x0 = cx + r * Math.cos(rad(a0));
+    const y0 = cy + r * Math.sin(rad(a0));
+    const x1 = cx + r * Math.cos(rad(a1));
+    const y1 = cy + r * Math.sin(rad(a1));
+    return 'M' + cx + ' ' + cy + 'L' + x0.toFixed(1) + ' ' + y0.toFixed(1) + 'A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + 'Z';
+  }
+  rose(levels, cx, cy, R) {
+    const step = 360 / levels.length;
+    const out = {};
+    levels.forEach((l, i) => {
+      const a0 = i * step + 2;
+      const a1 = (i + 1) * step - 2;
+      const r = l > 0 ? R * (0.25 + 0.1875 * l) : R * 0.5;
+      out['p' + i] = this.wedge(cx, cy, r, a0, a1);
+      out['g' + i] = this.wedge(cx, cy, R, a0, a1);
+      out['c' + i] = l >= 3 ? 'pt-on' : (l > 0 ? 'pt-mid' : 'pt-off');
+    });
+    return out;
+  }
+  renderVals() {
+    return {
+      a: this.rose([4, 3, 4, 3, 3, 0, 2, 0, 0], 70, 70, 66),
+      b: this.rose([3, 2, 0, 1, 0, 0], 70, 70, 66)
+    };
+  }
+}
+</script>
+</body>
+</html>

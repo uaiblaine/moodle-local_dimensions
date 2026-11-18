@@ -1,0 +1,1 @@
+s/(        \$plan = api::create_plan_from_template)/        if (\\core_competency\\plan::record_exists_select('templateid = ? AND userid = ?', [\$template->get('id'), \$params['userid']])) {\n            return ['success' => true, 'created' => false];\n        }\n$1/;

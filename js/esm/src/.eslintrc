@@ -1,0 +1,67 @@
+// Restores the lint that moving out of amd/src silently drops (ADR-006 decision 7).
+//
+// The list below is core's own set for **/amd/src/*.js, rule for rule, plus two additions
+// stated as such: require-returns and require-returns-type, which core does not enforce
+// on AMD and which this plugin wants because a .tsx is arrow functions returning values.
+// Keeping the two lists comparable is the point - "restores what core enforces" has to be
+// checkable against core's .eslintrc, not a claim in a comment.
+//
+// Core's .eslintrc applies jsdoc rules to **/amd/src/*.js and none at all to
+// **/*.ts or **/*.tsx: that override registers the TypeScript parser and turns two
+// promise rules off, and declares no jsdoc rule of any kind. So every file this
+// plugin moves from amd/src to js/esm/src leaves a gate it currently passes, with
+// nothing in any pipeline to say so.
+//
+// eslintrc-style configuration cascades, so this file merges with core's rather
+// than replacing it, and both `grunt eslint:react` and the CI grunt gate pick it
+// up with no change anywhere else.
+//
+// require-jsdoc is configured explicitly because its default only covers
+// FunctionDeclaration, and a .tsx file is arrow functions almost end to end - the
+// default would have enforced nothing here while reading as though it did.
+//
+// Two settings below are not preferences, they are the price of core registering the
+// TypeScript parser without the @typescript-eslint plugin (ADR-006 fact 5).
+//
+// no-unused-vars runs its plain JavaScript implementation over a TypeScript AST, so the
+// parameter names inside a function TYPE - `open: (root: HTMLElement) => Promise<void>`
+// in a type alias - read to it as arguments nobody used. There is no such thing as using
+// them; they are documentation. `args: "none"` is the narrowest switch that silences
+// exactly that while keeping the half of the rule that matters here, unused variables
+// and unused imports. Measured 2026-09-04: without it, every function type in this
+// plugin was an error, and the same would be true of any Moodle plugin writing
+// TypeScript.
+//
+// require-param with a destructured parameter demands one @param per field. The fields
+// are typed immediately above in the props type, so repeating them in the docblock adds
+// nothing a reader or a tool can use - and eslint's fix mode WRITES the bare lines into
+// the source, which then fail require-param-type, which is not fixable. Document the
+// object; let TypeScript carry the fields. check-param-names needs the same setting or
+// it asks for the same four lines from the other side.
+{
+  "rules": {
+    "no-unused-vars": ["error", {"args": "none"}],
+    "jsdoc/check-access": "error",
+    "jsdoc/check-alignment": "error",
+    "jsdoc/check-param-names": ["error", {"checkDestructured": false}],
+    "jsdoc/check-property-names": "error",
+    "jsdoc/empty-tags": "error",
+    "jsdoc/implements-on-classes": "error",
+    "jsdoc/multiline-blocks": "error",
+    "jsdoc/require-jsdoc": ["error", {
+      "require": {
+        "ArrowFunctionExpression": true,
+        "FunctionDeclaration": true,
+        "FunctionExpression": true
+      }
+    }],
+    "jsdoc/require-param": ["error", {"checkDestructured": false}],
+    "jsdoc/require-param-name": "error",
+    "jsdoc/require-param-type": "error",
+    "jsdoc/require-property": "error",
+    "jsdoc/require-property-name": "error",
+    "jsdoc/require-property-type": "error",
+    "jsdoc/require-returns": "error",
+    "jsdoc/require-returns-type": "error"
+  }
+}

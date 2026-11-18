@@ -6,6 +6,217 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security: the tracker's card services need a plan (MDL Shield, 2026-11-18)
+
+Version `2026100531`.
+
+- **`get_course_progress` and `get_courses_completion_status` refuse a call without a plan.**
+  With plan id 0 the only gate was that the course carried some competency link and that the
+  caller could browse it, so any user received the section names of any such course, locked cards
+  included (MDL Shield finding 1, low). The tracker page always names its plan and competency, and
+  nothing else calls the two services; `planid` and `competencyid` are now required, and 0 ends in
+  `invalidplan` before any course is read. Gate `mutations/mdlshield_2026_11_18.conf`.
+- **The plugin no longer creates the PostgreSQL `unaccent` extension by itself** (finding 2).
+  Install and upgrade used to run `CREATE EXTENSION` and swallow the outcome. The plugin settings
+  now show the extension's state with a button that creates it (`/local/dimensions/unaccent.php`,
+  `moodle/site:config` and a session key), and System status gains a check: OK when installed,
+  a warning with the recommendation when missing, not applicable on other databases.
+  `helper::has_unaccent()` is memoised per request, so a search asks the catalogue once.
+- **Exporting a framework needs `moodle/competency:competencymanage`**, as core's own export page
+  does; the hub's export button was already shown only to managers, and the template export now
+  offers a referenced framework as a companion download only to a caller who manages it (the CSV
+  still names every framework the caller reads).
+- **The reflective write of `core_availability\info::$modinfo`** in `learner_restrictions` is
+  documented as intentional (core has no setter and its public filter walks the course's members),
+  and `info::get_modinfo()` joins the core-parity manifest beside `info::filter_user_list()`
+  (finding 3).
+- `cli/core_parity.php` reports a missing manifest instead of failing on the read.
+- README: the accent-insensitive search section describes the admin action and the status check,
+  and the tracker section tells administrators that a viewer who may read a learner's user
+  competencies sees the plan owner's course progress and section names on the tracker.
+- Finding 4 (direct writes to core competency and custom field tables) is left as it is: each
+  write follows core's own precedent or a documented need, and the field writes reset the
+  handlers' caches.
+
+### Security hardening: the rest of the 2026-11 audit
+
+Version `2026100530`. None of these was reachable as an escalation; each brings a surface in line
+with core or with the plugin's own rule.
+
+- **The hub's modals trust no posted context.** The template modal created a template in the
+  context access was checked in but sent the posted `contextid` on an edit too (core refused the
+  change with an exception) and checked short-name uniqueness there; it now takes the template's
+  own context. The template and framework modals refuse a context core keeps no template or
+  framework in (`invalidcontext`). Both the template and the competency modal apply the custom
+  fields' own rules (`instance_form_validation()`), and the competency modal stores custom SCSS
+  as plain text, as the template modal does (`helper::force_customscss_plain_data()`).
+- **The card services answer each course once.** `get_course_progress` and
+  `get_courses_completion_status` deduplicate the requested ids, so a repeated id no longer
+  repeats the course's structure and completion reads.
+- **Cohort roles go only to active accounts.** `add_cohort_role` refuses a suspended, deleted or
+  guest role holder; core's mapping accepts any user id.
+- **Adding a user to a template asks core first.** `add_template_user_plan` lets
+  `api::create_plan_from_template()` answer "already has one" after its own `planmanage` check,
+  so a template manager no longer learns who holds a plan.
+- **Plan creation per cohort is serialised.** `task\sync_template_cohort` creates a pair's plans
+  under a core lock (`competency_plan` has no unique index on template and user), and
+  `task\sync_cohort_roles` ends with a message for a user who lost `moodle/role:manage` instead
+  of failing every retry.
+- **The enrolment status toggle follows the site and the task.** `set_enrol_instance_status`
+  refuses a method disabled on the site, takes the lock of `task\process_enrol_method`, and
+  applies the method's own `can_hide_show_instance()` (self enrolment without a required password).
+- **Report descriptions survive a missing context.** The plan and template description columns
+  fall back to the site context when the plan's owner or the template's category context is gone
+  (the plans source joins the owner with a LEFT JOIN, so such a row reaches the column). The
+  prior-learning source joins its owner with an inner JOIN, so its column needs no fallback.
+- **Hidden templates in a subcategory.** The locked category entry's template list keeps a hidden
+  template only for whoever manages it in its own context. The rule is now in `CLAUDE.md`:
+  hiding filters lists; a lookup by id follows core.
+
+### Security: four findings of the 2026-11 external audit
+
+Version `2026100529`. The audit's other findings were checked against the code and core 5.3 and
+either mirror core, are hardening left for a later change, or do not hold.
+
+- **Custom-field files follow the instance's read rule.** `competency_handler::can_view()` and
+  `lp_handler::can_view()` returned true for everyone, and core's textarea and customfield_picture
+  file callbacks ask only that, behind no login. A known instance now requires a logged-in user and
+  `picture_manager::can_view()`: a visible template to anyone logged in, a hidden one to its
+  readers and plan holders, a competency to its framework's readers. Instance 0 (the report
+  builder's question) still answers true.
+- **Every web service refuses while competencies are disabled.** 45 services read the competency
+  tables directly and answered on a site with competencies off; each now calls
+  `api::require_enabled()` after its context check, as the hub pages do.
+  `tests/local/external_requires_competencies_test.php` scans for it.
+- **The competency search and the import's structure hint leave out unlisted categories.**
+  `search_competencies` and `template_import_analyser::hint_other_frameworks()` now filter by
+  `unlisted_categories`, as the hub's Structure and Frameworks tabs do.
+- **A category manager can import template custom fields.** The import analyser resolved the
+  fields' editing rights at the site, so a manager holding `templatemanage` in one category had
+  every `template_idnumber` and `cf_*` row refused as not writable. It now names the target, and
+  both handlers drop a create form's context hint when the save ends.
+
+### Changed: the workload follows core's progress rule, held to it by an oracle and a fingerprint
+
+Version `2026100528`.
+
+- **The activities the bar and the rings count are core's.** `calculator::counts_towards_progress()`
+  now asks `cm_info::is_visible_on_course_page()`, as `completion_info::get_user_activities_with_completion()`
+  does, where it asked "listed on the course page, or openable now". A stealth activity ("Make
+  available but don't show on course page") no longer counts. A hidden activity counts for a
+  learner who may see it (`moodle/course:viewhiddenactivities`), as core counts it. Moodle's own
+  course progress (the dashboard's *My courses*, block_compass) and the tracker now give the same
+  number for the same learner.
+- **An oracle holds the two equal.** `tests/local/core_parity_test.php` compares, for every learner
+  of a course that carries each case of core's rule, the set of counted activities and the
+  percentage. It covers 18 restriction sets, groups of every visibility, groupings, a module
+  override, separate groups, hidden, stealth and deleted activities, a restricted section and a
+  subsection, in five scenarios. Ported from block_compass's ADR-027.
+- **A fingerprint says when core moves the code the rule mirrors.** `local\core_fingerprint`,
+  `tests/fixtures/core_parity.json` (23 core functions, audited against v5.3.1, among them
+  `cm_info::update_user_visible()`, which MDL-66780 changed), `tests/local/core_fingerprint_test.php`
+  and `cli/core_parity.php`. `docs/core-parity.md` holds the audit procedure and its log. The fleet's
+  weekly look upstream covers this plugin.
+
+### Improvements from the comment audit
+
+Version `2026100527` (AMD build).
+
+- **Removed**: the inert `@media (prefers-color-scheme: dark)` block and
+  `colour_mode::MEDIA_OPTIN_ATTRIBUTE`. This branch serves Moodle 5.3 only, where core resolves the
+  *auto* colour mode itself; `MOODLE_405_STABLE` keeps the block. The hub modal's Bootstrap 4 margin
+  fallback goes too.
+- **Removed**: `calculator::current_user_has_pending_application()`, which had no caller left; call
+  `calculator::has_pending_application($courseid, $userid)`.
+- The course completion service answers the other courses when one course fails with any error, as
+  the progress service already did.
+- The user evidence report's file count reads only the owner's user context, as core stores those
+  files, and can use the files index.
+- The template CSV export checks a framework the viewer cannot read once, not once per competency.
+- The Competency hub's context bar no longer needs jQuery, and its deletion dialogue names every
+  string literally. Smaller tidying: one plan read in the competency summary service, one option
+  splitter for the chip filters, `unaccent` ensured from one place, and no e-mail address in
+  `@copyright` lines.
+
+### Fixed
+
+- **The tracker counts progress only for learners, as the plan overview does** (version
+  `2026100526`). Core records completion only for its tracked users: those enrolled with
+  `moodle/course:isincompletionreports`, which by default only the student role holds. The plan
+  overview's progress bar already asked `completion_info::is_tracked_user()` and drew nothing for
+  a teacher or manager. The tracker's section rings did not, and drew a card of zeros for a plan
+  owner enrolled in such a role. The tracker now asks the same question. An untracked owner's card
+  says "Progress is tracked for learners only." where a course without completion says
+  "Completion disabled.", and `local_dimensions_get_course_progress` returns a new `tracked`
+  field. An owner who is not enrolled keeps the locked card. A manager enrolled as a student is
+  tracked, and, holding `moodle/course:ignoreavailabilityrestrictions`, has every restricted
+  activity in their workload, as core counts it.
+
+- **The Competency hub's "Connection lost" toast** appears again for a dropped connection, a
+  timeout and a 502 or 504 from a load balancer. Moodle 5.3's core/ajax is fetch-based and rejects
+  those with error objects (fetch's TypeError, an AbortError, `Error('HTTP n: ...')`), never the
+  bare string the hub looked for, so they opened core's technical exception dialogue unless the
+  browser reported itself offline. Web-service exceptions and script faults still get the dialogue.
+  Version 2026100525 (AMD build).
+- **Learning plan reports: a completed plan's competency count, proficient count and progress**
+  come from the competencies archived at completion, as core and the plugin's own *Learning plan
+  competencies* source list them. A completed plan based on a template counted the template's
+  current competencies, so editing the template afterwards changed the numbers of plans already
+  completed.
+
+### Code comments reviewed
+
+- The comments of the production code changed since the previous review (classes, AMD modules,
+  templates, `db/`, the top-level pages and `styles.css`) say the non-obvious why, the contract and
+  the edge case, and no longer carry history or development-environment detail; claims that
+  contradicted the code were corrected. No behaviour changes. The AMD build is regenerated because
+  its source maps carry the comments (version 2026100524).
+
+### Plugins directory readiness
+
+Version `2026100523`.
+
+- `tests/marketplace_readiness_test.php` is the fleet template again, with this plugin's two
+  documented departures (the `styles_<theme>.css` sheets and token-only root rules). It now splits
+  a selector list at top-level commas only, skips the paths `thirdpartylibs.xml` declares, and
+  checks that every Mustache template carries core's whole GPL block.
+- Sentence case in `lang/en`: *Learn more*, *Submit evidence*, *Full plan overview* and
+  *Competency tracker* in the strings that still capitalised them; `lang/pt_br` in step.
+- The collapsible description's custom properties carry the plugin's prefix:
+  `--local-dimensions-collapsible-max-vh` and `--local-dimensions-collapsible-fade-color`.
+- README: the version table lists each branch's latest release instead of version numbers that
+  had gone stale; "Data stored" names the browser storage (two pane widths in `localStorage`,
+  the *Return to plan* button's position in `sessionStorage`); the documentation heading is in
+  English only.
+
+### Competency hub v2: the tree as a canvas of nodes (preview)
+
+A second view of a framework's competency tree, beside the Competency hub it does not replace.
+
+- **A new page**, `hubv2.php`, under *Site administration > Competencies > Competency Dimensions >
+  Competency hub v2*, with the hub's capability (`moodle/competency:competencymanage`) and absent
+  while competencies are disabled. It honours the hub's `contexttype`, `categoryid` and
+  `frameworkid` parameters, defaulting to the hub's remembered context, which it never writes.
+  A GET form chooses the context (the category through the hub's category search) and the
+  framework; *List view* opens the same framework in the hub's Competencies tab.
+- **The canvas** (React, `js/esm/src/hubv2`, one bundle) lays the tree out left to right, loads
+  each branch when it is first opened, draws rule edges and the selected competency's related ones,
+  and has search, zoom, fit and an overview map. The panel shows the selected competency and acts
+  through the hub's own dialogues and core's competency services, plus one read web service,
+  `local_dimensions_competency_delete_check`: no database change.
+- **Deleting is checked first, on the canvas and in the hub's Competencies tab.** The delete action asks `local_dimensions_competency_delete_check`
+  (read-only, `moodle/competency:competencymanage` in the framework's context) before attempting
+  anything. When core would refuse (the competency or a descendant is in a template, a plan, a
+  course, a user's record or a badge) a dialogue says why, with counts that are exact only for a
+  site-level manager (a course category's manager sees which reasons apply, not how many); otherwise the confirmation
+  names what goes with it: the descendants, their relations and their prior-learning links, and the
+  parent's rule that core resets, whether a branch or a single leaf is deleted.
+- **React Flow** (`@xyflow/react` 12.12.1, MIT) is vendored under `js/esm/vendor/xyflow` and
+  declared in `thirdpartylibs.xml`; its rules are ported into `styles.css` under the page's own
+  class, painted with the plugin's colour tokens.
+- `stylesheet_markup_contract_test` now reads the classes the ES tree writes; `bundle_test`
+  holds the bundle as fresh as its sources and the vendored release.
+
 ### The Competency hub honours unlisted course categories
 
 Any logged-in user passes the hub's category readability check (core gives every authenticated
@@ -58,6 +269,70 @@ The *Related content* tab's course cards follow the fleet's course card contract
   `showcover` per course, and `courseimage` may now be the theme's generated image (a base64 SVG
   data URI or a pluginfile URL of this site, checked on the server).
 - The course name no longer takes core's dark-mode underline of `#region-main` links at rest.
+
+### Performance: the competency tracker loads its cards in one request, behind a skeleton
+
+Version `2026100522`.
+
+- **One request instead of one per course.** The tracker asked for the completion status of every
+  course and then for each course's progress, one request after another (with a 2 s overlap), so
+  a page of six courses made seven round trips. The status call and the progress of up to 20
+  courses now share one HTTP request (core/ajax runs them in order on the server); a longer list
+  is cut into batches of 20 sent together. The server's work is the same: on the 2026-11-17
+  fixture, a warm batch of six heavy courses took 95 ms and 17 reads, the same work the six
+  single calls did between them. Every card is drawn once the status has answered, because a card reads it.
+- **A failed call costs only its own cards.** A batch that fails, or answers without a course,
+  leaves each of its cards the error state and its Retry button, which asks for that course
+  alone. When the status call fails, core skips the rest of that request: the first batch's cards
+  show Retry and the completion tabs stay hidden, as before.
+- **A skeleton instead of a spinner** (fleet Design System, `components/skeleton.md`): grey
+  timeline rows, one per top-level visible section of the course (between three and twelve; a
+  locked card three), counted for every card in one query on `{course_sections}`, so the body
+  that replaces it lands at nearly its height. The rows pulse every 1.3 s and stand still under
+  reduced motion; the grid is `aria-busy` with one spoken status line until every card is drawn
+  or failed. Layout shift of the fixture's six-course tracker of nine-section courses: 0.060 with
+  the spinner, 0.011 with the skeleton.
+- **Code scanning alert 6**: the tab strip read a millisecond duration with
+  `indexOf('ms') === length - 2`, true for any one-character value, so a theme writing `s` in
+  `--local-dimensions-tabs-scroll-duration` made the scroll duration NaN; it now reads the suffix.
+  **Alert 9**: the README imagery tool (`docs/`, not shipped) built the script it evaluates in
+  Chrome from the SVG markup; it now passes the markup as an argument to a fixed function.
+- Tests: `learner_js_source_test` (batches after the status, a failed batch leaves every card a
+  retry, the suffix), `view_competency_page_test` (a skeleton row per timeline section),
+  `stylesheet_markup_contract_test` (busy, silent and still under reduced motion); gates in
+  `mutations/tracker_batch.conf`.
+
+### Performance: progress in very large courses
+
+Version `2026100521`.
+
+- **A course card no longer reads the whole course's group membership.** Whether a group,
+  grouping or profile restriction keeps an activity out of a learner's workload was asked through
+  core's `filter_user_list()`, which is built for long lists: for one learner it read every member
+  of the group, every member of the grouping, or, for "any group", every group member of the
+  course, and listed everyone holding `moodle/course:ignoreavailabilityrestrictions`, on every
+  activity, three times per card (bar, card shape, section rings). `local\learner_restrictions`
+  now gives the same answer for that one learner: group and grouping conditions through their own
+  per-user test, which reads the learner's groups from core's shared groups cache; any other
+  condition through its own filter with a one-person list; the capability through
+  `has_capability()`. The rule is unchanged: only the restrictions that are permanent for a person
+  count, so a date-locked activity still counts.
+- Measured on a 5.3 twin stack with one course of 100,001 students, 2,000 groups (about 50 members
+  each, 5% of students in two groups, 1% in three, 1% in none, 100 groups with hidden visibility),
+  20 groupings of 100 groups, 45 teachers in 30 groups each, and 66 restricted activities: the
+  tracker's `get_course_progress` for that course fell from 470 ms and 402 queries to 8.6 ms and 8
+  queries, and its card on `view-competency.php` now appears at 753 ms instead of 1,116 ms (median
+  of five loads at 4x CPU). The three card calls fell from 1,111 ms to 36 ms per learner (mean of
+  240 users, 4.5: 1,258 ms to 28 ms). All 16,080 learner-activity answers (4.5: 15,840) and all
+  240 cards were identical to the previous code's.
+- `tests/local/learner_restrictions_test.php` holds core's `filter_user_list()` as the oracle on
+  nineteen restriction sets (groups visible to all, to members, to each member and to nobody, a
+  group of another course, grouping 0) for seven kinds of user, read by the learner, a teacher and
+  two classmates, and pins that a warm group or grouping check runs no query. `tests/calculator_group_workload_test.php` checks the bar
+  and every ring against hand-counted workloads: a learner in two groups (an activity open to
+  either counted once), in one group and in none, under forced separate groups, with subsections
+  and a section restricted to another group. Mutation spec: `mutations/learner_restrictions.conf`
+  (22 gates).
 
 ### Performance
 

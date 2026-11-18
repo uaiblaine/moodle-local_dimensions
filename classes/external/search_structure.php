@@ -91,6 +91,7 @@ class search_structure extends external_api {
             return ['items' => [], 'total' => 0];
         }
         self::validate_context($framework->get_context());
+        \core_competency\api::require_enabled();
         if (!competency_framework::can_read_context($framework->get_context())) {
             return ['items' => [], 'total' => 0];
         }

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fluxo do plano</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+button:focus-visible{outline:3px solid #4456ff;outline-offset:2px}
+.stp{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;position:relative}
+.stp div{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;text-align:center}
+.stp div::before{content:"";position:absolute;top:17px;left:-50%;right:50%;height:3px;background:#e1e3ef;z-index:0}
+.stp div:first-child::before{display:none}
+.stp i{width:36px;height:36px;border-radius:50%;border:2.5px solid #c9cce0;background:#fff;display:grid;place-items:center;font:700 14px "Outfit",sans-serif;color:#5d6180;position:relative;z-index:1;font-style:normal}
+.stp .on i{background:#070093;border-color:#070093;color:#fff;box-shadow:0 0 0 6px rgba(68,86,255,.16)}
+.stp .skip i{border-style:dashed;color:#9a9eb8}
+.stp .skip span{color:#9a9eb8}
+.stp span{font-size:13.5px;font-weight:600}
+.act{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 14px;border:1px solid #e1e3ef;border-radius:14px;background:#fff}
+.act b{display:block;font-size:14.5px}
+.act small{display:block;color:#5d6180;font-size:12.5px}
+.cr{display:grid;grid-template-columns:22px 10px minmax(0,1fr) auto;gap:12px;align-items:center;min-height:46px;border-top:1px solid #eef0f6;font-size:14px}
+.tog{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:#3a3e58;cursor:pointer;border:0;background:transparent;font-family:inherit}
+.tog span{width:34px;height:20px;border-radius:10px;background:#c9cce0;position:relative;display:block}
+.tog span::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.tog.on span{background:#070093}
+.tog.on span::after{left:16px}
+.rt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:13px}
+.rt span:nth-child(odd){color:#3a3e58}
+</style>
+</helmet>
+<div class="dim" style="width: 1440px; height: 900px; display: flex; flex-direction: column;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink on" href="#" aria-current="page">Planos de aprendizagem</a>
+    <span class="grow"></span>
+    <span class="avatar" style="background: #ffd84d;">CO</span>
+  </nav>
+  <main style="padding: 22px 30px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; flex: 1 1 auto; min-height: 0;">
+    <div class="col" style="gap: 18px; min-width: 0;">
+      <div class="row" style="gap: 12px;">
+        <span class="avatar" style="width: 44px; height: 44px; font-size: 15px;">AS</span>
+        <div class="col" style="gap: 2px;"><span class="small">Planos de Ana Souza</span><h1 class="h2">{{title}}</h1></div>
+        <span class="grow"></span>
+        <button type="button" class="tog {{tplCls}}" aria-pressed="{{tplPressed}}" onClick="{{toggleTpl}}"><span></span>Plano criado a partir de um modelo</button>
+      </div>
+
+      <section class="card pad col" style="gap: 18px;">
+        <div class="stp" role="list" aria-label="Estados do plano">
+          <div role="listitem" class="{{s.k0}}"><i>1</i><span>Rascunho</span></div>
+          <div role="listitem" class="{{s.k1}}"><i>2</i><span>Aguardando revisão</span></div>
+          <div role="listitem" class="{{s.k2}}"><i>3</i><span>Em revisão</span></div>
+          <div role="listitem" class="{{s.k3}}"><i>4</i><span>Ativo</span></div>
+          <div role="listitem" class="{{s.k4}}"><i>5</i><span>Concluído</span></div>
+        </div>
+        <p class="small" style="font-size: 13.5px; text-align: center; max-width: none;">{{stateNote}}</p>
+      </section>
+
+      <section class="col" style="gap: 8px;">
+        <h2 class="h3">O que pode ser feito agora</h2>
+        <sc-for list="{{actions}}" as="a" hint-placeholder-count="3">
+          <div class="act"><span><b>{{a.label}}</b><small>{{a.effect}}</small></span><button type="button" class="btn sm {{a.style}}" onClick="{{a.go}}">{{a.button}}</button></div>
+        </sc-for>
+      </section>
+
+      <section class="card pad col" style="gap: 0;">
+        <div class="row" style="padding-bottom: 8px;"><h2 class="h3">Competências do plano</h2><span class="grow"></span><sc-if value="{{editable}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn line sm">Adicionar competência</button></sc-if></div>
+        <div class="cr"><span class="small" aria-hidden="true">{{handle}}</span><i style="width: 10px; height: 10px; border-radius: 50%; background: #0f7d74; display: block;"></i><span>Conhece as rotinas da escola</span><span class="chip ok">Referência</span></div>
+        <div class="cr"><span class="small" aria-hidden="true">{{handle}}</span><i style="width: 10px; height: 10px; border-radius: 50%; background: #7b2fa8; display: block;"></i><span>Planeja aulas eficazes</span><span class="chip ok">Consolidado</span></div>
+        <div class="cr"><span class="small" aria-hidden="true">{{handle}}</span><i style="width: 10px; height: 10px; border-radius: 50%; background: #c2570c; display: block;"></i><span>Reflete sobre a prática</span><span class="chip warm">Revisão pedida</span></div>
+        <span class="small" style="padding-top: 10px;">{{editNote}}</span>
+      </section>
+    </div>
+
+    <aside class="col" style="gap: 16px;">
+      <section class="card pad col" style="gap: 10px;">
+        <span class="eyebrow">Quem faz cada passo (padrão do Moodle)</span>
+        <div class="rt">
+          <span>Pedir ou cancelar revisão</span><span>a própria pessoa, gestor</span>
+          <span>Iniciar, encerrar, ativar, voltar a rascunho</span><span>gestor (planreview)</span>
+          <span>Concluir e reabrir</span><span>gestor (planmanage)</span>
+          <span>Editar e excluir</span><span>gestor; não em concluídos</span>
+          <span>Desvincular do modelo</span><span>gestor</span>
+        </div>
+        <span class="small">A tela só mostra os botões que o core já liberou para quem está vendo; ela não decide nada.</span>
+      </section>
+      <section class="card pad col" style="gap: 8px;">
+        <span class="eyebrow">Histórico do plano</span>
+        <span style="font-size: 13.5px;">2 mar · criado por Coordenação</span>
+        <span style="font-size: 13.5px;">4 mar · revisão pedida por Ana Souza</span>
+        <span style="font-size: 13.5px;">6 mar · ativado por Coordenação</span>
+      </section>
+    </aside>
+  </main>
+  <span class="tagid" style="left: 300px; top: 74px;">R2 · Fluxo do plano</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { st: 1, tpl: false };
+  }
+  renderVals() {
+    const { st, tpl } = this.state;
+    const go = (n) => () => this.setState({ st: n });
+    const A = {
+      0: [
+        { label: 'Pedir revisão', effect: 'Vai para "Aguardando revisão"; quem revisa vê o pedido na mesa de revisão.', button: 'Pedir revisão', style: 'line', go: go(1) },
+        { label: 'Ativar sem revisão', effect: 'Vai direto para "Ativo"; a pessoa passa a ver o plano.', button: 'Ativar', style: 'primary', go: go(3) }
+      ],
+      1: [
+        { label: 'Iniciar revisão', effect: 'Você passa a ser quem revisa; o estado fica "Em revisão".', button: 'Iniciar revisão', style: 'primary', go: go(2) },
+        { label: 'Cancelar o pedido', effect: 'Volta para "Rascunho".', button: 'Cancelar pedido', style: 'line', go: go(0) },
+        { label: 'Ativar agora', effect: 'Aprova sem passar pela revisão.', button: 'Ativar', style: 'line', go: go(3) }
+      ],
+      2: [
+        { label: 'Aprovar e ativar', effect: 'Vai para "Ativo" e encerra a revisão.', button: 'Ativar', style: 'primary', go: go(3) },
+        { label: 'Encerrar revisão', effect: 'Volta para "Rascunho" para ajustes.', button: 'Encerrar revisão', style: 'line', go: go(0) }
+      ],
+      3: [
+        { label: 'Concluir o plano', effect: 'Congela as avaliações de cada competência no estado de hoje.', button: 'Concluir', style: 'primary', go: go(4) },
+        { label: 'Voltar a rascunho', effect: 'Some da visão da pessoa até ser ativado de novo.', button: 'Voltar a rascunho', style: 'line', go: go(0) }
+      ],
+      4: [
+        { label: 'Reabrir o plano', effect: 'Volta para "Ativo" e descarta o retrato congelado.', button: 'Reabrir', style: 'primary', go: go(3) }
+      ]
+    };
+    let actions = A[st];
+    if (tpl) {
+      actions = st === 3 ? [A[3][0], { label: 'Desvincular do modelo', effect: 'O plano passa a ser só da pessoa e pode ser editado.', button: 'Desvincular', style: 'line', go: () => this.setState({ tpl: false }) }] : (st === 4 ? A[4] : []);
+    }
+    const s = {};
+    for (let i = 0; i < 5; i++) {
+      s['k' + i] = i === st ? 'on' : (tpl && i < 3 ? 'skip' : '');
+    }
+    const notes = ['Só quem gerencia vê um rascunho.', 'A pessoa pediu revisão.', 'Em revisão com Coordenação.', 'A pessoa acompanha o plano e as avaliações seguem acontecendo.', 'As avaliações estão congeladas; nada muda até reabrir.'];
+    const editable = !tpl && st !== 4;
+    return {
+      s, actions, editable,
+      title: 'Trilha de indução 2026',
+      stateNote: tpl ? 'Plano criado a partir de um modelo: não passa por revisão. ' + notes[st] : notes[st],
+      handle: editable ? '⋮⋮' : '',
+      editNote: editable ? 'Arraste para reordenar; a ordem é a que a pessoa vê.' : (tpl ? 'As competências vêm do modelo; edite no modelo ou desvincule o plano.' : 'Plano concluído: reabra para editar.'),
+      tplCls: tpl ? 'on' : '', tplPressed: tpl ? 'true' : 'false',
+      toggleTpl: () => this.setState({ tpl: !tpl, st: tpl ? st : (st < 3 ? 3 : st) })
+    };
+  }
+}
+</script>
+</body>
+</html>

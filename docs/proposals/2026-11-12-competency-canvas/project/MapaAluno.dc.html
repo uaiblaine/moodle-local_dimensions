@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Como o aluno chega a cada tela</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.maprow{display:grid;grid-template-columns:520px 36px 400px 36px minmax(0,1fr);align-items:stretch}
+.maphead{display:grid;grid-template-columns:520px 36px 400px 36px minmax(0,1fr);font-family:"Outfit",sans-serif;font-weight:700;font-size:16px;color:#3d445c}
+.src,.dst{background:#fff;border:1px solid #dfe2ec;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.src li,.dst li{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:start}
+.dst li{grid-template-columns:minmax(0,1fr)}
+.tag{display:inline-flex;justify-content:center;min-height:22px;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.tag.now{background:#f1f3f9;color:#3d445c;border:1px solid #dfe2ec}
+.tag.new{background:#e8f0f8;color:#0a4a85;border:1px solid #b9cfe5}
+.scr{border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:#0a4a85;color:#fff}
+.scr b{font-family:"Outfit",sans-serif;font-size:18px;line-height:1.2}
+.scr span{font-size:13px;color:#e6edf5}
+.own{display:inline-flex;align-self:flex-start;min-height:24px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700;background:#fff}
+.chev{display:grid;place-items:center;color:#596079}
+.by{color:#596079;font-size:12.5px}
+</style>
+</helmet>
+<div class="ln" style="width: 1600px; height: 1270px; padding: 40px 48px; gap: 16px;">
+  <div class="row" style="align-items: flex-end;">
+    <div class="col" style="gap: 6px; flex: 1 1 auto;">
+      <h1 class="h1">Como o aluno chega a cada tela</h1>
+      <p class="lede" style="max-width: 90ch;">Lido do core 5.3 e dos plugins. No core, o aluno só chega aos próprios planos pelo perfil, pelo bloco de planos ou por um aviso de comentário; as páginas do local_dimensions só são alcançadas pelo block_dimensions.</p>
+    </div>
+    <div class="row" style="gap: 8px;"><span class="tag now">hoje</span><span class="small">o caminho já existe</span><span class="tag new">proposto</span><span class="small">entrada nova</span></div>
+  </div>
+
+  <div class="maphead"><span>De onde parte</span><span></span><span>Tela e quem a desenha</span><span></span><span>Dali segue para</span></div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Perfil, cartão Diversos, link “Planos de aprendizagem” <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Bloco Planos de aprendizagem, “ver mais” <span class="by">(block_lp)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Bloco Dimensions no painel, ou a página dele como página inicial <span class="by">(block_dimensions)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Item “Minha jornada” na barra e no menu do usuário <span class="by">(tema)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Cartão “Sua jornada” no painel <span class="by">(block_compass)</span> e no perfil <span class="by">(tema)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>1 · Minha jornada</b><span>A lista de planos com o que foi reconhecido.</span><span class="own" style="color: #96430a;">block_dimensions (página) · core plans.php pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>2 · Plano</li><li>5 · Minhas evidências</li><li>3 · Competência, direto por um selo reconhecido</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Cartão do plano e passos da trilha <span class="by">(block_dimensions → view-plan.php)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Lista de planos e bloco de planos <span class="by">(core → plan.php)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Aviso “comentário no plano” <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Botão “Voltar ao plano”, flutuante dentro do curso <span class="by">(local_dimensions)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Competências do curso, “planos que contêm esta competência” <span class="by">(core)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Aviso “competência reconhecida”, com a frase de quem leu</span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>2 · Plano</b><span>O caderno; “Ver como” leva ao portfólio e ao painel.</span><span class="own" style="color: #6a2892;">local_dimensions view-plan.php · core plan.php pelo tema</span><span>As duas páginas ficam, na mesma linha visual. O modelo do plano escolhe qual abre.</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>3 e 4 · Competência</li><li>5 · Minhas evidências, pelo “Registrar uma evidência”</li><li>O curso ou a atividade de uma entrada do caderno</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Linha do plano no core: abre só um diálogo, não há link para a página <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Acordeão ou cartão do plano; cartão de competência do bloco <span class="by">(local_dimensions, block_dimensions)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Aviso “comentário na competência” <span class="by">(core)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Cada marco e cada “alimenta” do caderno é um link para a página</span></li>
+      <li><span class="tag new">proposto</span><span>Linha “Desenvolve: …” no cartão de curso <span class="by">(contrato do cartão)</span></span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>3 e 4 · Competência</b><span>Reconhecida (peça + caderno) ou em construção.</span><span class="own" style="color: #6a2892;">local_dimensions (detalhe e view-competency.php) · core user_competency_in_plan.php pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>Curso e atividade onde se pratica</li><li>A evidência de cada entrada (5)</li><li>Competências vizinhas</li><li>Pedir uma leitura; gerar o documento (8)</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Lista de planos, link “Evidências de aprendizagem prévia” <span class="by">(core)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Botão “Enviar evidência” no detalhe da competência, se ligado <span class="by">(local_dimensions)</span></span></li>
+      <li><span class="tag now">hoje</span><span>Faixa nas páginas de evidência do core e avisos de validade <span class="by">(local_evidencehub)</span></span></li>
+      <li><span class="tag new">proposto</span><span>“Registrar uma evidência” em 1, 2, 3 e 4, sempre no mesmo lugar</span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>5 · Minhas evidências</b><span>Um só cartão de evidência nas duas páginas.</span><span class="own" style="color: #0c5f59;">core user_evidence pelo tema · local_evidencehub acrescenta validade e conferência</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>A competência que a evidência alimenta</li><li>Documentos compartilhados e a sua revogação</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Menu do curso, item “Competências” <span class="by">(core; o aluno vê)</span></span></li>
+      <li><span class="tag new">proposto</span><span>Bloco “Este curso na sua jornada” <span class="by">(block_dimensions no curso)</span></span></li>
+      <li><span class="tag new">proposto</span><span>“Onde se pratica”, em 3 e 4</span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>6 · Competências do curso</b><span>O que este curso desenvolve e o que já virou evidência.</span><span class="own" style="color: #0a4a85;">core coursecompetencies.php pelo tema</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>“Ver detalhes”: a competência do aluno neste curso</li><li>O plano que contém a competência (2)</li><li>A atividade ligada</li></ul>
+  </div>
+
+  <div class="maprow">
+    <ul class="src">
+      <li><span class="tag now">hoje</span><span>Código ou QR do documento exportado; não há entrada em menu <span class="by">(local_evidencehub)</span></span></li>
+      <li><span class="tag new">proposto</span><span>“Gerar o documento” na competência reconhecida e no plano, pelo próprio aluno</span></li>
+    </ul>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <div class="scr"><b>8 · Verificação pública</b><span>Quem recebe o documento confere, sem entrar.</span><span class="own" style="color: #0c5f59;">local_evidencehub verify.php</span></div>
+    <span class="chev"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span>
+    <ul class="dst"><li>Nenhuma outra tela: a página não liga a nada do aluno</li></ul>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1600,"height":1270}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

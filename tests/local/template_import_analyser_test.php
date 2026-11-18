@@ -360,6 +360,61 @@ final class template_import_analyser_test extends \advanced_testcase {
     }
 
     /**
+     * A structure in a category local_unlistedcourses withholds from the viewer is not named in
+     * the missing-competency hint, though competencyview still reads it; the administrator (the
+     * control) sees its name.
+     *
+     * @return void
+     */
+    public function test_a_framework_in_an_unlisted_category_is_not_named(): void {
+        if (!class_exists('\local_unlistedcourses\category_discoverability')) {
+            $this->markTestSkipped('local_unlistedcourses is not installed on this site.');
+        }
+        $reset = static function (): void {
+            \local_unlistedcourses\category_discoverability::reset_caches();
+            \local_unlistedcourses\category_access::reset_caches();
+        };
+        $reset();
+        $site = $this->prepare_site();
+        $mine = \context_coursecat::instance((int) $this->getDataGenerator()->create_category(['name' => 'Mine'])->id);
+        $unlisted = $this->getDataGenerator()->create_category(['name' => 'Unlisted school']);
+        $other = $site['generator']->create_framework([
+            'shortname' => 'Unlisted framework',
+            'contextid' => \context_coursecat::instance((int) $unlisted->id)->id,
+        ]);
+        $site['generator']->create_competency([
+            'competencyframeworkid' => (int) $other->get('id'),
+            'shortname' => 'Moved',
+            'idnumber' => 'C-MOVED',
+        ]);
+        \local_unlistedcourses\category_discoverability::set_state(
+            (int) $unlisted->id,
+            \local_unlistedcourses\category_discoverability::STATE_UNLISTED
+        );
+        $csv = $this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-NEW', 'shortname' => 'Wants moved'],
+            ['rowtype' => 'link', 'template_idnumber' => 'TPL-NEW', 'framework_idnumber' => 'FW-1',
+             'competency_idnumber' => 'C-MOVED', 'sortorder' => '0'],
+        ]);
+        $links = $this->first_item($this->analyse($csv, $mine, false))['links'];
+        $this->assertStringContainsString('Unlisted framework', reset($links)['detail'], 'Control: the administrator');
+
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $mine->id);
+        role_assign($roleid, (int) $user->id, $mine->id);
+        $this->setUser($user);
+        $reset();
+        $links = $this->first_item($this->analyse($csv, $mine, false))['links'];
+        $this->assertStringNotContainsString('Unlisted framework', reset($links)['detail']);
+        $this->assertStringContainsString(
+            get_string('central_plans_import_hiddenframework', 'local_dimensions'),
+            reset($links)['detail']
+        );
+        $reset();
+    }
+
+    /**
      * A due date in the past blocks, with clearing it pre-selected and shifting it available.
      * keepduedate is not offered on a create: there is no stored value to keep.
      *
@@ -600,6 +655,33 @@ final class template_import_analyser_test extends \advanced_testcase {
         // The control: the same competency in the structure named by its ID number is an exact match.
         $this->assertSame(template_import_verdict::LINK_MATCHED, $byidnumber[0]['status']);
         $this->assertSame(template_import_verdict::CONFIDENCE_EXACT, $byidnumber[0]['confidence']);
+    }
+
+    /**
+     * A manager who holds templatemanage in one category only may import a template ID number
+     * into that category: the fields' editing rights resolve in the target, not at the site, and
+     * the context the analyser named is cleared once it has read them.
+     *
+     * @return void
+     */
+    public function test_a_category_manager_may_write_the_fields_in_their_category(): void {
+        $this->prepare_site();
+        $category = \context_coursecat::instance((int) $this->getDataGenerator()->create_category()->id);
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $category->id);
+        role_assign($roleid, (int) $user->id, $category->id);
+        $this->setUser($user);
+        $csv = $this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-CAT', 'shortname' => 'Category plan'],
+        ]);
+
+        $item = $this->first_item($this->analyse($csv, $category, false));
+
+        $this->assertSame(template_import_verdict::REASON_NONE, $item['reason'], $this->describe($item));
+        $this->assertSame(template_import_verdict::VERDICT_CREATE, $item['verdict']);
+        $field = helper::find_field_by_shortname(\local_dimensions\constants::CFIELD_TEMPLATE_IDNUMBER, helper::AREA_LP);
+        $this->assertFalse(lp_handler::create()->can_edit($field, 0), 'The category must not stay hinted after the analysis');
     }
 
     /**

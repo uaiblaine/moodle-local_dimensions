@@ -62,7 +62,10 @@ class export_framework extends external_api {
         $framework = new competency_framework($params['frameworkid']);
         // Context comes from the framework itself, so a course-category framework validates here.
         self::validate_context($framework->get_context());
-        require_capability('moodle/competency:competencyview', $framework->get_context());
+        \core_competency\api::require_enabled();
+        // A management action, as core's own export page (tool_lpimportcsv) treats it: the file
+        // carries the competencies' custom fields too, and leaves the site.
+        require_capability('moodle/competency:competencymanage', $framework->get_context());
 
         \core_php_time_limit::raise();
         raise_memory_limit(MEMORY_EXTRA);

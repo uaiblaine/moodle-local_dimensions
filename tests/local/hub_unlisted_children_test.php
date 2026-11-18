@@ -143,6 +143,35 @@ final class hub_unlisted_children_test extends advanced_testcase {
     }
 
     /**
+     * The competency search leaves out what lives in the unlisted child's framework, as the
+     * framework lists do; the administrator (the control) finds both.
+     *
+     * @return void
+     */
+    public function test_the_competency_search_withholds_the_unlisted_child(): void {
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        foreach (['parent', 'child'] as $label) {
+            $framework = \core_competency\competency_framework::get_record(['shortname' => "Framework in $label"]);
+            $ccg->create_competency(['competencyframeworkid' => $framework->get('id'), 'shortname' => "Findme in $label"]);
+        }
+        $found = static function (): array {
+            $result = \core_external\external_api::clean_returnvalue(
+                \local_dimensions\external\search_competencies::execute_returns(),
+                \local_dimensions\external\search_competencies::execute('Findme', 0, 25)
+            );
+            $names = array_column($result['items'], 'shortname');
+            sort($names);
+            return $names;
+        };
+
+        $this->assertSame(['Findme in child', 'Findme in parent'], $found(), 'Control: the administrator');
+        $this->setUser($f['user']);
+        $this->assertSame(['Findme in parent'], $found());
+    }
+
+    /**
      * Frameworks and Structure leave out the unlisted child's framework for an unrelated viewer.
      *
      * @return void

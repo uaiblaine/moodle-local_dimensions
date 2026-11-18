@@ -25,12 +25,12 @@
 namespace local_dimensions\local;
 
 /**
- * The theme's image for a course with none of its own (the course card contract, section 8).
+ * The theme's image for a course with none of its own.
  *
  * Under Boost Union or a child theme the plan's card asks the theme's renderer, which answers Boost Union's fallback
  * image, core's geometric pattern or, under theme_dimensions, the course category's cover. Under any other theme it
  * asks nothing and the client paints the cover fallback token. The same rules as block_compass' cards, copied rather
- * than called (contract D1).
+ * than called: the plugin does not depend on block_compass.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -66,7 +66,7 @@ final class course_card {
     /**
      * Whether a renderer's answer for a course with no image is one the client may draw.
      *
-     * Two shapes only (the course card contract, section 8): a base64 SVG data URI, which core's pattern
+     * Two shapes only: a base64 SVG data URI, which core's pattern
      * (core_geopattern::datauri()) and theme_dimensions' category cover are, and a URL of this site's pluginfile.php,
      * which Boost Union's fallback image is (with slash arguments or without). Anything else - another host, another
      * script, another scheme, a quote - is refused: the value reaches an img src, and get_competency_courses returns
@@ -95,7 +95,7 @@ final class course_card {
      *
      * The closure {@see with_generated()} calls once a course of the response lacks an image: only then is core's
      * renderer created. The general target, never the request's: a web service request's factory answers core's ajax
-     * renderer, which no theme overrides, and would lose Boost Union's get_generated_image_for_id().
+     * renderer, which Boost Union does not override, and would lose Boost Union's get_generated_image_for_id().
      *
      * Boost Union's fallback image is one file for every course, and its renderer reads the file area on every call:
      * while the fallback is the administrator's choice, its first answer that is not a data URI (the file's URL) is

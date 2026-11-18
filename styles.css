@@ -59,7 +59,7 @@
    Bootstrap 4 rung or, where there is none, the literal. The literals come from core's own light
    palette. The other four (on-brand-fill, shadow, scrim, favourite) are plugin literals.
 
-   WHY THERE IS ALMOST NO DARK RULE. Moodle 5.1/5.2 compile a complete [data-bs-theme="dark"]
+   WHY THERE IS ALMOST NO DARK RULE. Moodle 5.x compiles a complete [data-bs-theme="dark"]
    block for the --bs-* set, so a token chained to --bs-* is already dark-correct wherever the
    host sets the attribute. Do not add a dark rule for any of the 30 chained tokens. Only shadow,
    scrim and favourite get a plugin dark value, because core has no equivalent: --bs-box-shadow is
@@ -143,8 +143,8 @@ body {
 
    The host signals dark mode with Bootstrap 5.3's data-bs-theme attribute. No core theme writes
    it on 4.5, 5.1 or 5.2; from 5.3 theme_boost writes it on <html>, behind
-   theme_boost/enablecolourmodes (off by default). On the supported branches it comes from
-   themes, and not always on <html>: theme_moove writes it on document.body and redefines the
+   theme_boost/enablecolourmodes (off by default). Themes write it too, and not always on
+   <html>: theme_moove writes it on document.body and redefines the
    whole --bs-* set there. Hence the two arms, and hence the token block lives on body too, so
    all 34 tokens follow a body-level attribute.
 
@@ -165,37 +165,6 @@ body[data-bs-theme="dark"],
     --local-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
     --local-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
     --local-dimensions-favourite: #fd7e14;
-}
-
-/* ============================================
-   OS-PREFERENCE FALLBACK - DELIBERATELY INERT
-   ============================================
-
-   The selector requires [data-dimensions-media-optin] on body, which nothing writes, so this
-   block never fires. The OS preference alone is the wrong signal: core (theme_boost from 5.3)
-   uses it only to resolve the "auto" mode into data-bs-theme on <html>, never as a trigger of its
-   own. Firing on the media query directly would override a user's explicit choice and could make
-   the plugin dark inside a light page. The :root:not([data-bs-theme="light"]) guard keeps an
-   explicit light choice on <html> winning even once the gate is removed.
-
-   Like the activation block, it assigns only the three plugin-owned tokens; the chained ones
-   follow the host's --bs-* values, and a host that paints dark without them should set data-bs-theme
-   rather than widen this block. colour_tokens_test::test_media_fallback_is_written_and_unreachable
-   checks that the block exists, that every selector carries the gate and that no plugin file
-   writes the attribute.
-
-   To switch on: delete "[data-dimensions-media-optin]" from the selector below, nothing else.
-   To retire: delete the block once $plugin->supported's minimum reaches 503, since core resolves
-   "auto" itself from 5.3 on.
-   ============================================ */
-@media (prefers-color-scheme: dark) {
-    /* Switch-on line: remove [data-dimensions-media-optin] and nothing else. */
-    :root:not([data-bs-theme="light"])
-    body[data-dimensions-media-optin]:not([data-bs-theme="light"]) {
-        --local-dimensions-shadow: var(--dimensions-shadow, rgb(0 0 0 / 55%));
-        --local-dimensions-scrim: var(--dimensions-scrim, rgb(29 33 37 / 72%));
-        --local-dimensions-favourite: #fd7e14;
-    }
 }
 
 /* ============================================
@@ -342,8 +311,8 @@ body {
 
 /* Real-time WCAG contrast panel beside the bg/text colour inputs
    (amd/src/central/contrast). The card reads only the plugin colour tokens, so it follows the
-   host page's colour mode; it must not carry a prefers-color-scheme rule of its own (see the
-   OS-preference fallback at the top of this file). */
+   host page's colour mode; it must not carry a prefers-color-scheme rule of its own: core resolves the
+   "auto" mode into data-bs-theme itself (colour_tokens_test::test_no_prefers_color_scheme_block). */
 .local-dimensions-contrast-layout {
     display: flex;
     flex-wrap: wrap;
@@ -893,7 +862,7 @@ body {
  * The hero is a branded island: its ground is the admin's colour or photograph in both colour
  * modes, so ink or surface would be wrong here in both modes. A text colour the admin set was
  * chosen against that ground and stays; only the translucent fallback becomes solid
- * on-brand-fill, the one token that does not flip. Forcing on-brand-fill over an admin's text
+ * on-brand-fill, which does not flip. Forcing on-brand-fill over an admin's text
  * colour would put white on whatever light ground they paired a dark ink with.
  */
 @media (prefers-contrast: more) {
@@ -1034,6 +1003,52 @@ body {
     min-height: 100px;
 
     padding: 30px 30px 30px 10px;
+}
+
+/*
+ * Card skeleton: grey blocks in the shape of the timeline rows, one slow pulse, static under
+ * reduced motion. Its geometry follows .local-dimensions-timeline and its items below, so the
+ * body that replaces it starts where the blocks were.
+ */
+.local-dimensions-sk {
+    display: block;
+    padding-left: 10px;
+}
+
+.local-dimensions-sk-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+}
+
+.local-dimensions-sk-block {
+    display: block;
+    background: var(--local-dimensions-surface-inset);
+}
+
+.local-dimensions-sk-block--ring {
+    flex: 0 0 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.local-dimensions-sk-block--line {
+    width: 60%;
+    height: 12px;
+    border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .local-dimensions-sk {
+        animation: local-dimensions-sk-pulse 1300ms ease-in-out infinite;
+    }
+}
+
+@keyframes local-dimensions-sk-pulse {
+    50% {
+        opacity: .55;
+    }
 }
 
 /* Locked card: the dashed border is an SVG that competency_view.js draws (see below). */
@@ -1643,8 +1658,7 @@ body {
     mask-image: url('[[pix:local_dimensions|status/lock]]');
 }
 
-/* A section with activities and no progress yet: an empty ring in the line colour, which is the
-   colour the SVG was drawn in. */
+/* A section with activities and no progress yet: an empty ring in the line colour. */
 .local-dimensions-icon-circle {
     background-color: var(--local-dimensions-line);
     -webkit-mask-image: url('[[pix:local_dimensions|status/circle-outline]]');
@@ -2174,11 +2188,11 @@ body {
       THE FILTER LINE
       ============================================ */
 
-/* The learner views' filter line (templates/filter_line.mustache, amd/src/filter_line.js;
-   moodle-dev/docs/filter-line/CONTRACT.md). The toolbar is sticky at every width, since the plan
-   runs to dozens of rows on a desktop too, anchored to the theme's navbar height so it stops below
-   a fixed header, and capped and centred so the end controls do not fling apart on a wide card. It
-   holds the line and, under it, the row of chips. */
+/* The learner views' filter line (templates/filter_line.mustache, amd/src/filter_line.js).
+   The toolbar is sticky at every width, since the plan runs to dozens of rows on a desktop too,
+   anchored to the theme's navbar height so it stops below a fixed header, and capped and centred
+   so the end controls do not fling apart on a wide card. It holds the line and, under it, the row
+   of chips. */
 .local-dimensions-toolbar {
     position: sticky;
     top: var(--navbar-height, 60px);
@@ -2202,10 +2216,10 @@ body {
     backdrop-filter: none;
 }
 
-/* ONE row in the contract's slot order: scope, search, star, Filters, Organise, view. It wraps where
-   it does not fit, which is the whole of its narrow behaviour without the module; the search is the
-   item that grows and shrinks. It is the positioned ancestor of every floating layer, which opens
-   under the LINE rather than under its own control. */
+/* One row, in slot order: scope, search, star, Filters, Organise, view. It wraps where it does not
+   fit, which is the whole of its narrow behaviour without the module; the search is the item that
+   grows and shrinks. It is the positioned ancestor of every floating layer, which opens under the
+   line rather than under its own control. */
 .local-dimensions-line {
     position: relative;
     display: flex;
@@ -2329,8 +2343,8 @@ body {
     background: var(--local-dimensions-surface);
 }
 
-/* The eraser is the field's one way to empty itself: the browser's own cross goes, because the
-   contract's eraser is never a cross. */
+/* The eraser button (an eraser glyph, never a cross) is the field's one way to empty itself, so the
+   browser's own cancel cross is hidden. */
 .local-dimensions-line-search .local-dimensions-search-input::-webkit-search-cancel-button {
     display: none;
 }
@@ -2572,7 +2586,7 @@ body {
 }
 
 /* ---- Folded by the module ---------------------------------------------------------------------
-   The module measures the line's OWN width and writes one step on it (local-dimensions-line--s1 to
+   The module measures the line's own width and writes one step on it (local-dimensions-line--s1 to
    s4): full; Filters without its word; the search as an icon (local-dimensions-line--folded); two
    lines, the scope on the second and the view toggle in the Organise menu. Without the module no
    step is ever written, so nothing below applies and the line wraps. */
@@ -2580,7 +2594,8 @@ body {
 /* While measuring the line is one row that never wraps and no control shrinks but the search, so a
    line that does not fit pushes a control past its edge, which is what the module reads. On the
    two-line step the scope, which has a line of its own, is out of the measure. Nothing is in
-   transition: the morph's rules are gated on the class's absence. */
+   transition meanwhile: the last rule of the slide's media block turns transitions off under this
+   class. */
 .local-dimensions-line.local-dimensions-line--measuring {
     flex-wrap: nowrap;
 }
@@ -2947,7 +2962,7 @@ body {
 
 /* ---- The rows that scroll sideways: a fade on the side that hides something ---------------------
    The scope on the two-line step and the row under the line; the module writes the class of each
-   side as the row scrolls. A mask reads the ALPHA of its image and nothing else, so its opaque stop
+   side as the row scrolls. A mask reads the alpha of its image and nothing else, so its opaque stop
    is the page's ink, which is opaque in both colour modes, and no colour of its own. */
 .local-dimensions-scroll--fade-left {
     mask-image: linear-gradient(90deg, transparent, var(--local-dimensions-ink) 28px);
@@ -3442,8 +3457,9 @@ body {
 }
 
 /* Evidence type colours. One definition per category: activity is success, grade is
-   brand, manual is warning, prior is danger, rule is info and other is neutral. Each
-   carries its tone's own border, the way core's alerts do. */
+   brand, manual is warning, prior is danger and other is neutral; rule is info, defined
+   with the journey row's icon below. Each carries its tone's own border, the way core's
+   alerts do. */
 .local-dimensions-evidence-activity {
     border: 1px solid var(--local-dimensions-success-edge);
     background: var(--local-dimensions-success-tint);
@@ -3491,14 +3507,14 @@ body {
 }
 
 /* ============================================
-   COURSE CARD (moodle-dev/docs/course-card/CONTRACT.md)
-   The plan view's "Related content" card, the fleet's unified course card. Every visual value is a
-   --local-dimensions-card-* token, declared on the card root here and nowhere else: each reads the family's
-   --dimensions-card-* name first (declared by theme_dimensions only, never here), then the plugin's own chain,
-   which goes through the plugin's body tokens where one says the same thing (so their dark values and their
-   contrast pairs carry over), else Bootstrap's property and a literal. chip-* and close-* paint nothing of the
-   plan's card (no kind pill, no popover) and are declared for the contract's sake.
-   tests/local/course_card_contract_test.php reads them.
+   COURSE CARD
+   The plan view's "Related content" card, the course card shared with theme_dimensions and block_compass.
+   Every visual value is a --local-dimensions-card-* token, declared on the card root here and nowhere else:
+   each reads the family's --dimensions-card-* name first (declared by theme_dimensions only, never here), then
+   the plugin's own chain, which goes through the plugin's body tokens where one says the same thing (so their
+   dark values and their contrast pairs carry over), else Bootstrap's property and a literal. chip-* and close-*
+   paint nothing of the plan's card (no kind pill, no popover) and are declared because the contract requires
+   every suffix: tests/local/course_card_contract_test.php reads them.
    ============================================ */
 .local-dimensions-course-card-lg {
     --local-dimensions-card-radius: var(--dimensions-card-radius, 12px);
@@ -3534,7 +3550,7 @@ body {
 }
 
 /* The rest is a small shadow, a larger one on hover with the title underlined in its hover colour, and nothing
-   that moves (contract, section 5): a transform would cut the shadow in the carousel and push the neighbours.
+   that moves: a transform would cut the shadow in the carousel and push the neighbours.
    The card is the stretched link's containing block. */
 .local-dimensions-course-card-lg {
     position: relative;
@@ -3588,12 +3604,12 @@ body {
     opacity: var(--local-dimensions-card-locked-opacity);
 }
 
-/* Completed (D4): a green base under the cover. */
+/* Completed: a green base under the cover. */
 .local-dimensions-course-card-done .local-dimensions-course-img {
     border-bottom: var(--local-dimensions-card-done-edge) solid var(--local-dimensions-card-done);
 }
 
-/* Boost Union's "Show course images" without Card (contract, section 8): no cover, and a top edge in the
+/* Boost Union's "Show course images" without Card: no cover, and a top edge in the
    cover's fallback colour, green once complete. The plugin holds no category colour. */
 .local-dimensions-course-card-lg.local-dimensions-course-card-nocover {
     border-top: var(--local-dimensions-card-done-edge) solid var(--local-dimensions-card-cover-fallback);
@@ -3625,7 +3641,7 @@ body {
     -webkit-box-orient: vertical;
 }
 
-/* One target (contract, section 4): the title's link stretches over the whole card, so the card is one hover
+/* One target: the title's link stretches over the whole card, so the card is one hover
    and a screen reader hears one link named by the course. The drawer and a compact card's button sit above it. */
 .local-dimensions-course-card-lg .local-dimensions-course-link {
     color: inherit;
@@ -3685,8 +3701,7 @@ body {
     }
 }
 
-/* The plugin slot (contract, section 2): what completing the course does to the competency, one line on a
-   quiet ground. */
+/* The plugin slot: what completing the course does to the competency, one line on a quiet ground. */
 .local-dimensions-course-card-lg .local-dimensions-course-extra {
     display: flex;
     align-items: center;
@@ -3745,7 +3760,7 @@ body {
     text-align: right;
 }
 
-/* Completed (D4): the green seal in place of the bar, whatever Boost Union's progress setting says (D13). */
+/* Completed: the green seal in place of the bar, whatever Boost Union's progress setting says. */
 .local-dimensions-course-card-lg .local-dimensions-course-seal {
     display: inline-flex;
     align-items: center;
@@ -3769,7 +3784,7 @@ body {
     justify-content: flex-start;
 }
 
-/* The state's own action is a Bootstrap button, restyled by nothing here (contract, section 6). */
+/* The state's own action is a Bootstrap button, restyled by nothing here. */
 .local-dimensions-course-card-lg .local-dimensions-course-cta {
     align-self: flex-start;
 }
@@ -3789,7 +3804,7 @@ body {
 }
 
 /* Single trackable activity or single section: the activity's line or the section's ring in place of the
-   progress row (contract, section 3), the same centred column the tracker's compact bodies use, so a learner
+   progress row, the same centred column the tracker's compact bodies use, so a learner
    moving between the two views reads one shape. */
 .local-dimensions-course-single {
     display: flex;
@@ -3892,7 +3907,7 @@ body {
     font-size: 0.7rem;
 }
 
-/* Activities disclosure, the card's foot (D6): outside the card's link, and above its stretched area so the
+/* Activities disclosure, the card's foot: outside the card's link, and above its stretched area so the
    toggle and the rows keep their own targets. */
 .local-dimensions-course-card-lg .local-dimensions-course-acts-toggle,
 .local-dimensions-course-card-lg .local-dimensions-course-acts {
@@ -4840,8 +4855,8 @@ a.local-dimensions-course-act-row:focus-visible {
 
 .local-dimensions-courses-scroll {
     display: flex;
-    /* The cards of one carousel share a height and line their feet up (contract, section 3); an open
-       drawer makes the row taller. */
+    /* The cards of one carousel share a height and line their feet up; an open drawer makes the
+       row taller. */
     gap: 1rem;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -5583,18 +5598,18 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 /* ============================================
    COLLAPSIBLE DESCRIPTION (view-plan / view-competency)
    Caps long descriptions/embedded media to 30vh (configurable via
-   --collapsible-max-vh). The local_dimensions/collapsible_description AMD
+   --local-dimensions-collapsible-max-vh). The local_dimensions/collapsible_description AMD
    module adds .has-overflow when content exceeds the limit and toggles
    .is-expanded on click.
    ============================================ */
 .local-dimensions-collapsible {
-    --collapsible-max-vh: 30vh;
-    --collapsible-fade-color: var(--local-dimensions-surface);
+    --local-dimensions-collapsible-max-vh: 30vh;
+    --local-dimensions-collapsible-fade-color: var(--local-dimensions-surface);
     position: relative;
 }
 
 .local-dimensions-collapsible-content {
-    max-height: var(--collapsible-max-vh);
+    max-height: var(--local-dimensions-collapsible-max-vh);
     overflow: hidden;
 }
 
@@ -5613,7 +5628,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
         linear-gradient(
             to bottom,
             transparent 0%,
-            var(--collapsible-fade-color) 100%
+            var(--local-dimensions-collapsible-fade-color) 100%
         );
     opacity: 0;
     transition: opacity 200ms ease;
@@ -6048,11 +6063,10 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
  * Give the Manage participants modal the full available viewport height so its long grids and
  * the autocomplete suggestion dropdowns have room; the body scrolls inside it. Scoped to our
  * dialog (which core creates scrollable) so other site modals keep their content-fit height.
- * The modal-margin variable is Bootstrap 5 only, so fall back to Bootstrap 4's own
- * $modal-dialog-margin-y-sm-up for Moodle 4.5, where the variable is undefined.
+ * The margin is Bootstrap's own --bs-modal-margin, so the dialog tracks its responsive steps.
  */
 .local-dimensions-participants-modal.modal-dialog-scrollable:has(.form-autocomplete-suggestions) .modal-content {
-    height: calc(100% - var(--bs-modal-margin, 1.75rem) * 2);
+    height: calc(100% - var(--bs-modal-margin) * 2);
 }
 
 /*
@@ -6127,9 +6141,10 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 }
 
 /*
- * Expanded = true fullscreen: edge to edge, full height, square corners. Like Bootstrap 5's
- * .modal-fullscreen without the class (4.5 lacks it) and without !important — specificity 0,2,0
- * beats modal-xl / modal-lg and .modal-content. Header and footer drop their radius too.
+ * Expanded = true fullscreen: edge to edge, full height, square corners. Like Bootstrap's
+ * .modal-fullscreen, but toggled by the persisted display preference rather than by the modal's
+ * creation options, and without !important — specificity 0,2,0 beats modal-xl / modal-lg and
+ * .modal-content. Header and footer drop their radius too.
  * Width is 100% (not 100vw): the dialog then matches its position:fixed .modal parent, whose
  * width already excludes any viewport scrollbar column, so the dialog stays beside the scrollbar
  * instead of extending under it (100vw includes the scrollbar, painting it over the dialog edge).
@@ -6171,7 +6186,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
  * Admin escape links in the footer of the data-dense hub modals (participants: the matching core
  * admin page per allowed tab; framework form: the scales page), in the footer so the header
  * carries only expand + close. margin-right:auto keeps the group left while any primary
- * action (the framework form's Save/Cancel) stays right, on Bootstrap 4 and 5; scoped under
+ * action (the framework form's Save/Cancel) stays right; scoped under
  * .modal-footer so the longhand beats core's `.modal-footer > * { margin }` shorthand whatever the
  * stylesheet order.
  */
@@ -6184,9 +6199,8 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
 }
 
 /*
- * btn-link draws a focus ring on Bootstrap 5 (it defines --bs-btn-focus-shadow-rgb) but none on
- * Bootstrap 4 (Moodle 4.5: .btn-link:focus forces box-shadow:none). Draw one outline ring for both
- * so 4.5 keyboard focus stays visible and 5.x does not stack two rings.
+ * Draw the footer links' keyboard focus as the plugin's one outline ring (the focus-ring token)
+ * instead of Bootstrap's brand-coloured box-shadow, and drop the shadow so the two do not stack.
  */
 .modal-footer .local-dimensions-modal-footer-links .btn-link:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
@@ -6606,7 +6620,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
    collapsed height lower; the toggle still reveals the full body on demand. */
 .local-dimensions-central-structure-detail-pane [data-region='detail-description'] .local-dimensions-collapsible,
 .local-dimensions-central-plans-description .local-dimensions-collapsible {
-    --collapsible-max-vh: 7rem;
+    --local-dimensions-collapsible-max-vh: 7rem;
 }
 
 /* Bound the expanded description and scroll it internally, so a long body never pushes the
@@ -8424,7 +8438,7 @@ a.local-dimensions-central-links-badge-warn:focus {
  * Bootstrap --bs-form-select-bg-img is scoped to .form-select (not reachable
  * here) and Moodle's stylelint forbids inline SVG image data, so mirror the
  * chevron with the FontAwesome angle-down the theme already ships (Moodle
- * 4.5-5.2 all use Font Awesome 6). font-size:0 hides the core glyph; the
+ * 4.5 to 5.3 all ship Font Awesome 6). font-size:0 hides the core glyph; the
  * loading spinner keeps its own size.
  */
 .local-dimensions-central-page .form-autocomplete-downarrow {
@@ -8842,4 +8856,576 @@ a.local-dimensions-central-links-badge-warn:focus {
 .local-dimensions-tplimport-linkdetail {
     color: var(--local-dimensions-ink-muted);
     font-size: 12.5px;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Competency hub v2 (hubv2.php): the canvas of a framework's tree.
+ *
+ * React Flow's own stylesheet is not loaded. The rules it needs to work (positioning, layers,
+ * pointer events) are ported from its base.css, each under the plugin's root class, and painted
+ * with the plugin's tokens instead of the library's palette.
+ * ------------------------------------------------------------------------------------------- */
+
+.local-dimensions-hubv2-layout {
+    display: flex;
+    align-items: stretch;
+    min-height: 560px;
+    --local-dimensions-hubv2-height: calc(100vh - 14rem);
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 12px;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    overflow: hidden;
+}
+
+.local-dimensions-hubv2-main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-canvas {
+    position: relative;
+    flex: 1 1 auto;
+    height: var(--local-dimensions-hubv2-height);
+    min-height: 32rem;
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-bar .local-dimensions-hubv2-hint {
+    flex: none;
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-panel {
+    flex: 0 0 400px;
+    width: 400px;
+    max-height: calc(var(--local-dimensions-hubv2-height) + 57px);
+    overflow-y: auto;
+    border-left: 1px solid var(--local-dimensions-line);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+}
+
+@media (max-width: 991.98px) {
+    .local-dimensions-hubv2-layout {
+        flex-direction: column;
+    }
+
+    .local-dimensions-hubv2-panel {
+        flex: 0 0 auto;
+        width: auto;
+        max-height: none;
+        border-left: 0;
+        border-top: 1px solid var(--local-dimensions-line);
+    }
+}
+
+.local-dimensions-hubv2-sec {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-sectitle {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-kicker {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-movesec {
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-hubv2-kv {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 12px;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-kv .local-dimensions-hubv2-kv-label {
+    font-weight: 400;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-kv .local-dimensions-hubv2-kv-value {
+    margin: 0;
+    text-align: right;
+}
+
+.local-dimensions-hubv2-usage {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.local-dimensions-hubv2-usage li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-usage b {
+    font-size: 1.125rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--local-dimensions-ink-strong);
+}
+
+.local-dimensions-hubv2-details summary {
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 4px;
+    vertical-align: -2px;
+}
+
+.local-dimensions-hubv2-description {
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-search {
+    position: relative;
+    flex: 0 1 360px;
+}
+
+.local-dimensions-hubv2-search-results {
+    position: absolute;
+    z-index: 10;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 320px;
+    margin-top: 4px;
+    overflow-y: auto;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+    box-shadow: 0 6px 18px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-hubv2-search-hit {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 6px 10px;
+    border: 0;
+    background-color: transparent;
+    color: var(--local-dimensions-ink);
+    text-align: left;
+}
+
+.local-dimensions-hubv2-search-hit:hover {
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-search-hit:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-search-name {
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-search-path {
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+}
+
+/* The cards. React Flow sizes the wrapper from graph.ts's CARD; the card fills it. */
+.local-dimensions-hubv2-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 240px;
+    height: 76px;
+    padding: 8px 10px;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 12px;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    box-shadow: 0 1px 3px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-selected {
+    border: 2px solid var(--local-dimensions-brand-edge);
+    box-shadow: 0 0 0 4px var(--local-dimensions-brand-tint);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-moving {
+    border-style: dashed;
+}
+
+.local-dimensions-hubv2-card-more {
+    justify-content: center;
+    border-style: dashed;
+    box-shadow: none;
+}
+
+.local-dimensions-hubv2-tile {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+}
+
+.local-dimensions-hubv2-tile-framework {
+    background-color: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+}
+
+.local-dimensions-hubv2-tile-depth1 {
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+.local-dimensions-hubv2-tile-depth2 {
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-hubv2-tile-depth3 {
+    background-color: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
+}
+
+.local-dimensions-hubv2-tile-depth4 {
+    background-color: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+}
+
+.local-dimensions-hubv2-card-text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-card-title {
+    max-height: 2.5em;
+    overflow: hidden;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.local-dimensions-hubv2-card-sub {
+    overflow: hidden;
+    font-size: 0.75rem;
+    color: var(--local-dimensions-ink-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-pill {
+    flex: none;
+    min-width: 24px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-strong);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.local-dimensions-hubv2-toggle {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 50%;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    font-size: 0.6875rem;
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2-toggle:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+/* React Flow's base rules, scoped to the canvas. */
+.local-dimensions-hubv2 .react-flow {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    direction: ltr;
+}
+
+.local-dimensions-hubv2 .react-flow__background {
+    pointer-events: none;
+    z-index: -1;
+}
+
+.local-dimensions-hubv2 .react-flow__background-pattern.dots {
+    fill: var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2 .react-flow__container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.local-dimensions-hubv2 .react-flow__pane {
+    z-index: 1;
+    touch-action: none;
+}
+
+.local-dimensions-hubv2 .react-flow__pane.draggable {
+    cursor: grab;
+}
+
+.local-dimensions-hubv2 .react-flow__pane.dragging {
+    cursor: grabbing;
+}
+
+.local-dimensions-hubv2 .react-flow__viewport {
+    z-index: 2;
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__renderer {
+    z-index: 4;
+}
+
+.local-dimensions-hubv2 .react-flow__edges {
+    position: absolute;
+}
+
+.local-dimensions-hubv2 .react-flow__edges svg {
+    position: absolute;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__edge {
+    pointer-events: visiblestroke;
+}
+
+.local-dimensions-hubv2 .react-flow__edge-path {
+    fill: none;
+    stroke: var(--local-dimensions-ink-muted);
+    stroke-width: 1.5;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-rule .react-flow__edge-path {
+    stroke: var(--local-dimensions-warning-edge);
+    stroke-width: 2;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-more .react-flow__edge-path {
+    stroke-dasharray: 2 4;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-related .react-flow__edge-path {
+    stroke: var(--local-dimensions-info-edge);
+    stroke-width: 2;
+    stroke-dasharray: 4 5;
+}
+
+.local-dimensions-hubv2 .react-flow__edgelabel-renderer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+}
+
+.local-dimensions-hubv2 .local-dimensions-hubv2-edge-label {
+    position: absolute;
+    padding: 2px 8px;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    border-radius: 999px;
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2 .react-flow__nodes {
+    transform-origin: 0 0;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__node {
+    position: absolute;
+    box-sizing: border-box;
+    transform-origin: 0 0;
+    border-radius: 12px;
+    pointer-events: all;
+    user-select: none;
+    cursor: default;
+}
+
+.local-dimensions-hubv2 .react-flow__node.selectable {
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2 .react-flow__node:focus-visible {
+    outline: 3px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-hubv2-picking .react-flow__node.selectable {
+    cursor: crosshair;
+}
+
+/* Every edge ends on a handle; none is a control here, so none is shown. */
+.local-dimensions-hubv2 .react-flow__handle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2 .react-flow__handle-left {
+    top: 50%;
+    left: 0;
+    transform: translate(-50%, -50%);
+}
+
+.local-dimensions-hubv2 .react-flow__handle-right {
+    top: 50%;
+    right: 0;
+    transform: translate(50%, -50%);
+}
+
+.local-dimensions-hubv2 .react-flow__panel {
+    position: absolute;
+    z-index: 5;
+    margin: 15px;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.top {
+    top: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.bottom {
+    bottom: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.left {
+    left: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__panel.right {
+    right: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__controls {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+    border: 0;
+    border-bottom: 1px solid var(--local-dimensions-line);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button:last-child {
+    border-bottom: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2 .react-flow__controls-button svg {
+    width: 100%;
+    max-width: 12px;
+    max-height: 12px;
+    fill: currentcolor;
+}
+
+.local-dimensions-hubv2 .react-flow__minimap {
+    overflow: hidden;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: 10px;
+    background-color: var(--local-dimensions-surface);
+}
+
+.local-dimensions-hubv2 .react-flow__minimap-svg {
+    display: block;
+}
+
+.local-dimensions-hubv2 .react-flow__minimap-mask {
+    fill: var(--local-dimensions-surface-inset);
+    fill-opacity: 0.6;
+}
+
+.local-dimensions-hubv2 .react-flow__minimap-node {
+    fill: var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2 .react-flow__attribution {
+    display: none;
 }

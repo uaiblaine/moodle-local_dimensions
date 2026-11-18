@@ -1,0 +1,847 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-11T15:00:00Z"
+  },
+  "title": "Competências: core, estudo de outubro e linha escolhida",
+  "launch": {
+    "view": "canvas",
+    "page": "comparativo"
+  },
+  "pages": [
+    {
+      "id": "comparativo",
+      "name": "Comparativo por tela"
+    },
+    {
+      "id": "fluxo",
+      "name": "Terceira abordagem: Fluxo"
+    },
+    {
+      "id": "acesso",
+      "name": "Acesso e papéis"
+    }
+  ],
+  "boards": {
+    "Ficha01.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 460,
+      "h": 820,
+      "title": "1 · Ficha: Lista de planos",
+      "page": "comparativo"
+    },
+    "CorePlanos.dc.html": {
+      "x": 600,
+      "y": 0,
+      "w": 1000,
+      "h": 1158,
+      "title": "Core · Lista de planos de um usuário",
+      "page": "comparativo"
+    },
+    "OutPlansAtlas.dc.html": {
+      "x": 1840,
+      "y": 0,
+      "w": 1280,
+      "h": 940,
+      "title": "Out · 3 · Meus planos: o atlas",
+      "page": "comparativo"
+    },
+    "TJornada.dc.html": {
+      "x": 3360,
+      "y": 0,
+      "w": 1280,
+      "h": 1140,
+      "title": "Nov · 1 · Minha jornada (planos)",
+      "page": "comparativo"
+    },
+    "Ficha02.dc.html": {
+      "x": 0,
+      "y": 1678,
+      "w": 460,
+      "h": 820,
+      "title": "2 · Ficha: Plano",
+      "page": "comparativo"
+    },
+    "CorePlano.dc.html": {
+      "x": 600,
+      "y": 1678,
+      "w": 1000,
+      "h": 1170,
+      "title": "Core · Plano de aprendizagem",
+      "page": "comparativo"
+    },
+    "OutPlanMap.dc.html": {
+      "x": 1840,
+      "y": 1678,
+      "w": 1440,
+      "h": 1060,
+      "title": "Out · R2 · Mapa dos planos (interativo)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "OutPlanTrails.dc.html": {
+      "x": 3360,
+      "y": 1678,
+      "w": 1280,
+      "h": 1040,
+      "title": "Out · 1C · Plano como mapa de trilhas",
+      "page": "comparativo"
+    },
+    "OutPlanConstellation.dc.html": {
+      "x": 4720,
+      "y": 1678,
+      "w": 1280,
+      "h": 1040,
+      "title": "Out · 1A · Plano como constelação",
+      "page": "comparativo"
+    },
+    "OutPlanRings.dc.html": {
+      "x": 6080,
+      "y": 1678,
+      "w": 1280,
+      "h": 1040,
+      "title": "Out · 1B · Plano como anéis de crescimento",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "OutPlanPhone.dc.html": {
+      "x": 7440,
+      "y": 1678,
+      "w": 390,
+      "h": 844,
+      "title": "Out · 1 · Plano no celular",
+      "page": "comparativo"
+    },
+    "TPlano.dc.html": {
+      "x": 8070,
+      "y": 1678,
+      "w": 1280,
+      "h": 1480,
+      "title": "Nov · 2 · Plano: caderno com reconhecidas",
+      "page": "comparativo"
+    },
+    "TPlanoFone.dc.html": {
+      "x": 9430,
+      "y": 1678,
+      "w": 390,
+      "h": 844,
+      "title": "Nov · 2 · Plano no celular",
+      "page": "comparativo"
+    },
+    "Main.dc.html": {
+      "x": 9900,
+      "y": 1678,
+      "w": 1280,
+      "h": 1240,
+      "title": "Nov · A1 · Caderno: plano do aluno",
+      "page": "comparativo"
+    },
+    "BPlano.dc.html": {
+      "x": 11260,
+      "y": 1678,
+      "w": 1280,
+      "h": 1240,
+      "title": "Nov · B1 · Atlas: plano do aluno",
+      "page": "comparativo"
+    },
+    "CPlano.dc.html": {
+      "x": 12620,
+      "y": 1678,
+      "w": 1280,
+      "h": 1240,
+      "title": "Nov · C1 · Portfólio: plano do aluno",
+      "page": "comparativo"
+    },
+    "Ficha03.dc.html": {
+      "x": 0,
+      "y": 3678,
+      "w": 460,
+      "h": 820,
+      "title": "3 · Ficha: Competência no plano",
+      "page": "comparativo"
+    },
+    "CoreCompetenciaPlano.dc.html": {
+      "x": 600,
+      "y": 3678,
+      "w": 1000,
+      "h": 1170,
+      "title": "Core · Competência do usuário no plano",
+      "page": "comparativo"
+    },
+    "OutCompetencyJourney.dc.html": {
+      "x": 1840,
+      "y": 3678,
+      "w": 1280,
+      "h": 1160,
+      "title": "Out · 2A · Competência: diário de bordo",
+      "page": "comparativo"
+    },
+    "OutCompetencyRiver.dc.html": {
+      "x": 3200,
+      "y": 3678,
+      "w": 1280,
+      "h": 920,
+      "title": "Out · 2B · Competência: linha do tempo horizontal",
+      "page": "comparativo"
+    },
+    "OutCompetencyPhone.dc.html": {
+      "x": 4560,
+      "y": 3678,
+      "w": 390,
+      "h": 844,
+      "title": "Out · 2 · Competência no celular",
+      "page": "comparativo"
+    },
+    "OutRadarRange.dc.html": {
+      "x": 5030,
+      "y": 3678,
+      "w": 1440,
+      "h": 1000,
+      "title": "Out · R2 · Radar com faixa e escalas mistas",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "TCompetencia.dc.html": {
+      "x": 6710,
+      "y": 3678,
+      "w": 1280,
+      "h": 1510,
+      "title": "Nov · 3 · Competência reconhecida",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "TCompetenciaAberta.dc.html": {
+      "x": 8070,
+      "y": 3678,
+      "w": 1280,
+      "h": 1160,
+      "title": "Nov · 4 · Competência em construção",
+      "page": "comparativo"
+    },
+    "ACompetencia.dc.html": {
+      "x": 9430,
+      "y": 3678,
+      "w": 1280,
+      "h": 1350,
+      "title": "Nov · A2 · Caderno: competência (aluno / professor)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "BCompetencia.dc.html": {
+      "x": 10790,
+      "y": 3678,
+      "w": 1280,
+      "h": 1275,
+      "title": "Nov · B2 · Atlas: competência (aluno / professor)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "CCompetencia.dc.html": {
+      "x": 12150,
+      "y": 3678,
+      "w": 1280,
+      "h": 1305,
+      "title": "Nov · C2 · Portfólio: competência (aluno / professor)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "Ficha04.dc.html": {
+      "x": 0,
+      "y": 5618,
+      "w": 460,
+      "h": 820,
+      "title": "4 · Ficha: Evidências",
+      "page": "comparativo"
+    },
+    "CoreEvidencias.dc.html": {
+      "x": 600,
+      "y": 5618,
+      "w": 1000,
+      "h": 1158,
+      "title": "Core · Evidência de aprendizagem prévia: lista",
+      "page": "comparativo"
+    },
+    "CoreEvidencia.dc.html": {
+      "x": 1680,
+      "y": 5618,
+      "w": 1000,
+      "h": 1158,
+      "title": "Core · Evidência de aprendizagem prévia: uma",
+      "page": "comparativo"
+    },
+    "OutEvidenceNotebook.dc.html": {
+      "x": 2920,
+      "y": 5618,
+      "w": 1280,
+      "h": 940,
+      "title": "Out · 4 · Evidências: caderno de campo",
+      "page": "comparativo"
+    },
+    "OutEvidencePhone.dc.html": {
+      "x": 4280,
+      "y": 5618,
+      "w": 390,
+      "h": 844,
+      "title": "Out · 4 · Uma evidência no celular",
+      "page": "comparativo"
+    },
+    "TEvidencias.dc.html": {
+      "x": 4910,
+      "y": 5618,
+      "w": 1280,
+      "h": 1200,
+      "title": "Nov · 5 · Minhas evidências",
+      "page": "comparativo"
+    },
+    "Ficha05.dc.html": {
+      "x": 0,
+      "y": 7338,
+      "w": 460,
+      "h": 820,
+      "title": "5 · Ficha: Competências do curso",
+      "page": "comparativo"
+    },
+    "CoreCursoCompetencias.dc.html": {
+      "x": 600,
+      "y": 7338,
+      "w": 1000,
+      "h": 1170,
+      "title": "Core · Competências do curso",
+      "page": "comparativo"
+    },
+    "OutCourseDimensions.dc.html": {
+      "x": 1840,
+      "y": 7338,
+      "w": 1280,
+      "h": 900,
+      "title": "Out · 5 · Competências do curso",
+      "page": "comparativo"
+    },
+    "OutCourseTeacher.dc.html": {
+      "x": 3200,
+      "y": 7338,
+      "w": 1440,
+      "h": 1000,
+      "title": "Out · R2 · Competências do curso (docente)",
+      "page": "comparativo"
+    },
+    "TCursoAluno.dc.html": {
+      "x": 4880,
+      "y": 7338,
+      "w": 1280,
+      "h": 1100,
+      "title": "Nov · 6 · Competências do curso (aluno)",
+      "page": "comparativo"
+    },
+    "PCurso.dc.html": {
+      "x": 6240,
+      "y": 7338,
+      "w": 1280,
+      "h": 1200,
+      "title": "Nov · 9 · Competências do curso (professor)",
+      "page": "comparativo"
+    },
+    "Ficha06.dc.html": {
+      "x": 0,
+      "y": 9058,
+      "w": 460,
+      "h": 820,
+      "title": "6 · Ficha: Competência de um aluno e a leitura",
+      "page": "comparativo"
+    },
+    "CoreCompetenciaCurso.dc.html": {
+      "x": 600,
+      "y": 9058,
+      "w": 1000,
+      "h": 1158,
+      "title": "Core · Competência de um aluno no curso",
+      "page": "comparativo"
+    },
+    "OutReviewDesk.dc.html": {
+      "x": 1840,
+      "y": 9058,
+      "w": 1440,
+      "h": 1000,
+      "title": "Out · R2 · Mesa de revisão (mentoria, gestão)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "PMesa.dc.html": {
+      "x": 3520,
+      "y": 9058,
+      "w": 1280,
+      "h": 1215,
+      "title": "Nov · 11 · Mesa de leitura",
+      "page": "comparativo"
+    },
+    "Ficha07.dc.html": {
+      "x": 0,
+      "y": 10778,
+      "w": 460,
+      "h": 820,
+      "title": "7 · Ficha: Turma",
+      "page": "comparativo"
+    },
+    "CoreRelatorio.dc.html": {
+      "x": 600,
+      "y": 10778,
+      "w": 1000,
+      "h": 1158,
+      "title": "Core · Distribuição de competências",
+      "page": "comparativo"
+    },
+    "OutTeacherSky.dc.html": {
+      "x": 1840,
+      "y": 10778,
+      "w": 1280,
+      "h": 900,
+      "title": "Out · 6 · Relatório da turma",
+      "page": "comparativo"
+    },
+    "PTurma.dc.html": {
+      "x": 3360,
+      "y": 10778,
+      "w": 1280,
+      "h": 1200,
+      "title": "Nov · 10 · Turma: quem trouxe algo novo",
+      "page": "comparativo"
+    },
+    "Ficha08.dc.html": {
+      "x": 0,
+      "y": 12498,
+      "w": 460,
+      "h": 820,
+      "title": "8 · Ficha: Plano de um aluno, por quem acompanha",
+      "page": "comparativo"
+    },
+    "OutPlanWorkflow.dc.html": {
+      "x": 600,
+      "y": 12498,
+      "w": 1440,
+      "h": 900,
+      "title": "Out · R2 · Fluxo do plano (gestor)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "PPlano.dc.html": {
+      "x": 2280,
+      "y": 12498,
+      "w": 1280,
+      "h": 1100,
+      "title": "Nov · 12 · Plano de um aluno: acompanhamento",
+      "page": "comparativo"
+    },
+    "Ficha09.dc.html": {
+      "x": 0,
+      "y": 14118,
+      "w": 460,
+      "h": 820,
+      "title": "9 · Ficha: Gestão: estruturas e modelos",
+      "page": "comparativo"
+    },
+    "CoreEstrutura.dc.html": {
+      "x": 600,
+      "y": 14118,
+      "w": 1000,
+      "h": 1158,
+      "title": "Core · Competências de uma estrutura",
+      "page": "comparativo"
+    },
+    "CoreModelo.dc.html": {
+      "x": 1680,
+      "y": 14118,
+      "w": 1000,
+      "h": 1170,
+      "title": "Core · Competências de um modelo de plano",
+      "page": "comparativo"
+    },
+    "OutHubNodes.dc.html": {
+      "x": 2920,
+      "y": 14118,
+      "w": 1600,
+      "h": 1040,
+      "title": "Out · R2 · Hub do local_dimensions em nós (React Flow)",
+      "page": "comparativo",
+      "is_interactive": true
+    },
+    "OutTemplateManager.dc.html": {
+      "x": 4600,
+      "y": 14118,
+      "w": 1440,
+      "h": 1000,
+      "title": "Out · R2 · Modelo de plano no Hub (gestão)",
+      "page": "comparativo"
+    },
+    "Ficha10.dc.html": {
+      "x": 0,
+      "y": 15808,
+      "w": 460,
+      "h": 820,
+      "title": "10 · Ficha: Bloco e pontos de entrada",
+      "page": "comparativo"
+    },
+    "OutBlockLp.dc.html": {
+      "x": 600,
+      "y": 15808,
+      "w": 400,
+      "h": 720,
+      "title": "Out · 7 · Bloco Planos de aprendizagem",
+      "page": "comparativo"
+    },
+    "TEntradas.dc.html": {
+      "x": 1240,
+      "y": 15808,
+      "w": 1280,
+      "h": 1200,
+      "title": "Nov · 7 · Pontos de entrada: painel, perfil, cartão",
+      "page": "comparativo"
+    },
+    "Ficha11.dc.html": {
+      "x": 0,
+      "y": 17528,
+      "w": 460,
+      "h": 820,
+      "title": "11 · Ficha: Verificação pública",
+      "page": "comparativo"
+    },
+    "TVerificar.dc.html": {
+      "x": 600,
+      "y": 17528,
+      "w": 960,
+      "h": 900,
+      "title": "Nov · 8 · Verificação pública",
+      "page": "comparativo"
+    },
+    "Ficha12.dc.html": {
+      "x": 0,
+      "y": 18948,
+      "w": 460,
+      "h": 820,
+      "title": "12 · Ficha: Gaveta do hub de evidências",
+      "page": "comparativo"
+    },
+    "PGaveta.dc.html": {
+      "x": 600,
+      "y": 18948,
+      "w": 1280,
+      "h": 1100,
+      "title": "Nov · 13 · Hub de evidências: gaveta",
+      "page": "comparativo"
+    },
+    "Ficha13.dc.html": {
+      "x": 0,
+      "y": 20568,
+      "w": 460,
+      "h": 820,
+      "title": "13 · Ficha: Referências do estudo de outubro",
+      "page": "comparativo"
+    },
+    "OutVocabulario.dc.html": {
+      "x": 600,
+      "y": 20568,
+      "w": 1280,
+      "h": 980,
+      "title": "Out · 0 · Vocabulário dimensional",
+      "page": "comparativo"
+    },
+    "OutFallback.dc.html": {
+      "x": 1960,
+      "y": 20568,
+      "w": 1280,
+      "h": 760,
+      "title": "Out · 8 · Sem o local_dimensions",
+      "page": "comparativo"
+    },
+    "MapaAluno.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1600,
+      "h": 1270,
+      "title": "Acesso · aluno",
+      "page": "acesso"
+    },
+    "MapaEquipe.dc.html": {
+      "x": 1680,
+      "y": 0,
+      "w": 1600,
+      "h": 1180,
+      "title": "Acesso · professor e equipe",
+      "page": "acesso"
+    },
+    "Papeis.dc.html": {
+      "x": 3360,
+      "y": 0,
+      "w": 1600,
+      "h": 1300,
+      "title": "Cada plugin no seu papel",
+      "page": "acesso"
+    },
+    "DHoje.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 1180,
+      "title": "D1 · Aluno: Hoje",
+      "page": "fluxo"
+    },
+    "DRegistrar.dc.html": {
+      "x": 1360,
+      "y": 0,
+      "w": 1280,
+      "h": 1000,
+      "title": "D2 · Aluno: registrar uma evidência",
+      "page": "fluxo"
+    },
+    "DMapa.dc.html": {
+      "x": 2720,
+      "y": 0,
+      "w": 1280,
+      "h": 1100,
+      "title": "D3 · Aluno: mapa com a competência aberta",
+      "page": "fluxo"
+    },
+    "DFone.dc.html": {
+      "x": 4080,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "D4 · Aluno: Hoje no celular",
+      "page": "fluxo"
+    },
+    "DLer.dc.html": {
+      "x": 0,
+      "y": 1700,
+      "w": 1280,
+      "h": 1100,
+      "title": "D5 · Professor: Ler",
+      "page": "fluxo"
+    },
+    "DTurma.dc.html": {
+      "x": 1360,
+      "y": 1700,
+      "w": 1280,
+      "h": 1100,
+      "title": "D6 · Professor: Turma",
+      "page": "fluxo"
+    },
+    "DPlanejar.dc.html": {
+      "x": 2720,
+      "y": 1700,
+      "w": 1280,
+      "h": 1040,
+      "title": "D7 · Professor: Planejar",
+      "page": "fluxo"
+    },
+    "DMomentos.dc.html": {
+      "x": 4080,
+      "y": 1700,
+      "w": 1280,
+      "h": 900,
+      "title": "D8 · Momento de reconhecimento e paleta de comandos",
+      "page": "fluxo"
+    }
+  },
+  "order": [
+    "Ficha01.dc.html",
+    "CorePlanos.dc.html",
+    "OutPlansAtlas.dc.html",
+    "TJornada.dc.html",
+    "Ficha02.dc.html",
+    "CorePlano.dc.html",
+    "OutPlanMap.dc.html",
+    "OutPlanTrails.dc.html",
+    "OutPlanConstellation.dc.html",
+    "OutPlanRings.dc.html",
+    "OutPlanPhone.dc.html",
+    "TPlano.dc.html",
+    "TPlanoFone.dc.html",
+    "Main.dc.html",
+    "BPlano.dc.html",
+    "CPlano.dc.html",
+    "Ficha03.dc.html",
+    "CoreCompetenciaPlano.dc.html",
+    "OutCompetencyJourney.dc.html",
+    "OutCompetencyRiver.dc.html",
+    "OutCompetencyPhone.dc.html",
+    "OutRadarRange.dc.html",
+    "TCompetencia.dc.html",
+    "TCompetenciaAberta.dc.html",
+    "ACompetencia.dc.html",
+    "BCompetencia.dc.html",
+    "CCompetencia.dc.html",
+    "Ficha04.dc.html",
+    "CoreEvidencias.dc.html",
+    "CoreEvidencia.dc.html",
+    "OutEvidenceNotebook.dc.html",
+    "OutEvidencePhone.dc.html",
+    "TEvidencias.dc.html",
+    "Ficha05.dc.html",
+    "CoreCursoCompetencias.dc.html",
+    "OutCourseDimensions.dc.html",
+    "OutCourseTeacher.dc.html",
+    "TCursoAluno.dc.html",
+    "PCurso.dc.html",
+    "Ficha06.dc.html",
+    "CoreCompetenciaCurso.dc.html",
+    "OutReviewDesk.dc.html",
+    "PMesa.dc.html",
+    "Ficha07.dc.html",
+    "CoreRelatorio.dc.html",
+    "OutTeacherSky.dc.html",
+    "PTurma.dc.html",
+    "Ficha08.dc.html",
+    "OutPlanWorkflow.dc.html",
+    "PPlano.dc.html",
+    "Ficha09.dc.html",
+    "CoreEstrutura.dc.html",
+    "CoreModelo.dc.html",
+    "OutHubNodes.dc.html",
+    "OutTemplateManager.dc.html",
+    "Ficha10.dc.html",
+    "OutBlockLp.dc.html",
+    "TEntradas.dc.html",
+    "Ficha11.dc.html",
+    "TVerificar.dc.html",
+    "Ficha12.dc.html",
+    "PGaveta.dc.html",
+    "Ficha13.dc.html",
+    "OutVocabulario.dc.html",
+    "OutFallback.dc.html",
+    "MapaAluno.dc.html",
+    "MapaEquipe.dc.html",
+    "Papeis.dc.html",
+    "DHoje.dc.html",
+    "DRegistrar.dc.html",
+    "DMapa.dc.html",
+    "DFone.dc.html",
+    "DLer.dc.html",
+    "DTurma.dc.html",
+    "DPlanejar.dc.html",
+    "DMomentos.dc.html"
+  ],
+  "notes": {
+    "row01": {
+      "x": 0,
+      "y": -300,
+      "text": "1 · Lista de planos",
+      "kind": "title1",
+      "maxW": 4640,
+      "page": "comparativo"
+    },
+    "row02": {
+      "x": 0,
+      "y": 1378,
+      "text": "2 · Plano",
+      "kind": "title1",
+      "maxW": 13900,
+      "page": "comparativo"
+    },
+    "row03": {
+      "x": 0,
+      "y": 3378,
+      "text": "3 · Competência no plano",
+      "kind": "title1",
+      "maxW": 13430,
+      "page": "comparativo"
+    },
+    "row04": {
+      "x": 0,
+      "y": 5318,
+      "text": "4 · Evidências",
+      "kind": "title1",
+      "maxW": 6190,
+      "page": "comparativo"
+    },
+    "row05": {
+      "x": 0,
+      "y": 7038,
+      "text": "5 · Competências do curso",
+      "kind": "title1",
+      "maxW": 7520,
+      "page": "comparativo"
+    },
+    "row06": {
+      "x": 0,
+      "y": 8758,
+      "text": "6 · Competência de um aluno e a leitura",
+      "kind": "title1",
+      "maxW": 4800,
+      "page": "comparativo"
+    },
+    "row07": {
+      "x": 0,
+      "y": 10478,
+      "text": "7 · Turma",
+      "kind": "title1",
+      "maxW": 4640,
+      "page": "comparativo"
+    },
+    "row08": {
+      "x": 0,
+      "y": 12198,
+      "text": "8 · Plano de um aluno, por quem acompanha",
+      "kind": "title1",
+      "maxW": 3560,
+      "page": "comparativo"
+    },
+    "row09": {
+      "x": 0,
+      "y": 13818,
+      "text": "9 · Gestão: estruturas e modelos",
+      "kind": "title1",
+      "maxW": 6200,
+      "page": "comparativo"
+    },
+    "row10": {
+      "x": 0,
+      "y": 15508,
+      "text": "10 · Bloco e pontos de entrada",
+      "kind": "title1",
+      "maxW": 2520,
+      "page": "comparativo"
+    },
+    "row11": {
+      "x": 0,
+      "y": 17228,
+      "text": "11 · Verificação pública (nova)",
+      "kind": "title1",
+      "maxW": 1600,
+      "page": "comparativo"
+    },
+    "row12": {
+      "x": 0,
+      "y": 18648,
+      "text": "12 · Gaveta do hub de evidências (nova)",
+      "kind": "title1",
+      "maxW": 1880,
+      "page": "comparativo"
+    },
+    "row13": {
+      "x": 0,
+      "y": 20268,
+      "text": "13 · Referências do estudo de outubro",
+      "kind": "title1",
+      "maxW": 3400,
+      "page": "comparativo"
+    },
+    "fluxo0": {
+      "x": 0,
+      "y": -300,
+      "text": "Fluxo · Aluno: Minha jornada",
+      "kind": "title1",
+      "maxW": 4470,
+      "page": "fluxo"
+    },
+    "fluxo1": {
+      "x": 0,
+      "y": 1400,
+      "text": "Fluxo · Professor: Leituras",
+      "kind": "title1",
+      "maxW": 5360,
+      "page": "fluxo"
+    }
+  },
+  "designSystems": []
+}

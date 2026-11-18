@@ -209,7 +209,9 @@ final class export_templates_test extends \advanced_testcase {
         $this->setUser($reader);
         $result = export_templates::execute((string) (int) $template->get('id'), $systemcontext->id);
         $this->assertStringContainsString('FW-HIDDEN', $result['content']);
-        $this->assertCount(1, $result['frameworks']);
+        // Read, not managed: named in the CSV, not offered as a download
+        // (test_a_framework_the_caller_only_reads_is_not_offered).
+        $this->assertSame([], $result['frameworks']);
 
         // Prohibited at the framework's category, the same viewer gets the competency but not the framework.
         $blocked = $this->user_with(['moodle/competency:templateview'], $systemcontext);
@@ -221,6 +223,34 @@ final class export_templates_test extends \advanced_testcase {
         $this->assertStringContainsString('C-KEEP', $result['content']);
         $this->assertStringNotContainsString('FW-HIDDEN', $result['content']);
         $this->assertStringNotContainsString('HiddenFwName', $result['content']);
+        $this->assertSame([], $result['frameworks']);
+    }
+
+    /**
+     * The companion download is offered only for a framework the caller manages, since
+     * export_framework asks competencymanage; the CSV still names it. The administrator (the
+     * control, test_export_single_template) is offered it.
+     *
+     * @return void
+     */
+    public function test_a_framework_the_caller_only_reads_is_not_offered(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $category = $this->getDataGenerator()->create_category();
+        $catcontext = \context_coursecat::instance((int) $category->id);
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $framework = $ccg->create_framework(['shortname' => 'FW', 'idnumber' => 'FW-READ']);
+        $competency = $ccg->create_competency(['competencyframeworkid' => (int) $framework->get('id'), 'idnumber' => 'C1']);
+        $template = $ccg->create_template(['shortname' => 'Nursing', 'contextid' => $catcontext->id]);
+        $ccg->create_template_competency([
+            'templateid' => (int) $template->get('id'),
+            'competencyid' => (int) $competency->get('id'),
+        ]);
+
+        $this->setUser($this->user_with(['moodle/competency:templateview'], $catcontext));
+        $result = export_templates::execute((string) (int) $template->get('id'), $catcontext->id);
+
+        $this->assertStringContainsString('FW-READ', $result['content']);
         $this->assertSame([], $result['frameworks']);
     }
 }

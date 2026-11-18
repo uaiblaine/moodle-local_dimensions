@@ -143,6 +143,12 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   (`unlisted_categories::filter_by_context()`), never by the entry's. Lookup by id in the hub's
   web services is not filtered: core's own services answer it. Spec
   `mutations/hub_unlisted_categories.conf`.
+- **Hidden templates**: hiding filters lists, it is not access control (a tidy-the-hub tool behind
+  the "show hidden" toggle). A list shows a hidden template only to whoever manages it in the
+  template's own context (`visible || can_manage_context()` per template, never the entry's
+  `$canmanage`); a lookup by id follows core (`can_read()`), so the cohort, participant and
+  cohort-role services answer for a hidden template as core's pages do. `export_templates` is
+  stricter on purpose: its file leaves the site.
 - **Category deletion**: `category_lifecycle` answers all five core callbacks; the in-use check
   reads the whole subtree because the parent's callback deletes before any child can refuse;
   adding a callback needs a `version.php` bump.
@@ -196,7 +202,8 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   value, in the one activation rule `body[data-bs-theme="dark"], [data-bs-theme="dark"] body`
   (`body` as subject keeps a navbar-scoped attribute out; `.theme-dark` is never accepted).
   The host writes `data-bs-theme`; the plugin never does (`colour_mode.php` is constants only).
-  The `prefers-color-scheme` block is written and inert behind `[data-dimensions-media-optin]`.
+  The sheet carries no `prefers-color-scheme` block (core resolves "auto" itself;
+  `colour_tokens_test::test_no_prefers_color_scheme_block`).
 - **Family tokens.** Every contract token is wrapped `--local-dimensions-x: var(--dimensions-x, <own chain>)`, the dark redeclarations of `shadow` and `scrim` too (a bare dark literal would beat the theme's dark value); `favourite` stays a literal. The contract lives in `theme_dimensions/docs/tokens.md`; the plugin never declares a `--dimensions-*` name. `colour_tokens_test::test_contract_tokens_read_the_family_token_first` holds it.
 - `--dimension-custombgcolor` / `--dimension-customtextcolor` are admin instance data written
   by a template onto the painted element, never tokens; a branded island reads no mode token.

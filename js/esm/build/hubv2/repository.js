@@ -1,0 +1,9 @@
+import{load as a}from"./amd";/**
+ * The only module of the canvas that talks to the server: the hub's own web services and core's
+ * competency services, called with the arguments the hub's list view passes
+ * (amd/src/central/structure.js).
+ *
+ * @module     local_dimensions/hubv2/repository
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */const s=e=>a("core/ajax").then(o=>Promise.all(o.call(e))),t=(e,o)=>s([{methodname:e,args:o}]).then(([n])=>n),u=(e,o,n,r)=>t("local_dimensions_browse_structure",{frameworkid:e,parentid:o,limitfrom:n,limitnum:r}),l=async(e,o,n)=>{const r=[];for(;;){const m=await u(e,o,r.length,n);if(m.items.forEach(c=>r.push({id:c.id,shortname:c.shortname})),m.items.length===0||r.length>=m.total)return r}},p=e=>t("local_dimensions_get_structure_node",{competencyid:e}),_=(e,o)=>t("local_dimensions_search_structure",{frameworkid:e,query:o,limitfrom:0,limitnum:25}),d=e=>s([{methodname:"local_dimensions_competency_usage",args:{competencyid:e}},{methodname:"local_dimensions_list_related_competencies",args:{competencyid:e}}]).then(([o,n])=>[o,n.items]),h=e=>t("local_dimensions_competency_delete_check",{competencyid:e}),b=e=>t("core_competency_delete_competency",{id:e}),y=(e,o)=>t(o?"core_competency_move_up_competency":"core_competency_move_down_competency",{id:e}),g=(e,o)=>t("core_competency_set_parent_competency",{competencyid:e,parentid:o}),P=(e,o)=>t("core_competency_update_competency",{competency:{id:e,ruletype:o.ruletype,ruleoutcome:o.ruleoutcome,ruleconfig:o.ruleconfig}}),x=e=>t("core_competency_count_competencies",{filters:[{column:"competencyframeworkid",value:String(e)}]});export{l as allChildren,u as browse,x as countCompetencies,h as deleteCheck,b as deleteCompetency,p as getNode,y as moveOne,_ as search,d as selectionData,g as setParent,P as updateRule};

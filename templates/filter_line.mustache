@@ -17,8 +17,8 @@
 {{!
     @template local_dimensions/filter_line
 
-    The filter line of a learner view (moodle-dev/docs/filter-line/CONTRACT.md): one sticky
-    toolbar holding the line, in the contract's slot order, and the row of chips under it.
+    The filter line of a learner view: one sticky toolbar holding the line, in a fixed slot
+    order, and the row of chips under it.
 
     The line (local-dimensions-line) holds, in order: the scope, a radio group of counted cells
     whose roving focus and arrow keys local_dimensions/filter_line adds, a cell with nothing to
@@ -30,12 +30,13 @@
     the slots it does not have and never reorders the rest.
 
     Every control the search slides out of the way when it grows over the line carries
-    local-dimensions-line-slides. Four parts are the module's alone, and the stylesheet draws none of them until the module has
-    folded the line into a step (local-dimensions-line--s1 to s4): the search's icon
-    (local-dimensions-search-open), which stands for the field once the line is too narrow for
-    it; the close button of the search grown over the line (local-dimensions-search-close), the
-    line's last control; the listbox of suggestions, given its role by the module, which carries
-    its three headings so the module composes no word of them; and the "Show as" group.
+    local-dimensions-line-slides. Four parts are the module's alone, and the stylesheet draws none
+    of them until the module has folded the line into a step (local-dimensions-line--s1 to s4): the
+    search's icon (local-dimensions-search-open), which stands for the field once the line is too
+    narrow for it; the close button of the search grown over the line
+    (local-dimensions-search-close), the line's last control; the listbox of suggestions, given its
+    role by the module, which carries its three headings so the module composes no word of them;
+    and the "Show as" group.
 
     The row under the line (local-dimensions-line-chips) holds a chip per active filter, each a
     button that drops it, and "Clear all" from two chips up; the module paints it, reading the

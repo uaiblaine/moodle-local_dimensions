@@ -1,0 +1,14 @@
+{
+  "hubv2/Hub": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
+  "hubv2/Panel": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
+  "hubv2/Search": {
+    "eject": "risky",
+    "wrap": "risky"
+  }
+}

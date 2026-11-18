@@ -293,10 +293,10 @@ class framework_csv_serializer {
     }
 
     /**
-     * Clean a compact scale-item string the way core's scale form cleans its items.
+     * Clean a compact scale-item string as PARAM_TEXT, the type core's scale form gives its field.
      *
-     * Core prints site scale items unescaped, so every item is reduced to plain text here,
-     * before the importer looks for an existing scale to reuse.
+     * Core's scale list (grade/edit/scale/index.php) prints site scale items unescaped, so every
+     * item is reduced to plain text here, before the importer looks for an existing scale to reuse.
      *
      * @param string $values Comma-separated scale items from the CSV.
      * @return string The cleaned items, empty ones dropped, re-joined with a comma.

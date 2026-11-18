@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Plano no celular</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./dim.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#070093}a:hover{color:#030050}
+.lv{display:inline-flex;gap:2px;align-items:flex-end}
+.lv i{width:5px;border-radius:2px;background:#e1e3ef;display:block}
+.crow{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:48px;padding:0 4px;border-bottom:1px solid #e1e3ef;text-decoration:none;color:#1d2033;font-size:14.5px}
+</style>
+</helmet>
+<div class="dim phone" style="background: #f6f7fb;">
+  <nav class="nav" aria-label="Site">
+    <button class="ibtn" type="button" aria-label="Abrir navegação"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+    <span class="brand" style="font-size: 18px;">Dimensions</span>
+    <span class="grow"></span>
+    <span class="avatar">AM</span>
+  </nav>
+  <div class="scroll">
+    <header class="hero" style="background: #4a1c7a; padding: 18px 16px 16px;">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 8px; align-items: center;">
+        <div class="col" style="gap: 8px;">
+          <span class="crumb">Meus planos</span>
+          <h1 class="h1" style="font-size: 25px;">Trilha de indução 2026</h1>
+          <span style="font-size: 13px; color: rgba(255, 255, 255, 0.82);">9 Etapas · até 14 jun 2027</span>
+        </div>
+        <svg viewBox="0 0 140 140" style="width: 132px; height: 132px;" role="img" aria-label="Rosa do plano: cinco de nove proficientes">
+          <path class="pt pt-ghost" fill="#ffffff" d="{{r.g0}}"></path><path class="pt pt-ghost" fill="#ffffff" d="{{r.g1}}"></path><path class="pt pt-ghost" fill="#ffffff" d="{{r.g2}}"></path>
+          <path class="pt pt-ghost" fill="#ffffff" d="{{r.g3}}"></path><path class="pt pt-ghost" fill="#ffffff" d="{{r.g4}}"></path><path class="pt pt-ghost" fill="#ffffff" d="{{r.g5}}"></path>
+          <path class="pt pt-ghost" fill="#ffffff" d="{{r.g6}}"></path><path class="pt pt-ghost" fill="#ffffff" d="{{r.g7}}"></path><path class="pt pt-ghost" fill="#ffffff" d="{{r.g8}}"></path>
+          <path class="pt {{r.c0}}" fill="#5fd6c8" stroke="#5fd6c8" d="{{r.p0}}"></path>
+          <path class="pt {{r.c1}}" fill="#7fe3d6" stroke="#7fe3d6" d="{{r.p1}}"></path>
+          <path class="pt {{r.c2}}" fill="#3fbfb0" stroke="#3fbfb0" d="{{r.p2}}"></path>
+          <path class="pt {{r.c3}}" fill="#d9b2ff" stroke="#d9b2ff" d="{{r.p3}}"></path>
+          <path class="pt {{r.c4}}" fill="#e7cbff" stroke="#e7cbff" d="{{r.p4}}"></path>
+          <path class="pt {{r.c5}}" fill="#c697f5" stroke="#c697f5" d="{{r.p5}}"></path>
+          <path class="pt {{r.c6}}" fill="#ffb27a" stroke="#ffb27a" d="{{r.p6}}"></path>
+          <path class="pt {{r.c7}}" fill="#ffc99e" stroke="#ffc99e" d="{{r.p7}}"></path>
+          <path class="pt {{r.c8}}" fill="#f29a5c" stroke="#f29a5c" d="{{r.p8}}"></path>
+        </svg>
+      </div>
+      <div class="seg dark" role="group" aria-label="Ver como" style="margin-top: 12px; display: flex;"><span class="on" style="flex: 1; text-align: center;">Rosa</span><span style="flex: 1; text-align: center;">Trilhas</span><span style="flex: 1; text-align: center;">Lista</span></div>
+    </header>
+
+    <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;">
+      <a href="#" class="card" style="padding: 14px; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; text-decoration: none; color: inherit; align-items: center;">
+        <span style="width: 40px; height: 40px; border-radius: 12px; background: #070093; color: #fff; display: grid; place-items: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>
+        <span class="col" style="gap: 2px;"><span class="eyebrow">Próxima parada</span><b style="font-size: 15px;">Plano de desenvolvimento</b><span class="small">Reflexão → Metas · seção 2 de 5</span></span>
+      </a>
+
+      <div class="col" style="gap: 2px;">
+        <span class="eyebrow" style="color: #0b5f58; padding: 4px;">Primeiros passos</span>
+        <a href="#" class="crow"><i style="width: 10px; height: 10px; border-radius: 50%; background: #0f7d74; display: block;"></i><span>Conhece as rotinas da escola</span><span class="lv" aria-label="Referência"><i style="height: 6px; background: #0f7d74;"></i><i style="height: 9px; background: #0f7d74;"></i><i style="height: 12px; background: #0f7d74;"></i><i style="height: 15px; background: #0f7d74;"></i></span></a>
+        <a href="#" class="crow"><i style="width: 10px; height: 10px; border-radius: 50%; background: #1f9488; display: block;"></i><span>Constrói relações de trabalho</span><span class="lv" aria-label="Consolidado"><i style="height: 6px; background: #1f9488;"></i><i style="height: 9px; background: #1f9488;"></i><i style="height: 12px; background: #1f9488;"></i><i style="height: 15px;"></i></span></a>
+        <a href="#" class="crow"><i style="width: 10px; height: 10px; border-radius: 50%; background: #0b5f58; display: block;"></i><span>Gere o comportamento com consistência</span><span class="lv" aria-label="Referência"><i style="height: 6px; background: #0b5f58;"></i><i style="height: 9px; background: #0b5f58;"></i><i style="height: 12px; background: #0b5f58;"></i><i style="height: 15px; background: #0b5f58;"></i></span></a>
+      </div>
+      <div class="col" style="gap: 2px;">
+        <span class="eyebrow" style="color: #5e2183; padding: 4px;">Prática em sala</span>
+        <a href="#" class="crow"><i style="width: 10px; height: 10px; border-radius: 50%; background: #7b2fa8; display: block;"></i><span>Planeja aulas eficazes</span><span class="lv" aria-label="Consolidado"><i style="height: 6px; background: #7b2fa8;"></i><i style="height: 9px; background: #7b2fa8;"></i><i style="height: 12px; background: #7b2fa8;"></i><i style="height: 15px;"></i></span></a>
+        <a href="#" class="crow"><i style="width: 10px; height: 10px; border-radius: 50%; background: #9446bf; display: block;"></i><span>Trabalha com as famílias</span><span class="lv" aria-label="Consolidado"><i style="height: 6px; background: #9446bf;"></i><i style="height: 9px; background: #9446bf;"></i><i style="height: 12px; background: #9446bf;"></i><i style="height: 15px;"></i></span></a>
+        <a href="#" class="crow"><i style="width: 10px; height: 10px; border-radius: 50%; border: 1.5px dashed #5e2183; display: block;"></i><span style="color: #3a3e58;">Trata cada estudante com dignidade</span><span class="small">a descobrir</span></a>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  wedge(cx, cy, r, a0, a1) {
+    const rad = (d) => (d - 90) * Math.PI / 180;
+    const x0 = cx + r * Math.cos(rad(a0));
+    const y0 = cy + r * Math.sin(rad(a0));
+    const x1 = cx + r * Math.cos(rad(a1));
+    const y1 = cy + r * Math.sin(rad(a1));
+    return 'M' + cx + ' ' + cy + 'L' + x0.toFixed(1) + ' ' + y0.toFixed(1) + 'A' + r + ' ' + r + ' 0 0 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + 'Z';
+  }
+  rose(levels, cx, cy, R) {
+    const step = 360 / levels.length;
+    const out = {};
+    levels.forEach((l, i) => {
+      const a0 = i * step + 2;
+      const a1 = (i + 1) * step - 2;
+      const r = l > 0 ? R * (0.25 + 0.1875 * l) : R * 0.5;
+      out['p' + i] = this.wedge(cx, cy, r, a0, a1);
+      out['g' + i] = this.wedge(cx, cy, R, a0, a1);
+      out['c' + i] = l >= 3 ? 'pt-on' : (l > 0 ? 'pt-mid' : 'pt-off');
+    });
+    return out;
+  }
+  renderVals() {
+    return { r: this.rose([4, 3, 4, 3, 3, 0, 2, 0, 0], 70, 70, 66) };
+  }
+}
+</script>
+</body>
+</html>

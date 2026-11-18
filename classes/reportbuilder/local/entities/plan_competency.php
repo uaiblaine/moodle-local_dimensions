@@ -30,12 +30,12 @@ use stdClass;
 /**
  * Competency in a learning plan entity.
  *
- * A plan's competencies are its template's (`competency_templatecomp`) or, for a plan without a
- * template, its own (`competency_plancomp`). The host datasource joins both as one derived table
- * under the `competency_plancomp` alias, with `planid`, `competencyid`, `sortorder` and
- * `fromtemplate`. A completed plan rates its competencies from the archive
- * (`competency_usercompplan`); any other plan from the user's current competency
- * (`competency_usercomp`).
+ * The host datasource joins a plan's competencies as one derived table under the
+ * `competency_plancomp` alias, with `planid`, `competencyid`, `sortorder` and `fromtemplate`, as
+ * {@see \core_competency\plan::get_competencies()} lists them: a completed plan's come from the
+ * archive (`competency_usercompplan`, with `sortorder` 0) and are rated from it; any other plan's
+ * are its template's (`competency_templatecomp`) or, without a template, its own
+ * (`competency_plancomp`), rated from the user's current competency (`competency_usercomp`).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine

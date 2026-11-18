@@ -103,9 +103,9 @@ class template extends base {
                 if ($description === null) {
                     return '';
                 }
-                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, [
-                    'context' => \core\context::instance_by_id((int) $row->contextid),
-                ]);
+                // A row whose context is gone (an interrupted deletion) still renders, in the site context.
+                $context = \core\context::instance_by_id((int) $row->contextid, IGNORE_MISSING) ?: \core\context\system::instance();
+                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, ['context' => $context]);
             });
 
         $columns[] = (new column(
@@ -279,7 +279,9 @@ class template extends base {
     }
 
     /**
-     * SQL counting the plans made from the template, or null for a row without a template.
+     * SQL counting the plans based on the template, or null for a row without a template.
+     *
+     * A plan unlinked from its template keeps it only in `origtemplateid` and is not counted.
      *
      * @return string A scalar subquery.
      */

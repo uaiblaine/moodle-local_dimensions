@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Telas: competência reconhecida</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./lines.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4a85}a:hover{color:#073560}
+.entry .dot{border-color:#6a2892}
+.facts{gap:6px 18px}
+.tight .radio{padding:8px 12px}
+.near li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+</style>
+</helmet>
+<div class="ln" style="width: 1280px; height: 1510px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a class="navlink" href="#">Painel</a>
+    <a class="navlink" href="#">Meus cursos</a>
+    <a class="navlink on" href="TJornada.dc.html" aria-current="page">Minha jornada</a>
+    <span class="grow"></span>
+    <div class="seg onbrand" role="group" aria-label="Persona do mockup">
+      <button type="button" class="{{alunoClass}}" aria-pressed="{{isAluno}}" onClick="{{asAluno}}" style="color: {{alunoInk}};">Aluno</button>
+      <button type="button" class="{{profClass}}" aria-pressed="{{isProf}}" onClick="{{asProf}}" style="color: {{profInk}};">Professor</button>
+    </div>
+  </nav>
+
+  <sc-if value="{{isProf}}" hint-placeholder-val="{{false}}">
+    <div class="viewing"><div class="wrap">Você está lendo a jornada de Marina Alves nesta competência · <a href="#" style="color: inherit;">voltar à turma</a></div></div>
+  </sc-if>
+
+  <div class="wrap" style="display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 32px; padding-top: 22px; flex: none; align-items: center;">
+    <div style="position: relative; height: 300px; border-radius: 24px; background: #6a2892; color: #fff; padding: 26px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; overflow: hidden;">
+      <svg viewBox="0 0 420 300" style="position: absolute; inset: 0; width: 100%; height: 100%;" aria-hidden="true"><circle cx="330" cy="80" r="140" fill="#ffffff" fill-opacity="0.08"></circle><circle cx="330" cy="80" r="84" fill="#ffffff" fill-opacity="0.09"></circle></svg>
+      <span style="position: absolute; right: 24px; top: 24px; width: 64px; height: 64px; border-radius: 50%; background: #fff; color: #17694a; display: grid; place-items: center;"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5"></circle><path d="M9 13.5L7.5 21l4.5-2.5 4.5 2.5L15 13.5"></path></svg></span>
+      <span class="chip" style="align-self: flex-start; background: #fff; color: #6a2892; position: relative;">Ensino e aprendizagem</span>
+      <h1 class="h1" style="position: relative;">3.1 Ensino</h1>
+    </div>
+
+    <div class="col" style="gap: 12px;">
+      <nav class="crumb" aria-label="Você está em"><a href="TJornada.dc.html">Minha jornada</a><span>/</span><a href="TPlano.dc.html">Docência digital (DigCompEdu)</a><span>/</span><span>3.1 Ensino</span></nav>
+      <span class="label" style="color: #17694a;">Competência reconhecida</span>
+      <blockquote class="quote big">“O plano da unidade 3 mostra objetivos claros e um uso das ferramentas digitais que serve à aula, não o contrário.”</blockquote>
+      <dl class="facts">
+        <dt>Reconhecida por</dt><dd>Renato Dias</dd>
+        <dt>Em</dt><dd>16 de outubro de 2026</dd>
+        <dt>Nível</dt><dd>Integrador (B1), o nível de proficiência desta escala</dd>
+        <dt>Sustentada por</dt><dd>3 evidências, entre setembro e outubro</dd>
+      </dl>
+      <p style="color: #3d445c; max-width: 62ch;">Planeja e usa dispositivos e recursos digitais no ensino, para tornar as intervenções mais eficazes.</p>
+    </div>
+  </div>
+
+  <div class="wrap" style="display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 36px; padding-top: 28px; flex: 1 1 auto;">
+    <main class="col" style="gap: 4px;">
+      <h2 class="h2" style="padding: 0 0 8px 112px;">Como esta competência foi construída</h2>
+
+      <article class="entry mile">
+        <span class="when num">16 out</span>
+        <span class="rail"><span class="dot"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></span>
+        <div class="body"><div class="box">
+          <span class="label" style="color: #17694a;">Reconhecimento · nível Integrador (B1)</span>
+          <blockquote class="quote">“O plano da unidade 3 mostra objetivos claros e um uso das ferramentas digitais que serve à aula, não o contrário.”</blockquote>
+          <span class="small" style="color: #17694a; font-weight: 600;">Renato Dias, ao avaliar no plano</span>
+        </div></div>
+      </article>
+
+      <article class="entry">
+        <span class="when num">9 out</span>
+        <span class="rail"><span class="dot"></span></span>
+        <div class="body"><div class="ev">
+          <span class="pic" style="width: 72px; height: 72px; background: #f3e9f8; color: #6a2892;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"></path><path d="M14 3v5h5"></path><path d="M10 13h6M10 17h6"></path></svg></span>
+          <div class="col" style="gap: 4px;">
+            <span class="small">Evidência registrada pela aluna · 2 arquivos</span>
+            <h3 class="h3">Plano de aula da unidade 3</h3>
+            <p style="font-size: 14px; color: #3d445c;">Sequência de quatro aulas sobre leitura crítica, com a rubrica usada na avaliação.</p>
+          </div>
+        </div></div>
+      </article>
+
+      <article class="entry">
+        <span class="when num">24 set</span>
+        <span class="rail"><span class="dot"></span></span>
+        <div class="body"><div class="ev">
+          <span class="pic" style="width: 72px; height: 72px; background: #e2f3f1; color: #0c5f59;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 10h8M8 14h5"></path></svg></span>
+          <div class="col" style="gap: 4px;">
+            <span class="small">Curso concluído · passou ao nível Explorador (A2)</span>
+            <h3 class="h3">Ensinar com recursos digitais</h3>
+            <p style="font-size: 14px; color: #3d445c;">A conclusão do curso anexou esta evidência ao plano.</p>
+          </div>
+        </div></div>
+      </article>
+
+      <article class="entry">
+        <span class="when num">3 set</span>
+        <span class="rail"><span class="dot"></span></span>
+        <div class="body"><div class="ev">
+          <span class="pic" style="width: 72px; height: 72px; background: #e8eefb; color: #2449ad;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V5M5 15l4-4 3 3 6-7"></path></svg></span>
+          <div class="col" style="gap: 4px;">
+            <span class="small">Atividade concluída em Ensinar com recursos digitais</span>
+            <h3 class="h3">Tarefa: objetivos de uma aula de 50 minutos</h3>
+            <p style="font-size: 14px; color: #3d445c;">“Bons verbos de ação. Falta dizer como a turma saberá que chegou lá.” — Lúcia Prado</p>
+          </div>
+        </div></div>
+      </article>
+
+      <article class="entry start">
+        <span class="when num">12 mar</span>
+        <span class="rail"><span class="dot"></span></span>
+        <div class="body"><p class="small" style="padding: 14px 0 0 4px;">A competência entrou no plano Docência digital (DigCompEdu).</p></div>
+      </article>
+    </main>
+
+    <aside class="col" style="gap: 16px;">
+      <sc-if value="{{isAluno}}" hint-placeholder-val="{{true}}">
+        <section class="card pad col" aria-labelledby="t-share">
+          <h2 class="h3" id="t-share">Mostre este reconhecimento</h2>
+          <p class="small">Um documento com o reconhecimento e as evidências que o sustentam, com código de verificação.</p>
+          <a class="btn primary" href="#">Gerar o documento</a>
+          <a class="btn line" href="#">Acrescentar uma evidência</a>
+          <a class="btn line" href="#">Pedir uma nova leitura</a>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{isProf}}" hint-placeholder-val="{{false}}">
+        <section class="card pad col tight" aria-labelledby="t-rate">
+          <h2 class="h3" id="t-rate">Sua leitura</h2>
+          <label class="radio"><input type="radio" name="t-level"><span>Recém-chegado (A1)</span></label>
+          <label class="radio"><input type="radio" name="t-level"><span>Explorador (A2)</span></label>
+          <label class="radio on"><input type="radio" name="t-level" checked><span><b>Integrador (B1)</b> · nível de proficiência, o atual</span></label>
+          <label class="radio"><input type="radio" name="t-level"><span>Especialista (B2)</span></label>
+          <label class="radio"><input type="radio" name="t-level"><span>Líder (C1)</span></label>
+          <label class="radio"><input type="radio" name="t-level"><span>Pioneiro (C2)</span></label>
+          <label class="small" for="t-note" style="font-weight: 600; color: #1c2233;">O que você observou (vira a frase do reconhecimento)</label>
+          <textarea class="note" id="t-note"></textarea>
+          <button type="button" class="btn primary">Registrar avaliação</button>
+        </section>
+      </sc-if>
+
+      <section class="card pad col" aria-labelledby="t-near">
+        <h2 class="h3" id="t-near">Vizinhança</h2>
+        <ul class="col near" style="gap: 10px; font-size: 14.5px;">
+          <li><a href="#">2.2 Criação e modificação</a><span class="chip ok">Reconhecida</span></li>
+          <li><a href="TCompetenciaAberta.dc.html">4.1 Estratégias de avaliação</a><span class="chip warm">Em construção</span></li>
+          <li><a href="#">3.3 Aprendizagem colaborativa</a><span class="chip line">Por explorar</span></li>
+        </ul>
+      </section>
+
+      <section class="card pad col" aria-labelledby="t-where">
+        <h2 class="h3" id="t-where">Onde se pratica</h2>
+        <ul class="col" style="gap: 10px; font-size: 14.5px;">
+          <li><a href="#" style="font-weight: 600;">Ensinar com recursos digitais</a><br><span class="small">Curso concluído em 24 de setembro</span></li>
+          <li><a href="#" style="font-weight: 600;">Recursos educacionais abertos na prática</a><br><span class="small">Inscrições abertas até 30 de novembro</span></li>
+        </ul>
+      </section>
+
+      <section class="col" aria-labelledby="t-valid" style="gap: 6px; padding: 0 4px;">
+        <div class="row" style="gap: 10px;">
+          <h2 class="h3" id="t-valid" style="font-size: 15px;">Validade</h2>
+          <span class="chip ok">Válida até 16 de outubro de 2028</span>
+        </div>
+        <p class="small">Uma nova leitura renova o reconhecimento.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"persona":{"editor":"enum","options":["aluno","professor"],"default":"aluno"},"$preview":{"width":1280,"height":1510}}'>
+class Component extends DCLogic {
+renderVals() {
+const p = (this.state && this.state.persona) || this.props.persona || 'aluno';
+const prof = p === 'professor';
+return {
+isAluno: !prof,
+isProf: prof,
+alunoClass: prof ? '' : 'on',
+profClass: prof ? 'on' : '',
+alunoInk: prof ? '#ffffff' : '#1c2233',
+profInk: prof ? '#1c2233' : '#ffffff',
+asAluno: () => this.setState({ persona: 'aluno' }),
+asProf: () => this.setState({ persona: 'professor' })
+};
+}
+}
+</script>
+</body>
+</html>

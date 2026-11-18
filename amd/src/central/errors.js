@@ -16,11 +16,12 @@
 /**
  * Network-aware error routing for the Competency hub.
  *
- * A transport failure (offline, dropped connection, timeout) rejects a core/ajax call, including
- * core/templates' core_output_load_template_with_dependencies, with a bare string rather than an
- * error object. core/notification's exception() renders that as a YUI exception dialogue with an
- * "undefined" title and body. Connectivity drops therefore get a dismissible toast instead, while
- * application errors keep the exception dialogue.
+ * Moodle 5.3's core/ajax is fetch-based, and so is core/templates' core_output_load_template_with_dependencies
+ * call, which goes through it. A transport failure rejects with an error object, never a bare string:
+ * fetch's own TypeError for a dropped connection, an AbortError for a timeout or an aborted request, and
+ * Error('HTTP <status>: <text>') for a non-2xx answer such as a balancer's 502 or 504. core/notification's
+ * exception() renders those as a raw technical dialogue, so connectivity drops get a dismissible toast
+ * instead, while application errors keep the exception dialogue.
  *
  * @module     local_dimensions/central/errors
  * @copyright  2026 Anderson Blaine
@@ -32,16 +33,31 @@ import {add as addToast} from 'local_dimensions/central/toast';
 import {getString} from 'core/str';
 
 /**
+ * Whether a TypeError is fetch's own transport failure rather than a script fault.
+ *
+ * Fetch rejects with a TypeError whose message differs per engine: 'Failed to fetch' (Chromium),
+ * 'NetworkError when attempting to fetch resource.' (Firefox) and 'Load failed' (Safari). A bare TypeError
+ * from a script fault is an application error and keeps the exception dialogue.
+ *
+ * @param {Object} error The rejection value.
+ * @return {Boolean} True when the error is a fetch transport failure.
+ */
+const isFetchFailure = (error) => {
+    if (!(error instanceof TypeError) || typeof error.message !== 'string') {
+        return false;
+    }
+    return ['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed'].includes(error.message);
+};
+
+/**
  * Decide whether a rejected call failed because of a connectivity problem rather
  * than a genuine application error.
  *
- * navigator.onLine === false is the strongest signal. Otherwise only core/ajax's
- * requestFail() rejects with jQuery's bare errorThrown, a string ('' for a dropped
- * connection, 'timeout', 'abort', or an HTTP error's status text, which this cannot
- * tell apart), or with nothing at all. Every other rejection
- * is an object and an error to show: a web-service exception (with a Moodle
- * errorcode), a script fault (TypeError and friends), core/ajax's own
- * Error('missing response') and jQuery's parse error on a broken response.
+ * navigator.onLine === false is the strongest signal. Otherwise the connectivity shapes of core/ajax's fetch
+ * layer are: fetch's TypeError for a dropped connection, an AbortError for a timeout, and Error('HTTP <status>:
+ * <text>') for a non-2xx answer. A falsy rejection or a bare string (older callers) counts too. Everything else
+ * is an error to show: a web-service exception (it carries a Moodle errorcode), core/ajax's own
+ * Error('missing response') and a script fault (TypeError and friends).
  *
  * @param {*} error The rejection value.
  * @return {Boolean} True when the failure looks like a connectivity drop.
@@ -50,7 +66,19 @@ export const isNetworkError = (error) => {
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         return true;
     }
-    return typeof error === 'string' || !error;
+    if (!error || typeof error === 'string') {
+        return true;
+    }
+    if (typeof error !== 'object' || error.errorcode) {
+        return false;
+    }
+    if (error.name === 'AbortError') {
+        return true;
+    }
+    if (typeof error.message === 'string' && error.message.startsWith('HTTP ')) {
+        return true;
+    }
+    return isFetchFailure(error);
 };
 
 /**

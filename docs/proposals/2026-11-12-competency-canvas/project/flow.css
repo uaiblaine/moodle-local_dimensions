@@ -1,0 +1,102 @@
+/* Third approach, "Fluxo": one workspace per persona, a composer, an inbox, peek sheets. Loaded after lines.css. */
+.fl { background: #f6f7fb; }
+.fl .wrap { max-width: 1216px; }
+
+/* Workspace bar: the persona's three verbs, a search that is also the command palette. */
+.ws { background: #fff; border-bottom: 1px solid var(--line); flex: none; }
+.ws .wrap { display: flex; align-items: center; gap: 20px; min-height: 64px; }
+.ws h1 { font-size: 20px; font-weight: 800; }
+.tabs { display: flex; gap: 4px; }
+.tabs a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 10px; font-weight: 600; font-size: 14.5px; color: var(--mute); text-decoration: none; }
+.tabs a.on { background: var(--brand-tint); color: var(--brand); }
+.tabs a svg { width: 18px; height: 18px; }
+.tabs .count { background: var(--brand); color: #fff; border-radius: 999px; font-size: 12px; font-weight: 700; padding: 1px 8px; }
+.find { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--page); color: var(--mute); font-size: 14px; min-width: 280px; }
+.find svg { width: 18px; height: 18px; }
+.kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; background: #fff; border: 1px solid #c9cedd; border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; color: var(--ink-2); }
+
+/* The composer: one box to say what you did. */
+.composer { background: #fff; border: 1.5px solid var(--brand-edge); border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 14px rgba(20, 24, 60, 0.06); }
+.composer .ask { font-family: "Outfit", sans-serif; font-size: 19px; font-weight: 700; color: var(--ink); }
+.composer .box { min-height: 56px; border-radius: 12px; background: var(--page); border: 1px dashed #8b92ab; padding: 14px; color: var(--mute); font-size: 14.5px; }
+.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tool { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line); background: #fff; font-size: 13.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.tool svg { width: 18px; height: 18px; }
+.pick { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--line); background: #fff; color: var(--ink); }
+.pick.on { border-color: var(--brand); background: var(--brand-tint); color: var(--brand-deep); }
+.pick i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+
+/* A moment in the feed: evidence, a reading, a recognition. One card anatomy everywhere. */
+.moment { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.moment .top { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--mute); }
+.moment .top b { color: var(--ink); }
+.moment.rec { border-color: var(--ok-edge); background: linear-gradient(#fff, #fff) padding-box; box-shadow: inset 0 4px 0 var(--ok); }
+.moment h3 { font-size: 17px; }
+.attach { display: flex; gap: 10px; }
+.attach .pic { width: 92px; height: 68px; }
+.thread { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.thread .msg { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; }
+.thread .avatar { width: 30px; height: 30px; font-size: 12px; }
+.reply { min-height: 44px; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; display: flex; align-items: center; color: var(--mute); font-size: 14px; background: var(--page); }
+
+/* Level as six pips: filled up to the current level, the proficiency level ringed. Never a percentage. */
+.pips { display: inline-flex; gap: 4px; align-items: center; }
+.pips i { width: 14px; height: 8px; border-radius: 999px; background: #dfe2ec; display: block; }
+.pips i.on { background: var(--brand); }
+.pips i.goal { outline: 2px solid var(--ok); outline-offset: 1px; }
+.pips.big i { width: 34px; height: 12px; }
+
+/* Next step cards and competency tiles. */
+.next { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.next .why { font-size: 13px; color: var(--mute); }
+.tilec { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--ink); font-size: 14px; font-weight: 600; line-height: 1.25; min-height: 96px; }
+.tilec small { font-size: 12.5px; font-weight: 600; color: var(--mute); }
+.tilec.ok { border-color: var(--ok-edge); }
+.tilec.sel { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-edge); }
+.tilec.far { border-style: dashed; background: #fafbfe; }
+.arearow { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: start; }
+.arearow h3 { font-size: 15px; display: flex; gap: 8px; align-items: center; padding-top: 12px; }
+.arearow h3 i { width: 12px; height: 12px; border-radius: 4px; display: block; flex: none; }
+
+/* Peek: a side sheet over the page, and the dialog. */
+.scrim { position: absolute; inset: 0; background: rgba(20, 24, 51, 0.45); }
+.sheet { position: absolute; top: 0; right: 0; bottom: 0; width: 520px; background: #fff; box-shadow: -12px 0 40px rgba(20, 24, 60, 0.2); display: flex; flex-direction: column; }
+.sheet header, .dialog header { display: flex; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--line); flex: none; }
+.sheet .bodyx, .dialog .bodyx { padding: 18px 22px; display: flex; flex-direction: column; gap: 16px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.sheet footer, .dialog footer { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 10px; flex: none; }
+.dialog { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); width: 680px; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(20, 24, 60, 0.3); display: flex; flex-direction: column; overflow: hidden; }
+.iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 0; background: transparent; display: grid; place-items: center; color: var(--ink-2); cursor: pointer; }
+.iconbtn svg { width: 20px; height: 20px; }
+
+/* Teacher: the inbox, the level buttons, the alignment lanes. */
+.inbox { background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+.it { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); font-size: 13.5px; }
+.it.on { background: var(--brand-tint); box-shadow: inset 3px 0 0 var(--brand); }
+.it b { display: block; font-size: 14px; }
+.it span { color: var(--mute); }
+.lvls { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.lvl { min-height: 64px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; color: var(--mute); cursor: pointer; }
+.lvl b { font-size: 16px; color: var(--ink); font-family: "Outfit", sans-serif; }
+.lvl.on { border-color: var(--brand); background: var(--brand-tint); }
+.lvl.goal { border-bottom: 4px solid var(--ok); }
+.lane { background: #eef0f6; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-height: 420px; }
+.lane h3 { font-size: 15px; display: flex; gap: 8px; align-items: center; padding: 4px 4px 0; }
+.act { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 600; box-shadow: 0 1px 3px rgba(20, 24, 60, 0.06); }
+.act small { font-weight: 600; color: var(--mute); font-size: 12.5px; }
+.drop { border: 1.5px dashed #8b92ab; border-radius: 12px; padding: 12px; font-size: 13px; color: var(--mute); text-align: center; }
+.person { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Phone chrome. */
+.bottomnav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #fff; border-top: 1px solid var(--line); flex: none; }
+.bottomnav a { min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px; font-weight: 600; color: var(--mute); text-decoration: none; }
+.bottomnav a.on { color: var(--brand); }
+.bottomnav svg { width: 22px; height: 22px; }
+.fab { position: absolute; right: 16px; bottom: 76px; min-height: 56px; padding: 0 20px; border-radius: 999px; background: var(--brand); color: #fff; font-weight: 700; font-size: 15px; border: 0; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(10, 74, 133, 0.35); }
+.fab svg { width: 20px; height: 20px; }
+
+/* lines.css resets the font of every button (.ln button); put this approach's button sizes back. */
+.fl .tool { font-size: 13.5px; font-weight: 600; }
+.fl .pick { font-size: 13px; font-weight: 600; }
+.fl .lvl { font-size: 12px; }
+.fl .lvl b { font-size: 16px; }
+.fl .fab { font-size: 15px; font-weight: 700; }

@@ -259,10 +259,11 @@ final class stylesheet_markup_contract_test extends \basic_testcase {
         $root = $this->plugin_root();
         $sources = array_values($this->templates());
         $paths = glob($root . '/*.php') ?: [];
-        foreach (['amd/src', 'classes', 'db'] as $relative) {
+        // The canvas of the hub v2 writes its classes from js/esm/src (TypeScript and JSX).
+        foreach (['amd/src', 'classes', 'db', 'js/esm/src'] as $relative) {
             $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/' . $relative));
             foreach ($iterator as $file) {
-                if ($file->isFile() && in_array($file->getExtension(), ['js', 'php'], true)) {
+                if ($file->isFile() && in_array($file->getExtension(), ['js', 'php', 'ts', 'tsx'], true)) {
                     $paths[] = $file->getPathname();
                 }
             }
@@ -311,6 +312,64 @@ final class stylesheet_markup_contract_test extends \basic_testcase {
             $offenders,
             'Nothing in the plugin writes these classes, so the rules styling them style nothing; delete them: '
                 . implode(' ', $offenders)
+        );
+    }
+
+    /**
+     * The tracker's card skeleton is busy, hidden from assistive technology, and still under reduced motion.
+     *
+     * The grid is the busy region with the one spoken status line (fleet Design System, skeleton.md);
+     * each card's container is busy until competency_view.js draws its body, and the grey blocks
+     * themselves say nothing. The pulse runs only when the user has not asked for less motion.
+     *
+     * Changes that must make it fail: drop aria-busy from the grid or the card container; drop the
+     * skeleton's aria-hidden or the grid's status line; move the pulse out of its media query.
+     *
+     * @return void
+     */
+    public function test_tracker_card_skeleton_is_busy_silent_and_still_when_asked(): void {
+        $byname = [];
+        foreach ($this->templates() as $path => $markup) {
+            $byname[basename($path)] = $markup;
+        }
+        $find = function (string $file, string $class) use ($byname): array {
+            $found = [];
+            foreach ($this->tags($byname[$file]) as $tag) {
+                $classes = preg_split('/\s+/', (string) $this->attribute($tag['attributes'], 'class'));
+                if (in_array($class, $classes, true)) {
+                    $found[] = $tag['attributes'];
+                }
+            }
+            $this->assertCount(1, $found, "{$file} draws .{$class} once");
+            return $found;
+        };
+
+        [$container] = $find('course_card.mustache', 'local-dimensions-progress-container');
+        $this->assertSame('true', $this->attribute($container, 'aria-busy'));
+        [$skeleton] = $find('course_card.mustache', 'local-dimensions-sk');
+        $this->assertSame('true', $this->attribute($skeleton, 'aria-hidden'));
+
+        $grid = null;
+        $status = null;
+        foreach ($this->tags($byname['course_grid.mustache']) as $tag) {
+            if ($this->attribute($tag['attributes'], 'id') === 'local-dimensions-viewcompetency-grid') {
+                $grid = $tag['attributes'];
+            }
+            if ($this->attribute($tag['attributes'], 'data-region') === 'local-dimensions-grid-loading') {
+                $status = $tag['attributes'];
+            }
+        }
+        $this->assertNotNull($grid);
+        $this->assertSame('true', $this->attribute($grid, 'aria-busy'));
+        $this->assertNotNull($status);
+        $this->assertSame('status', $this->attribute($status, 'role'));
+
+        $css = file_get_contents($this->plugin_root() . '/styles.css');
+        $this->assertSame(1, preg_match_all('/local-dimensions-sk-pulse 1300ms/', $css));
+        $this->assertMatchesRegularExpression(
+            '/@media \(prefers-reduced-motion: no-preference\) \{\s*\.local-dimensions-sk \{\s*'
+                . 'animation: local-dimensions-sk-pulse 1300ms ease-in-out infinite;\s*\}\s*\}/',
+            $css
         );
     }
 
