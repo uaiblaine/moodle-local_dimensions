@@ -53,15 +53,11 @@ class get_courses_completion_status extends external_api {
             ),
             'planid' => new external_value(
                 PARAM_INT,
-                'A learning plan the caller may read, whose owner the statuses describe; 0 for the caller\'s own',
-                VALUE_DEFAULT,
-                0
+                'A learning plan the caller may read, whose owner the statuses describe'
             ),
             'competencyid' => new external_value(
                 PARAM_INT,
-                'The competency of the plan whose linked courses are asked for; read only with a plan',
-                VALUE_DEFAULT,
-                0
+                'The competency of the plan whose linked courses are asked for'
             ),
         ]);
     }
@@ -73,15 +69,15 @@ class get_courses_completion_status extends external_api {
      * whether the caller can open the course (calculator::is_locked_for_viewer()), as on the progress cards.
      *
      * @param int[] $courseids
-     * @param int $planid The learning plan whose owner the statuses describe, 0 for the caller's own.
-     * @param int $competencyid The plan's competency the courses are linked to, read only with a plan.
+     * @param int $planid The learning plan whose owner the statuses describe.
+     * @param int $competencyid The plan's competency the courses are linked to.
      * @return array<int, array{courseid:int,iscompleted:bool,islocked:bool}>
      * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan does
      *     not reach the competency.
      * @throws \required_capability_exception When the current user may not read the plan or its owner's user
      *     competencies.
      */
-    public static function execute($courseids, $planid = 0, $competencyid = 0) {
+    public static function execute($courseids, $planid, $competencyid) {
         global $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [

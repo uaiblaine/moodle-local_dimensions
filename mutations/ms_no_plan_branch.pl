@@ -1,0 +1,1 @@
+s/        if \(\$planid <= 0\) \{\n            throw new \\moodle_exception\('invalidplan', 'local_dimensions'\);\n        \}\n/        if (\$planid === 0) {\n            return ['ownerid' => (int) \$GLOBALS['USER']->id, 'courses' => helper::readable_competency_courses(\$courseids)];\n        }\n/;

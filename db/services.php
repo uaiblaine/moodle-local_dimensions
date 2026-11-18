@@ -336,7 +336,7 @@ $functions = [
         'methodname' => 'execute',
         'description' => 'Export a competency framework and its custom fields as CSV.',
         'type' => 'read',
-        'capabilities' => 'moodle/competency:competencyview',
+        'capabilities' => 'moodle/competency:competencymanage',
         'ajax' => true,
         'readonlysession' => true,
     ],

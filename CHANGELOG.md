@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Ported from main: the MDL Shield review of v5.3-r1 (#159)
+
+Version `2025100619`. All of main's #159 applies here (the same port as 4.5's).
+
+- **`get_course_progress` and `get_courses_completion_status` refuse a call without a plan.**
+  With plan id 0 the only gate was that the course carried some competency link and that the
+  caller could browse it, so any user received the section names of any such course, locked cards
+  included (MDL Shield finding 1, low). The tracker page always names its plan and competency, and
+  nothing else calls the two services; `planid` and `competencyid` are now required, and 0 ends in
+  `invalidplan` before any course is read. Gate `mutations/mdlshield_2026_11_18.conf`.
+- **The plugin no longer creates the PostgreSQL `unaccent` extension by itself** (finding 2).
+  Install and upgrade used to run `CREATE EXTENSION` and swallow the outcome. The plugin settings
+  now show the extension's state with a button that creates it (`/local/dimensions/unaccent.php`,
+  `moodle/site:config` and a session key), and System status gains a check: OK when installed,
+  a warning with the recommendation when missing, not applicable on other databases.
+  `helper::has_unaccent()` is memoised per request, so a search asks the catalogue once.
+- **Exporting a framework needs `moodle/competency:competencymanage`**, as core's own export page
+  does; the hub's export button was already shown only to managers, and the template export now
+  offers a referenced framework as a companion download only to a caller who manages it (the CSV
+  still names every framework the caller reads).
+- **The reflective write of `core_availability\info::$modinfo`** in `learner_restrictions` is
+  documented as intentional (core has no setter and its public filter walks the course's members),
+  and `info::get_modinfo()` joins the core-parity manifest beside `info::filter_user_list()`
+  (finding 3).
+- `cli/core_parity.php` reports a missing manifest instead of failing on the read.
+- README: the accent-insensitive search section describes the admin action and the status check,
+  and the tracker section tells administrators that a viewer who may read a learner's user
+  competencies sees the plan owner's course progress and section names on the tracker.
+- Finding 4 (direct writes to core competency and custom field tables) is left as it is: each
+  write follows core's own precedent or a documented need, and the field writes reset the
+  handlers' caches.
+
 ### Ported from main: the 2026-11 security audit
 
 Version `2025100618`. From main's #157 and #158, the parts that apply to 5.1 (the same port as 4.5's).
