@@ -3414,6 +3414,60 @@ class helper {
     }
 
     /**
+     * The custom fields' own validation, for the fields a submission carries.
+     *
+     * Core's handler::instance_form_validation() reads every editable field from the data and
+     * warns for one that is absent; a submission that leaves a field out (tool_lp's own forms,
+     * which know nothing of these fields, or a partial modal post) means "unchanged", so only the
+     * fields present are validated. The editable set resolves as can_edit() does: the instance's
+     * own context, or a create form's hint for instance 0.
+     *
+     * @param \core_customfield\handler $handler The area's handler.
+     * @param array $data Submitted data, carrying the instance id under 'id' (0 on create).
+     * @param array $files Submitted files.
+     * @return array Errors keyed by form element name.
+     */
+    public static function validate_present_customfields(\core_customfield\handler $handler, array $data, array $files): array {
+        $instanceid = (int) ($data['id'] ?? 0);
+        $errors = [];
+        // Moodle 4.5's handler has no get_instance_fields_data(), and the stable branches share
+        // this code; this is the call 4.5's own instance_form_validation() makes.
+        $fields = \core_customfield\api::get_instance_fields_data($handler->get_editable_fields($instanceid), $instanceid);
+        foreach ($fields as $field) {
+            $name = $field->get_form_element_name();
+            if (!array_key_exists($name, $data) && !array_key_exists($name . '_editor', $data)) {
+                continue;
+            }
+            $errors += $field->instance_form_validation($data, $files);
+        }
+        return $errors;
+    }
+
+    /**
+     * Pin the submitted custom SCSS value to plain text.
+     *
+     * The data-side half of force_customscss_plain(): the format travels with the submission, so
+     * a modal form's get_data() resets it, whichever shape the field took (editor or plain, array
+     * or object). Nothing downstream reads the format today; the stored row says what it holds.
+     *
+     * @param \stdClass $data The form's submitted data, changed in place.
+     * @return void
+     */
+    public static function force_customscss_plain_data(\stdClass $data): void {
+        $name = 'customfield_' . constants::CFIELD_CUSTOMSCSS;
+        foreach ([$name . '_editor', $name] as $prop) {
+            if (isset($data->$prop) && is_array($data->$prop)) {
+                $data->{$prop}['format'] = FORMAT_PLAIN;
+                return;
+            }
+            if (isset($data->$prop) && is_object($data->$prop)) {
+                $data->$prop->format = FORMAT_PLAIN;
+                return;
+            }
+        }
+    }
+
+    /**
      * Server-side validation of the submitted custom SCSS (when the feature is enabled).
      *
      * Shared by the competency and template modal forms so both block saving invalid SCSS

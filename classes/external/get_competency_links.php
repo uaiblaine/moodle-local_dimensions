@@ -102,6 +102,7 @@ class get_competency_links extends external_api {
         $competency = new competency($competencyid);
         $frameworkcontext = $competency->get_context();
         self::validate_context($frameworkcontext);
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:competencyview', $frameworkcontext);
         $canlink = (bool) $competency->get_framework()->get('visible');
 

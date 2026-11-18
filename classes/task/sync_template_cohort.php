@@ -98,7 +98,19 @@ class sync_template_cohort extends \core\task\adhoc_task {
                 . $cohortid . ': ' . $refusal . '.');
             return;
         }
-        api::create_plans_from_template_cohort($templateid, $cohortid, $recreateunlinked);
+        /* Core's method checks for an existing plan, then inserts, and competency_plan has no
+           unique index on (templateid, userid): two runs for the same pair, queued by two
+           managers (the dedupe key includes the user), would give a member two plans. */
+        $lockfactory = \core\lock\lock_config::get_lock_factory('local_dimensions');
+        $lock = $lockfactory->get_lock('sync_template_cohort_' . $templateid . '_' . $cohortid, 60);
+        if (!$lock) {
+            throw new \moodle_exception('locktimeout');
+        }
+        try {
+            api::create_plans_from_template_cohort($templateid, $cohortid, $recreateunlinked);
+        } finally {
+            $lock->release();
+        }
     }
 
     /**

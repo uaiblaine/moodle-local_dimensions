@@ -89,10 +89,12 @@ class get_courses_completion_status extends external_api {
             'planid' => $planid,
             'competencyid' => $competencyid,
         ]);
-        $courseids = $params['courseids'];
+        // Each id once: the loop below computes a card per id, so a repeated id would repeat the work.
+        $courseids = array_values(array_unique(array_map('intval', $params['courseids'])));
 
         $context = context_system::instance();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
         require_capability('local/dimensions:view', $context);
 
         /* The same gate as get_course_progress::execute(): the two services feed one card list and must

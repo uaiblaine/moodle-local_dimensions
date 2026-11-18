@@ -76,6 +76,7 @@ class get_competency_rule_data extends external_api {
 
         $context = context_system::instance();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('local/dimensions:view', $context);
 
         // Read the plan to get the userid.

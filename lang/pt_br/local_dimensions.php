@@ -89,6 +89,7 @@ $string['central_enrol_apply_method'] = 'Aplicar · {$a}';
 $string['central_enrol_apply_queued'] = '{$a} ação(ões) enfileirada(s) — executam em segundo plano.';
 $string['central_enrol_bothdisabled'] = 'A Sincronização de coortes e a Autoinscrição estão desabilitadas neste site. Habilite pelo menos um dos plugins de inscrição ou contate um administrador do site.';
 $string['central_enrol_busy'] = 'Outra ação de inscrição já está processando esta combinação. Tente novamente em instantes.';
+$string['central_enrol_cannotchangestatus'] = 'Este método de inscrição não permite alterar o status aqui, por exemplo uma autoinscrição sem a senha que o site exige.';
 $string['central_enrol_category'] = 'Categoria de curso';
 $string['central_enrol_categoryall'] = 'Todas as categorias';
 $string['central_enrol_cohort'] = 'Coorte do plano';

@@ -180,8 +180,16 @@ class template_import_analyser {
             $this->fields[$shortname] = helper::find_field_by_shortname($shortname, helper::AREA_LP);
         }
 
-        foreach (lp_handler::create()->get_editable_fields(0) as $field) {
-            $this->editable[(string) $field->get('shortname')] = true;
+        // Templates are created and matched in the target only, so their fields' editing rights
+        // resolve there; without the hint they resolve at the site and a category manager gets none.
+        $handler = lp_handler::create();
+        $handler->set_edit_context_hint($this->target);
+        try {
+            foreach ($handler->get_editable_fields(0) as $field) {
+                $this->editable[(string) $field->get('shortname')] = true;
+            }
+        } finally {
+            $handler->set_edit_context_hint(null);
         }
 
         /* 'parents' and 'children' are mutually exclusive in api::get_related_contexts(), so the
@@ -889,8 +897,10 @@ class template_import_analyser {
             }
             $framework = competency_framework::get_record(['id' => $otherid]);
             if ($framework) {
-                // A structure the viewer cannot read is not named.
-                $names[competency_framework::can_read_context($framework->get_context())
+                // A structure the viewer cannot read, or whose category is withheld from them, is not named.
+                $named = competency_framework::can_read_context($framework->get_context())
+                    && unlisted_categories::filter_by_context([$framework]) !== [];
+                $names[$named
                     ? (string) $framework->get('shortname')
                     : get_string('central_plans_import_hiddenframework', 'local_dimensions')] = true;
             }

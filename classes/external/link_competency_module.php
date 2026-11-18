@@ -69,6 +69,7 @@ class link_competency_module extends external_api {
 
         $modcontext = context_module::instance($cmid);
         self::validate_context($modcontext);
+        api::require_enabled();
 
         // False when the link already existed: nothing was added, so nothing is logged below.
         $created = api::add_competency_to_course_module($cmid, $competencyid);
