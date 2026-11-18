@@ -602,6 +602,33 @@ final class template_import_analyser_test extends \advanced_testcase {
     }
 
     /**
+     * A manager who holds templatemanage in one category only may import a template ID number
+     * into that category: the fields' editing rights resolve in the target, not at the site, and
+     * the context the analyser named is cleared once it has read them.
+     *
+     * @return void
+     */
+    public function test_a_category_manager_may_write_the_fields_in_their_category(): void {
+        $this->prepare_site();
+        $category = \context_coursecat::instance((int) $this->getDataGenerator()->create_category()->id);
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $category->id);
+        role_assign($roleid, (int) $user->id, $category->id);
+        $this->setUser($user);
+        $csv = $this->csv([
+            ['rowtype' => 'template', 'template_idnumber' => 'TPL-CAT', 'shortname' => 'Category plan'],
+        ]);
+
+        $item = $this->first_item($this->analyse($csv, $category, false));
+
+        $this->assertSame(template_import_verdict::REASON_NONE, $item['reason'], $this->describe($item));
+        $this->assertSame(template_import_verdict::VERDICT_CREATE, $item['verdict']);
+        $field = helper::find_field_by_shortname(\local_dimensions\constants::CFIELD_TEMPLATE_IDNUMBER, helper::AREA_LP);
+        $this->assertFalse(lp_handler::create()->can_edit($field, 0), 'The category must not stay hinted after the analysis');
+    }
+
+    /**
      * Every item carries a fingerprint, and it moves when the projected result moves.
      *
      * @return void

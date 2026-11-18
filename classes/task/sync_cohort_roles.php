@@ -60,6 +60,12 @@ class sync_cohort_roles extends \core\task\adhoc_task {
      * @return void
      */
     public function execute(): void {
+        // Core's sync requires role:manage of the user the task runs as; one who lost it since
+        // queueing would fail every retry, so the task reports it and ends instead.
+        if (!has_capability('moodle/role:manage', \context_system::instance())) {
+            mtrace('local_dimensions: cohort roles not synced: the task user no longer holds moodle/role:manage.');
+            return;
+        }
         \tool_cohortroles\api::sync_all_cohort_roles();
     }
 }

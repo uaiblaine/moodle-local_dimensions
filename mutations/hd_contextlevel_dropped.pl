@@ -1,0 +1,1 @@
+s/        if \(\$context->contextlevel !== CONTEXT_SYSTEM && \$context->contextlevel !== CONTEXT_COURSECAT\) \{\n            throw new \\moodle_exception\('invalidcontext', 'error'\);\n        \}\n//;

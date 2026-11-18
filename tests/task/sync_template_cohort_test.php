@@ -175,4 +175,27 @@ final class sync_template_cohort_test extends \advanced_testcase {
 
         $this->assertSame(0, $this->plans());
     }
+
+    /**
+     * Two runs for the same pair are serialised: while the lock is held elsewhere the task
+     * creates nothing and throws, so core retries it; with the lock free (the control above,
+     * test_the_task_creates_the_plans) it creates the plans.
+     *
+     * @return void
+     */
+    public function test_the_task_waits_for_a_run_of_the_same_pair(): void {
+        global $CFG;
+        require_once(__DIR__ . '/../fixtures/refusing_lock_factory.php');
+        $CFG->lock_factory = '\\local_dimensions\\refusing_lock_factory';
+
+        try {
+            $this->run_task();
+            $this->fail('The task ran without the lock.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('locktimeout', $e->errorcode);
+        } finally {
+            unset($CFG->lock_factory);
+        }
+        $this->assertSame(0, $this->plans());
+    }
 }

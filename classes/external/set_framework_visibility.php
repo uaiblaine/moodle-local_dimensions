@@ -68,6 +68,7 @@ class set_framework_visibility extends external_api {
 
         $framework = new competency_framework($frameworkid);
         self::validate_context($framework->get_context());
+        api::require_enabled();
 
         // Partial record: api::update_framework loads the framework first, so the scale id,
         // scale configuration and context are preserved. Core re-checks competencymanage.

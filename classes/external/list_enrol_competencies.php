@@ -105,6 +105,7 @@ class list_enrol_competencies extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         $bycompetency = enrol_methods::competency_course_ids($template->get('id'));
