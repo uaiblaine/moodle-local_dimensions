@@ -63,6 +63,12 @@
             "hash": "5b2f558db44e91e12732bf3ed972125c514ce8e5"
         },
         {
+            "file": "availability/classes/info.php",
+            "class": "info",
+            "function": "get_modinfo",
+            "hash": "096d29c018c5d5b9e84d0a2c6c8de863fbf326b1"
+        },
+        {
             "file": "availability/classes/info_module.php",
             "class": "info_module",
             "function": "filter_user_list",

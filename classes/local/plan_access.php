@@ -159,10 +159,11 @@ final class plan_access {
     /**
      * Whose course cards the tracker's card services describe, and which of the requested courses they answer for.
      *
-     * get_course_progress and get_courses_completion_status take their course ids from the client. Without
-     * a plan (plan id 0) they describe the caller, as they always have, and the competency id is not read.
-     * With one they describe the plan's owner, as the plan accordion does (get_competency_courses), and
-     * only past these gates, in order:
+     * get_course_progress and get_courses_completion_status take their course ids from the client. They
+     * describe the plan's owner, as the plan accordion does (get_competency_courses), and only past these
+     * gates, in order:
+     * - there is a plan: without one the only rule left would be "the course carries some competency
+     *   link", and a locked card's section names would reach any user for any such course;
      * - the caller may read the plan (read_plan(): a refusal is core's own error, never invalidplan);
      * - the caller may read the owner's user competencies (require_owner_readable(), which the tracker
      *   page asks too);
@@ -172,21 +173,21 @@ final class plan_access {
      *   linked to that competency. A course failing either is left out of the result, so the service
      *   answers it exactly as it answers an unreadable course and never says which check failed.
      *
-     * @param int $planid The plan id from the request, 0 for none.
-     * @param int $competencyid The competency id from the request, read only with a plan.
+     * @param int $planid The plan id from the request.
+     * @param int $competencyid The competency id from the request.
      * @param array $courseids Raw course ids from the client.
      * @return array Keys ownerid (the id of the user the cards describe) and courses (course id => course
      *     record, the requested courses the service may describe).
-     * @throws \moodle_exception 'invalidplan' when no plan has that id, 'competency_id_missing' when the plan
-     *     does not reach the competency.
+     * @throws \moodle_exception 'invalidplan' when no plan has that id (0 included), 'competency_id_missing'
+     *     when the plan does not reach the competency.
      * @throws \required_capability_exception When the current user may not read the plan or its owner's user
      *     competencies.
      */
     public static function tracker_courses(int $planid, int $competencyid, array $courseids): array {
-        global $DB, $USER;
+        global $DB;
 
-        if ($planid === 0) {
-            return ['ownerid' => (int) $USER->id, 'courses' => helper::readable_competency_courses($courseids)];
+        if ($planid <= 0) {
+            throw new \moodle_exception('invalidplan', 'local_dimensions');
         }
 
         $plan = self::read_plan($planid);

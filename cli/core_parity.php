@@ -55,6 +55,10 @@ $root = $options['root'] !== '' ? rtrim($options['root'], '/') : $CFG->dirroot;
 if (!is_dir($root . '/availability')) {
     cli_error("Not a core tree: $root");
 }
+// The manifest ships under tests/: a package built without the tests has nothing to compare.
+if (!is_readable(dirname(__DIR__) . core_fingerprint::MANIFEST)) {
+    cli_error('The core parity manifest (tests/fixtures/core_parity.json) is not in this copy of local_dimensions.');
+}
 $manifest = core_fingerprint::manifest();
 
 if ($options['rebuild'] !== '') {
