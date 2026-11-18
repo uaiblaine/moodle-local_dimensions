@@ -30,9 +30,21 @@ namespace local_dimensions;
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \local_dimensions\calculator::current_user_can_enrol
- * @covers     \local_dimensions\calculator::current_user_has_pending_application
+ * @covers     \local_dimensions\calculator::has_pending_application
  */
 final class optional_enrol_apply_test extends \advanced_testcase {
+    /**
+     * Whether the current $USER has an application awaiting a decision on the course.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    private function current_user_has_pending(int $courseid): bool {
+        global $USER;
+
+        return calculator::has_pending_application($courseid, (int) $USER->id);
+    }
+
     /**
      * version.php declares no dependency on any enrol plugin.
      *
@@ -135,17 +147,17 @@ final class optional_enrol_apply_test extends \advanced_testcase {
         $this->setUser($this->getDataGenerator()->create_user());
         $this->assertTrue(calculator::current_user_can_enrol((int) $course->id));
         $this->setUser($applicant);
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
 
         // Now take the plugin away.
         unset($enabled['apply']);
         set_config('enrol_plugins_enabled', implode(',', array_keys($enabled)));
 
-        $this->assertTrue(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertTrue($this->current_user_has_pending((int) $course->id));
         $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
         $this->setUser($this->getDataGenerator()->create_user());
         $this->assertFalse(calculator::current_user_can_enrol((int) $course->id));
-        $this->assertFalse(calculator::current_user_has_pending_application((int) $course->id));
+        $this->assertFalse($this->current_user_has_pending((int) $course->id));
     }
 
     /**

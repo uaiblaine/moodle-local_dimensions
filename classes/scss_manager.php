@@ -22,7 +22,7 @@
  * with core_scss, and caching the compiled CSS via MUC.
  *
  * @package    local_dimensions
- * @copyright  2026 Anderson Blaine (anderson@blaine.com.br)
+ * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,7 +32,7 @@ namespace local_dimensions;
  * SCSS manager for compiling, caching and validating template and competency SCSS.
  *
  * @package    local_dimensions
- * @copyright  2026 Anderson Blaine (anderson@blaine.com.br)
+ * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class scss_manager {
