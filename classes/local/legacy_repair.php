@@ -105,10 +105,6 @@ class legacy_repair {
         foreach (self::RETIRED_SETTINGS as $name) {
             unset_config($name, 'local_dimensions');
         }
-        /* Accent-insensitive search needs the PostgreSQL unaccent extension, and creating it is DDL,
-           so it happens here (install and every upgrade), never from a search web service. A
-           database account without the privilege simply keeps accent-sensitive search. */
-        helper::ensure_unaccent();
     }
 
     /**
