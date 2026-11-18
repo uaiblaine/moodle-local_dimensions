@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Ported from main: improvements from the comment audit
+
+Version `2026042017`. From main's #149, the parts that apply to this branch.
+
+- **Removed**: `calculator::current_user_has_pending_application()`, which had no caller left; call
+  `calculator::has_pending_application($courseid, $userid)`.
+- The course completion service answers the other courses when one course fails with any error, as
+  the progress service already did.
+- The user evidence report's file count reads only the owner's user context, as core stores those
+  files, and can use the files index.
+- The template CSV export checks a framework the viewer cannot read once, not once per competency.
+- Smaller tidying: one plan read in the competency summary service, one option splitter for the
+  chip filters, `unaccent` ensured from one place (`legacy_repair::run()`, which install and every
+  upgrade call), and no e-mail address in `@copyright` lines.
+- Not ported: the inert `prefers-color-scheme` block stays, since core resolves the *auto* colour
+  mode itself only from 5.3 on. The Bootstrap 4 modal margin and the hub context bar's jQuery tab
+  listener also stay, because the 4.5, 5.1 and 5.2 branches carry the same code. The deletion
+  dialogue those changes touched exists on main only.
+
 ### Ported from main: progress rule, tracked users, plan statistics, directory readiness
 
 Version `2026042016`. From main's #143, #147 (the plan statistics fix), #148 and #150.
