@@ -109,7 +109,7 @@ class get_user_competency_summary_in_plan extends external_api {
         if (!empty($result->usercompetencysummary->evidence)) {
             self::add_prior_learning_files(
                 $result->usercompetencysummary->evidence,
-                (int) api::read_plan($params['planid'])->get('userid'),
+                (int) $result->plan->userid,
                 (int) $params['competencyid']
             );
         }

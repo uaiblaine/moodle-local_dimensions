@@ -154,4 +154,59 @@ final class get_courses_completion_status_test extends \advanced_testcase {
         $this->assertArrayHasKey((int) $unlinked->id, $rows);
         $this->assertTrue($rows[-1]['islocked']);
     }
+
+    /**
+     * A Throwable that is not an Exception, thrown while one course is read, leaves the other
+     * courses answered; the failing one reads as not completed and not locked.
+     *
+     * The completion and lock reads cannot be made to throw from a fixture, so a subclass throws a
+     * TypeError for one course and reads every other course through the real code.
+     *
+     * @return void
+     */
+    public function test_an_error_in_one_course_leaves_the_others_answered(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $broken = $this->getDataGenerator()->create_course(['enablecompletion' => 0]);
+        $healthy = $this->getDataGenerator()->create_course(['enablecompletion' => 0]);
+        foreach ([$broken, $healthy] as $course) {
+            $this->getDataGenerator()->enrol_user((int) $user->id, (int) $course->id, 'student');
+        }
+        $this->link_competency((int) $broken->id, (int) $healthy->id);
+        $this->setUser($user);
+        $service = new class extends get_courses_completion_status {
+            /** @var int The course whose read throws. */
+            public static $brokenid = 0;
+
+            /**
+             * Throw for the broken course, read every other one.
+             *
+             * @param \stdClass $course The course.
+             * @param int $ownerid The learner the status describes.
+             * @param int $viewerid The caller.
+             * @return array
+             */
+            protected static function course_status(\stdClass $course, int $ownerid, int $viewerid): array {
+                if ((int) $course->id === self::$brokenid) {
+                    throw new \TypeError('A typed argument received null');
+                }
+                return parent::course_status($course, $ownerid, $viewerid);
+            }
+        };
+        $service::$brokenid = (int) $broken->id;
+
+        $result = external_api::clean_returnvalue(
+            get_courses_completion_status::execute_returns(),
+            $service::execute([(int) $broken->id, (int) $healthy->id])
+        );
+
+        $this->assertCount(2, $result);
+        $this->assertSame((int) $broken->id, $result[0]['courseid']);
+        $this->assertFalse($result[0]['iscompleted']);
+        $this->assertFalse($result[0]['islocked']);
+        // The control: the other course is read normally, as an enrolled student's unlocked course.
+        $this->assertSame((int) $healthy->id, $result[1]['courseid']);
+        $this->assertFalse($result[1]['iscompleted']);
+        $this->assertFalse($result[1]['islocked']);
+    }
 }
