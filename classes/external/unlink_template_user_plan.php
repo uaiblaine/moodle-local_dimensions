@@ -64,6 +64,7 @@ class unlink_template_user_plan extends external_api {
             return ['success' => false];
         }
         self::validate_context($plan->get_context());
+        api::require_enabled();
         /* Core checks plan::can_manage(), which also admits planmanageown on the caller's own plan;
            list_template_participants reports that same check as canmanage. */
         api::unlink_plan_from_template($plan);

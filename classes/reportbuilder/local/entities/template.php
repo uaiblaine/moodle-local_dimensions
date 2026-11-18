@@ -100,9 +100,9 @@ class template extends base {
                 if ($description === null) {
                     return '';
                 }
-                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, [
-                    'context' => \core\context::instance_by_id((int) $row->contextid),
-                ]);
+                // A row whose context is gone (an interrupted deletion) still renders, in the site context.
+                $context = \core\context::instance_by_id((int) $row->contextid, IGNORE_MISSING) ?: \core\context\system::instance();
+                return format_text($description, $row->descriptionformat ?? FORMAT_HTML, ['context' => $context]);
             });
 
         $columns[] = (new column(

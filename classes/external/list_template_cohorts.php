@@ -67,6 +67,7 @@ class list_template_cohorts extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:templateview', $context);
 
         $cohorts = [];

@@ -118,6 +118,35 @@ final class lp_handler_test extends \advanced_testcase {
     }
 
     /**
+     * A save ends the create form's hint, so a later create-path question in the same request is
+     * site-scoped again; before the save (the control) the hint admits the manager.
+     *
+     * @return void
+     */
+    public function test_a_save_drops_the_create_hint(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enabled', 1, 'core_competency');
+        helper::ensure_custom_fields_exist(helper::AREA_LP);
+        $category = $this->getDataGenerator()->create_category();
+        $categorycontext = \context_coursecat::instance((int) $category->id);
+        $template = $this->getDataGenerator()->get_plugin_generator('core_competency')
+            ->create_template(['contextid' => $categorycontext->id]);
+        $user = $this->getDataGenerator()->create_user();
+        $roleid = $this->getDataGenerator()->create_role();
+        assign_capability('moodle/competency:templatemanage', CAP_ALLOW, $roleid, $categorycontext->id);
+        role_assign($roleid, (int) $user->id, $categorycontext->id);
+        $this->setUser($user);
+        $handler = lp_handler::create();
+        $field = helper::find_field_by_shortname(constants::CFIELD_TEMPLATE_IDNUMBER, helper::AREA_LP);
+
+        $handler->set_edit_context_hint($categorycontext);
+        $this->assertTrue($handler->can_edit($field, 0));
+        $handler->instance_form_save((object) ['id' => (int) $template->get('id')], false);
+        $this->assertFalse($handler->can_edit($field, 0));
+    }
+
+    /**
      * On the create path there is no template yet, so the form names the context: with the hint
      * set a category manager may edit the fields of the template they are about to create.
      *

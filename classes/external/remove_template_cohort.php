@@ -71,6 +71,7 @@ class remove_template_cohort extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         $relationid = (int) template_cohort::get_relation($template->get('id'), $params['cohortid'])->get('id');

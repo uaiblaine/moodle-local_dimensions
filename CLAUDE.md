@@ -133,6 +133,12 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   `block_dimensions`' `resolve_plan_display_context()`; never give a learner view a
   course-content pagelayout with a course in context, and never add `related` to the tracker's
   `set_url`. Long form: "Return-to-Plan FAB".
+- **Hidden templates**: hiding filters lists, it is not access control (a tidy-the-hub tool behind
+  the "show hidden" toggle). A list shows a hidden template only to whoever manages it in the
+  template's own context (`visible || can_manage_context()` per template, never the entry's
+  `$canmanage`); a lookup by id follows core (`can_read()`), so the cohort, participant and
+  cohort-role services answer for a hidden template as core's pages do. `export_templates` is
+  stricter on purpose: its file leaves the site.
 - **Category deletion**: `category_lifecycle` answers all five core callbacks; the in-use check
   reads the whole subtree because the parent's callback deletes before any child can refuse;
   adding a callback needs a `version.php` bump.

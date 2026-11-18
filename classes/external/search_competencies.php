@@ -86,6 +86,7 @@ class search_competencies extends external_api {
         // only searches that category's frameworks and nothing else.
         $context = context_system::instance();
         self::validate_context($context);
+        \core_competency\api::require_enabled();
 
         if (\core_text::strlen($query) < self::MIN_QUERY_LENGTH) {
             return ['items' => [], 'total' => 0];

@@ -72,6 +72,7 @@ class add_template_cohort extends external_api {
         }
         $context = $template->get_context();
         self::validate_context($context);
+        api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
         $relation = api::create_template_cohort($template->get('id'), $params['cohortid']);
