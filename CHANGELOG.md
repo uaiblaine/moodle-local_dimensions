@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Ported from main: the 2026-11 security audit
+
+Version `2026042018`. From main's #157 and #158, all of it: the 4.5 and 5.1 port plus the
+unlisted-category filters this branch's `local\unlisted_categories` makes possible.
+
+- **Custom-field files follow the instance's read rule.** `competency_handler::can_view()` and
+  `lp_handler::can_view()` returned true for everyone, and core's textarea and customfield_picture
+  file callbacks ask only that, behind no login. A known instance now requires a logged-in user and
+  `picture_manager::can_view()`; instance 0 (the report builder's question) still answers true.
+- **Every web service refuses while competencies are disabled** (`api::require_enabled()` after
+  the context check; `tests/local/external_requires_competencies_test.php` scans for it).
+- **A category manager can import template custom fields**: the import analyser resolves the
+  fields' editing rights in the target, and both handlers drop a create form's context hint when
+  the save ends.
+- **The hub's modals trust no posted context**, refuse a context level core keeps no template or
+  framework in, apply the custom fields' own rules for the fields a submission carries
+  (`helper::validate_present_customfields()`, shared with the observer), and the competency modal
+  stores custom SCSS as plain text.
+- **The card services answer each course id once**; **cohort roles go only to active accounts**;
+  **adding a user to a template asks core first**, so a template manager no longer learns who holds
+  a plan; **plan creation per cohort runs under a core lock**, and the cohort-role sync ends for a
+  user who lost `moodle/role:manage`.
+- **The enrolment status toggle** refuses a method disabled on the site, takes the enrolment
+  task's lock and applies the method's `can_hide_show_instance()`.
+- **Plan and template report descriptions** fall back to the site context when the owner or the
+  category context is gone.
+- **Hidden templates in a subcategory** stay out of the locked category entry's list for whoever
+  only reads templates there; `CLAUDE.md` records the rule (hiding filters lists; a lookup by id
+  follows core).
+- **The competency search and the import's structure hint leave out unlisted categories**, as the
+  hub's Structure and Frameworks tabs do.
+
 ### Ported from main: improvements from the comment audit
 
 Version `2026042017`. From main's #149, the parts that apply to this branch.

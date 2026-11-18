@@ -72,6 +72,7 @@ class export_templates extends external_api {
            alone. */
         $context = self::get_context_from_params(['contextid' => $params['contextid']]);
         self::validate_context($context);
+        \core_competency\api::require_enabled();
 
         $ids = [];
         foreach (explode(',', (string) $params['templateids']) as $rawid) {

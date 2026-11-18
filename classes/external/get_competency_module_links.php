@@ -75,6 +75,7 @@ class get_competency_module_links extends external_api {
 
         $coursecontext = context_course::instance($courseid);
         self::validate_context($coursecontext);
+        \core_competency\api::require_enabled();
         require_capability('moodle/competency:coursecompetencyview', $coursecontext);
         $canmanage = has_capability('moodle/competency:coursecompetencymanage', $coursecontext);
         $canedit = has_capability('moodle/course:manageactivities', $coursecontext);
