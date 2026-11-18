@@ -215,7 +215,11 @@ final class learner_restrictions {
                activity grouping with none set, for which core's filter throws its exception. */
         }
 
-        // As in info::filter_user_list(), a condition may read the current user's modinfo.
+        /* As in info::filter_user_list(), a condition may read the current user's modinfo, and only
+           that method sets it: core has no setter, and its public filter walks the whole tree for the
+           course's members (the cost this class exists to avoid). So the protected property is set
+           here on purpose. tests/fixtures/core_parity.json fingerprints both info::filter_user_list()
+           and info::get_modinfo(), so a change to either fails the parity check. */
         $one = [$userid => (object) ['id' => $userid]];
         $property = new \ReflectionProperty(info::class, 'modinfo');
         $property->setValue($info, get_fast_modinfo($info->get_course()));
