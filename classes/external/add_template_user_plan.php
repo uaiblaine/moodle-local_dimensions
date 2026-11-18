@@ -59,8 +59,6 @@ class add_template_user_plan extends external_api {
      * @return array Keys: success (bool), created (bool).
      */
     public static function execute(int $templateid, int $userid): array {
-        global $DB;
-
         $params = self::validate_parameters(self::execute_parameters(), [
             'templateid' => $templateid,
             'userid' => $userid,
@@ -74,11 +72,10 @@ class add_template_user_plan extends external_api {
         api::require_enabled();
         require_capability('moodle/competency:templatemanage', $context);
 
-        if ($DB->record_exists('competency_plan', ['templateid' => $template->get('id'), 'userid' => $params['userid']])) {
-            return ['success' => true, 'created' => false];
-        }
-        api::create_plan_from_template($template->get('id'), $params['userid']);
-        return ['success' => true, 'created' => true];
+        // Core answers "already has one" (false) only after checking planmanage over that user, so
+        // asking it first never tells a template manager who holds a plan.
+        $plan = api::create_plan_from_template($template->get('id'), $params['userid']);
+        return ['success' => true, 'created' => $plan !== false];
     }
 
     /**

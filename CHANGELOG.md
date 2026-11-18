@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security hardening: the rest of the 2026-11 audit
+
+Version `2026100530`. None of these was reachable as an escalation; each brings a surface in line
+with core or with the plugin's own rule.
+
+- **The hub's modals trust no posted context.** The template modal created a template in the
+  context access was checked in but sent the posted `contextid` on an edit too (core refused the
+  change with an exception) and checked short-name uniqueness there; it now takes the template's
+  own context. The template and framework modals refuse a context core keeps no template or
+  framework in (`invalidcontext`). Both the template and the competency modal apply the custom
+  fields' own rules (`instance_form_validation()`), and the competency modal stores custom SCSS
+  as plain text, as the template modal does (`helper::force_customscss_plain_data()`).
+- **The card services answer each course once.** `get_course_progress` and
+  `get_courses_completion_status` deduplicate the requested ids, so a repeated id no longer
+  repeats the course's structure and completion reads.
+- **Cohort roles go only to active accounts.** `add_cohort_role` refuses a suspended, deleted or
+  guest role holder; core's mapping accepts any user id.
+- **Adding a user to a template asks core first.** `add_template_user_plan` lets
+  `api::create_plan_from_template()` answer "already has one" after its own `planmanage` check,
+  so a template manager no longer learns who holds a plan.
+- **Plan creation per cohort is serialised.** `task\sync_template_cohort` creates a pair's plans
+  under a core lock (`competency_plan` has no unique index on template and user), and
+  `task\sync_cohort_roles` ends with a message for a user who lost `moodle/role:manage` instead
+  of failing every retry.
+- **The enrolment status toggle follows the site and the task.** `set_enrol_instance_status`
+  refuses a method disabled on the site, takes the lock of `task\process_enrol_method`, and
+  applies the method's own `can_hide_show_instance()` (self enrolment without a required password).
+- **Report descriptions survive a missing context.** The plan and template description columns
+  fall back to the site context when the plan's owner or the template's category context is gone
+  (the plans source joins the owner with a LEFT JOIN, so such a row reaches the column). The
+  prior-learning source joins its owner with an inner JOIN, so its column needs no fallback.
+- **Hidden templates in a subcategory.** The locked category entry's template list keeps a hidden
+  template only for whoever manages it in its own context. The rule is now in `CLAUDE.md`:
+  hiding filters lists; a lookup by id follows core.
+
 ### Security: four findings of the 2026-11 external audit
 
 Version `2026100529`. The audit's other findings were checked against the code and core 5.3 and

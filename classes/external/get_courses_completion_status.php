@@ -89,7 +89,8 @@ class get_courses_completion_status extends external_api {
             'planid' => $planid,
             'competencyid' => $competencyid,
         ]);
-        $courseids = $params['courseids'];
+        // Each id once: the loop below computes a card per id, so a repeated id would repeat the work.
+        $courseids = array_values(array_unique(array_map('intval', $params['courseids'])));
 
         $context = context_system::instance();
         self::validate_context($context);

@@ -89,6 +89,7 @@ $string['central_enrol_apply_method'] = 'Apply · {$a}';
 $string['central_enrol_apply_queued'] = '{$a} action(s) queued — they run in the background.';
 $string['central_enrol_bothdisabled'] = 'Cohort sync and self enrolment are both disabled on this site. Enable at least one of the enrol plugins, or contact a site administrator.';
 $string['central_enrol_busy'] = 'Another enrolment action is already processing this combination. Please try again shortly.';
+$string['central_enrol_cannotchangestatus'] = 'This enrolment method does not allow its status to be changed here, for example a self enrolment without the password the site requires.';
 $string['central_enrol_category'] = 'Course category';
 $string['central_enrol_categoryall'] = 'All categories';
 $string['central_enrol_cohort'] = 'Plan cohort';

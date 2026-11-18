@@ -89,6 +89,9 @@ class add_cohort_role extends external_api {
         if (!template_cohort::get_relation($template->get('id'), $params['cohortid'])->get('id')) {
             throw new \moodle_exception('central_roles_cohortnotlinked', 'local_dimensions');
         }
+        // The role holder must be a real, active account: core's mapping accepts any user id, and
+        // the sync would then give a deleted, suspended or guest account a role over the members.
+        \core_user::require_active_user(\core_user::get_user($params['userid'], '*', MUST_EXIST), true);
         // The role must be assignable at user context.
         if (!in_array((int) $params['roleid'], array_map('intval', get_roles_for_contextlevels(CONTEXT_USER)), true)) {
             throw new \moodle_exception('central_roles_invalidrole', 'local_dimensions');

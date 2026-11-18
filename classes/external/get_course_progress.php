@@ -92,7 +92,8 @@ class get_course_progress extends external_api {
             'planid' => $planid,
             'competencyid' => $competencyid,
         ]);
-        $courseids = $params['courseids'];
+        // Each id once: the loop below computes a card per id, so a repeated id would repeat the work.
+        $courseids = array_values(array_unique(array_map('intval', $params['courseids'])));
 
         /* local/dimensions:view is granted to every authenticated user by default, so it only
            admits the caller to the tracker. The course ids come from the client, so each one is

@@ -135,6 +135,65 @@ final class cohort_roles_test extends \advanced_testcase {
     }
 
     /**
+     * The role holder must be an active account: a suspended, a deleted and the guest account are
+     * refused and no mapping is written; an active one (the control) is accepted.
+     *
+     * @return void
+     */
+    public function test_add_refuses_an_inactive_holder(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, $cohortid, $roleid] = $this->setup_fixture();
+        $dg = $this->getDataGenerator();
+        $suspended = (int) $dg->create_user(['suspended' => 1])->id;
+        $deleted = (int) $dg->create_user()->id;
+        delete_user($DB->get_record('user', ['id' => $deleted]));
+
+        foreach (['suspended' => $suspended, 'deleted' => $deleted, 'guest' => (int) guest_user()->id] as $label => $userid) {
+            try {
+                add_cohort_role::execute($templateid, $userid, $roleid, $cohortid);
+                $this->fail("A $label role holder was accepted.");
+            } catch (\moodle_exception $e) {
+                $this->assertSame(0, $DB->count_records('tool_cohortroles', ['userid' => $userid]), $label);
+            }
+        }
+
+        $active = (int) $dg->create_user()->id;
+        $this->assertTrue(add_cohort_role::execute($templateid, $active, $roleid, $cohortid)['success']);
+    }
+
+    /**
+     * The sync task ends quietly for a user who lost role:manage after queueing it, instead of
+     * failing every retry; the same task run as the administrator (the control) assigns the roles.
+     *
+     * @return void
+     */
+    public function test_the_sync_task_ends_for_a_user_without_role_manage(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        [$templateid, $cohortid, $roleid, $holderid] = $this->setup_fixture();
+        add_cohort_role::execute($templateid, $holderid, $roleid, $cohortid);
+        $task = new \local_dimensions\task\sync_cohort_roles();
+        $assigned = fn(): int => $DB->count_records('role_assignments', ['roleid' => $roleid, 'component' => 'tool_cohortroles']);
+
+        $this->setUser($this->getDataGenerator()->create_user());
+        ob_start();
+        try {
+            $task->execute();
+        } finally {
+            $output = ob_get_clean();
+        }
+        $this->assertStringContainsString('moodle/role:manage', $output);
+        $this->assertSame(0, $assigned());
+
+        $this->setAdminUser();
+        $task->execute();
+        $this->assertSame(2, $assigned());
+    }
+
+    /**
      * remove_cohort_role deletes the mapping.
      *
      * @return void

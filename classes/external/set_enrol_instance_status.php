@@ -108,16 +108,42 @@ class set_enrol_instance_status extends external_api {
             require_capability($cap, $coursecontext);
         }
 
+        // A method disabled on the site enrols nobody whatever its instances say, as on the queue service.
+        if (!enrol_is_enabled($params['method'])) {
+            throw new \moodle_exception('central_enrol_methoddisabled', 'local_dimensions');
+        }
         $plugin = enrol_get_plugin($params['method']);
-        $instances = process_enrol_method::get_instances($params['courseid'], $params['method'], $params['cohortid']);
-        if (!$plugin || !$instances) {
+        if (!$plugin) {
             return ['configured' => false, 'active' => false];
         }
-        $target = $params['enabled'] ? ENROL_INSTANCE_ENABLED : ENROL_INSTANCE_DISABLED;
-        foreach ($instances as $instance) {
-            if ((int) $instance->status !== $target) {
+
+        // The adhoc task that creates and removes these instances takes the same lock, so the
+        // instances read here are not deleted or replaced while their status is written.
+        $lockfactory = \core\lock\lock_config::get_lock_factory('local_dimensions');
+        $key = 'enrol_' . process_enrol_method::key($params['courseid'], $params['method'], $params['cohortid']);
+        $lock = $lockfactory->get_lock($key, 10);
+        if (!$lock) {
+            throw new \moodle_exception('central_enrol_busy', 'local_dimensions');
+        }
+        try {
+            $instances = process_enrol_method::get_instances($params['courseid'], $params['method'], $params['cohortid']);
+            if (!$instances) {
+                return ['configured' => false, 'active' => false];
+            }
+            $target = $params['enabled'] ? ENROL_INSTANCE_ENABLED : ENROL_INSTANCE_DISABLED;
+            foreach ($instances as $instance) {
+                if ((int) $instance->status === $target) {
+                    continue;
+                }
+                // The plugin's own rule, as core's instances page applies it (self enrolment
+                // refuses to enable an instance without the password the site requires).
+                if (!$plugin->can_hide_show_instance($instance)) {
+                    throw new \moodle_exception('central_enrol_cannotchangestatus', 'local_dimensions');
+                }
                 $plugin->update_status($instance, $target);
             }
+        } finally {
+            $lock->release();
         }
         return ['configured' => true, 'active' => $params['enabled']];
     }

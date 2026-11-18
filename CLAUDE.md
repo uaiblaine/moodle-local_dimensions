@@ -143,6 +143,12 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   (`unlisted_categories::filter_by_context()`), never by the entry's. Lookup by id in the hub's
   web services is not filtered: core's own services answer it. Spec
   `mutations/hub_unlisted_categories.conf`.
+- **Hidden templates**: hiding filters lists, it is not access control (a tidy-the-hub tool behind
+  the "show hidden" toggle). A list shows a hidden template only to whoever manages it in the
+  template's own context (`visible || can_manage_context()` per template, never the entry's
+  `$canmanage`); a lookup by id follows core (`can_read()`), so the cohort, participant and
+  cohort-role services answer for a hidden template as core's pages do. `export_templates` is
+  stricter on purpose: its file leaves the site.
 - **Category deletion**: `category_lifecycle` answers all five core callbacks; the in-use check
   reads the whole subtree because the parent's callback deletes before any child can refuse;
   adding a callback needs a `version.php` bump.
