@@ -172,6 +172,14 @@ final class filter_line_markup_test extends \advanced_testcase {
         $eraser = $this->tag($html, 'data-action="local-dimensions-search-clear"');
         $this->assertStringContainsString(' hidden', $eraser);
         $this->assertSame(1, preg_match('~data-action="local-dimensions-search-clear"[^>]*>\s*<i class="fa fa-eraser"~', $html));
+        // Named "Clear text" with the plugin's tooltip in place of a title attribute (D110).
+        $this->assertStringContainsString('aria-label="' . get_string('line_clear_text', 'local_dimensions') . '"', $eraser);
+        $this->assertStringContainsString('data-dim-tip="' . get_string('line_clear_text', 'local_dimensions') . '"', $eraser);
+        $this->assertStringContainsString('local-dimensions-tip', $eraser);
+        $this->assertStringNotContainsString(' title=', $eraser);
+        // Filters draws the funnel, never the sliders (D107).
+        $this->assertSame(1, preg_match('~data-filter-toggle[^>]*>\s*<i class="fa fa-filter"~', $html));
+        $this->assertStringNotContainsString('fa-sliders', $html);
         $opener = $this->tag($html, 'data-action="local-dimensions-search-open"');
         $this->assertStringContainsString('aria-controls="' . $field[1] . '"', $opener);
         $this->assertStringContainsString('aria-expanded="false"', $opener);

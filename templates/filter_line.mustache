@@ -116,7 +116,7 @@
             <label class="local-dimensions-line-sronly" for="{{id}}-search">{{searchlabel}}</label>
             <i class="fa fa-search local-dimensions-line-searchicon" aria-hidden="true"></i>
             <input type="search" id="{{id}}-search" class="local-dimensions-search-input" placeholder="{{searchplaceholder}}" autocomplete="off">
-            <button type="button" class="local-dimensions-line-eraser" data-action="local-dimensions-search-clear" aria-label="{{#str}}line_clear_text, local_dimensions{{/str}}" title="{{#str}}line_clear_text, local_dimensions{{/str}}" hidden><i class="fa fa-eraser" aria-hidden="true"></i></button>
+            <button type="button" class="local-dimensions-line-eraser local-dimensions-tip" data-action="local-dimensions-search-clear" aria-label="{{#str}}line_clear_text, local_dimensions{{/str}}" data-dim-tip="{{#str}}line_clear_text, local_dimensions{{/str}}" hidden><i class="fa fa-eraser" aria-hidden="true"></i></button>
         </div>
         <button type="button" class="local-dimensions-line-iconbtn local-dimensions-line-searchopen local-dimensions-line-slides" data-action="local-dimensions-search-open" aria-controls="{{id}}-search" aria-expanded="false" aria-label="{{searchlabel}}" title="{{searchlabel}}"><i class="fa fa-search" aria-hidden="true"></i></button>
         {{#hasstar}}
@@ -126,7 +126,7 @@
         {{/hasstar}}
         {{#haschipfilters}}
         <div class="local-dimensions-line-filters local-dimensions-line-slides">
-            <button type="button" class="local-dimensions-line-filterstoggle" data-filter-toggle aria-expanded="false" aria-controls="{{id}}-panel"><i class="fa fa-sliders" aria-hidden="true"></i> <span class="local-dimensions-line-label">{{#str}}line_filters, local_dimensions{{/str}}</span> <span class="local-dimensions-line-badge" data-chip-count hidden></span></button>
+            <button type="button" class="local-dimensions-line-filterstoggle" data-filter-toggle aria-expanded="false" aria-controls="{{id}}-panel"><i class="fa fa-filter" aria-hidden="true"></i> <span class="local-dimensions-line-label">{{#str}}line_filters, local_dimensions{{/str}}</span> <span class="local-dimensions-line-badge" data-chip-count hidden></span></button>
             <div class="local-dimensions-filter-panel" id="{{id}}-panel" data-filter-panel data-region="local-dimensions-line-panel" hidden>
                 {{#chipfilters}}
                 {{> local_dimensions/chip_filters }}
