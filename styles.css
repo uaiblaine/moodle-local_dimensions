@@ -2347,32 +2347,60 @@ body {
     display: none;
 }
 
-.local-dimensions-line-eraser {
+.local-dimensions-line-search .local-dimensions-line-eraser {
     position: absolute;
     top: 50%;
-    right: 4px;
+    right: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     border: 0;
-    border-radius: 999px;
+    border-radius: 4px;
     background: transparent;
     color: var(--local-dimensions-ink-muted);
     transform: translateY(-50%);
     cursor: pointer;
 }
 
-.local-dimensions-line-eraser:hover {
-    background: var(--local-dimensions-surface-inset);
+.local-dimensions-line-search .local-dimensions-line-eraser:hover {
+    background: var(--local-dimensions-surface-alt);
     color: var(--local-dimensions-ink);
 }
 
-.local-dimensions-line-eraser:focus-visible {
+.local-dimensions-line-search .local-dimensions-line-eraser:focus-visible {
     outline: 2px solid var(--local-dimensions-focus-ring);
     outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .local-dimensions-line-search .local-dimensions-line-eraser {
+        transition:
+            background-color var(--local-dimensions-motion-fast) var(--local-dimensions-motion-ease),
+            color var(--local-dimensions-motion-fast) var(--local-dimensions-motion-ease);
+    }
+}
+
+/* The eraser's tooltip is the plugin's .local-dimensions-tip balloon, which comes later in the
+   sheet and sets position: relative on its host; the extra class keeps the eraser positioned
+   in the field. The balloon shows after 100 ms of rest here, not the base 250 ms, and not at
+   all without motion. */
+.local-dimensions-line-search .local-dimensions-line-eraser:hover::after,
+.local-dimensions-line-search .local-dimensions-line-eraser:hover::before,
+.local-dimensions-line-search .local-dimensions-line-eraser:focus-visible::after,
+.local-dimensions-line-search .local-dimensions-line-eraser:focus-visible::before,
+.local-dimensions-line-search .local-dimensions-line-eraser:focus-within::after,
+.local-dimensions-line-search .local-dimensions-line-eraser:focus-within::before {
+    transition-delay: 100ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-line-search .local-dimensions-line-eraser::after,
+    .local-dimensions-line-search .local-dimensions-line-eraser::before {
+        transition: none;
+    }
 }
 
 /* The line's icon buttons - the search's icon and its close button, the star, Organise - are 40px
@@ -2415,7 +2443,7 @@ body {
     color: var(--local-dimensions-favourite);
 }
 
-/* Filters: the sliders glyph, the word and the count badge. Its wrapper is no positioned box, so
+/* Filters: the funnel glyph, the word and the count badge. Its wrapper is no positioned box, so
    the panel opens under the line. */
 .local-dimensions-line-filters,
 .local-dimensions-line-organise {
@@ -8616,7 +8644,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tip::before {
     content: '';
-    bottom: calc(100% + 3px);
+    bottom: calc(100% - 2px);
     left: 50%;
     transform: translateX(-50%);
     border: 5px solid transparent;
@@ -8636,7 +8664,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-tip-bottom::before {
     bottom: auto;
-    top: calc(100% + 3px);
+    top: calc(100% - 2px);
     border-top-color: transparent;
     border-bottom-color: var(--local-dimensions-ink);
 }
