@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Design System: the filter line's funnel and eraser (D107, D109, D110)
+
+Version `2024100720`.
+
+- **Filters draws the funnel** (`fa-filter`, core `i/filter`) in place of the sliders.
+- **The open search's eraser is a 24 px square button** (radius 4 px) at the end of the field, shown
+  only while there is text: `ink-muted` on transparent at rest, the `surface-alt` ground and `ink`
+  on hover, the 2 px focus ring, its colours changing over `motion-fast`. It keeps its "Clear text"
+  name in `aria-label` and the plugin's `local-dimensions-tip` balloon (after 100 ms) takes the
+  place of the `title` attribute. The browser's own clear button stays hidden.
+- **The tooltip's arrow sits on the balloon's edge** (D120): with the 5 px border triangle,
+  `calc(100% + 3px)` drew the visible half inside the balloon; the arrow is now at
+  `calc(100% - 2px)`, above and in the `-tip-bottom` variant.
+
 ### Ported from main: the MDL Shield review of v5.3-r1 (#159)
 
 Version `2024100719`. All of main's #159 applies here.
