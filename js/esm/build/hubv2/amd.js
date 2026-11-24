@@ -12,4 +12,4 @@ import{requireAsync as o}from"@moodle/lms/core/amd";/**
  * @module     local_dimensions/hubv2/amd
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */const n=async e=>(await o("core/first"),o(e)),i=async e=>{try{await(await n("local_dimensions/central/errors")).notifyError(e)}catch{window.console.error(e)}};export{n as load,i as notifyError};
+ */const n=async e=>(await o("core/first"),o(e)),s=async e=>{try{await(await n("local_dimensions/central/errors")).notifyError(e)}catch{window.console.error(e)}};export{n as load,s as notifyError};

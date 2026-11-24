@@ -43,6 +43,28 @@ export type MoveParent = {shortname: string, ruletype: string | null};
 const hasRule = (parent: MoveParent | null): parent is MoveParent => !!parent && !!parent.ruletype;
 
 /**
+ * The sentences naming each rule core resets on the way: the current parent's, then the new one's.
+ *
+ * Both confirmations read them from here: the pick-on-the-map flow's dialogue as HTML, the "Move to"
+ * dialogue as text, so the two can never say different things about the same move.
+ *
+ * @param {object} labels The labels.
+ * @param {object|null} oldparent The current parent, or null when the competency is at the top level.
+ * @param {object|null} newparent The new parent, or null for the top level.
+ * @param {Function} escape How a name enters the sentence: escapeHtml for HTML, the identity for text.
+ * @returns {Array} The sentences, none when neither parent has a rule.
+ */
+export const ruleNotes = (
+    labels: Labels,
+    oldparent: MoveParent | null,
+    newparent: MoveParent | null,
+    escape: (text: string) => string = (text) => text,
+): string[] => [
+    hasRule(oldparent) ? fill(labels.hubv2_moverule_oldparent, escape(oldparent.shortname)) : '',
+    hasRule(newparent) ? fill(labels.hubv2_moverule_newparent, escape(newparent.shortname)) : '',
+].filter((note) => note !== '');
+
+/**
  * The body of the move confirmation.
  *
  * @param {object} labels The labels.
@@ -56,9 +78,6 @@ export const moveBody = (labels: Labels, name: string, oldparent: MoveParent | n
     const question = newparent
         ? fillObject(labels.hubv2_moveconfirm, {name: safe, parent: escapeHtml(newparent.shortname)})
         : fill(labels.hubv2_moveconfirmroot, safe);
-    const notes = [
-        hasRule(oldparent) ? fill(labels.hubv2_moverule_oldparent, escapeHtml(oldparent.shortname)) : '',
-        hasRule(newparent) ? fill(labels.hubv2_moverule_newparent, escapeHtml(newparent.shortname)) : '',
-    ].filter((note) => note !== '').map((note) => `<p>${note}</p>`).join('');
+    const notes = ruleNotes(labels, oldparent, newparent, escapeHtml).map((note) => `<p>${note}</p>`).join('');
     return `<p>${question}</p>${notes}`;
 };

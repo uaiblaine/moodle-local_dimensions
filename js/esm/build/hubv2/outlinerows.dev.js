@@ -105,7 +105,23 @@ const scrollToShow = /* @__PURE__ */ __name((top, height, scrolltop, viewheight)
   }
   return null;
 }, "scrollToShow");
+const editorSlot = /* @__PURE__ */ __name((rows, parentkey, afterkey) => {
+  const anchor = afterkey ?? parentkey;
+  const index = rows.findIndex((row) => row.key === anchor);
+  if (index < 0) {
+    return null;
+  }
+  if (afterkey === null) {
+    return anchor;
+  }
+  let last = index;
+  while (last + 1 < rows.length && rows[last + 1].level > rows[index].level) {
+    last++;
+  }
+  return rows[last].key;
+}, "editorSlot");
 export {
+  editorSlot,
   outlineRows,
   rowMeta,
   scrollToShow

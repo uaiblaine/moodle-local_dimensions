@@ -20,31 +20,34 @@
  * Every related competency is listed in words, each a button that reveals it in both panes; the map
  * draws, besides, a dotted edge to those it shows. A relation is never said by the drawing alone.
  *
+ * Its buttons are the action registry's (commands.ts), the same list and the same decision the node's
+ * menu and the command palette draw from: "Edit" and "Add child", then "More actions", which opens the
+ * node's own menu under itself (the destructive action lives there, last). With nothing selected it shows
+ * the framework's summary (summary.ts), which the palette's command brings into view, and "Add competency".
+ * During a move it shows what the move needs.
+ *
  * @module     local_dimensions/hubv2/Panel
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import type {ReactNode} from 'react';
+import type {ReactNode, RefObject} from 'react';
+import type {ActionId, ActionView} from './commands';
 import {isHexColour} from './html';
+import type {SummaryLine} from './summary';
 import {fill, fillCount} from './strings';
 import type {Labels} from './strings';
 import type {Framework, PathItem, StructureNode, Usage} from './types';
 
-/** What the panel's buttons do. */
+/** What the panel's buttons do: run an action of the registry, open the node's menu, reveal a relation. */
 export type PanelActions = {
-    edit: (node: StructureNode) => void,
-    addChild: (node: StructureNode | null) => void,
-    rule: (node: StructureNode) => void,
-    links: (node: StructureNode) => void,
-    relate: (node: StructureNode) => void,
-    move: (node: StructureNode) => void,
-    moveRoot: () => void,
-    cancelMove: () => void,
-    moveOne: (node: StructureNode, up: boolean) => void,
-    remove: (node: StructureNode) => void,
+    run: (id: ActionId) => void,
+    menu: (anchor: HTMLElement) => void,
     reveal: (item: PathItem) => void,
 };
+
+/** The actions the panel draws as buttons; every other one is in "More actions". */
+const PANEL_BUTTONS: ActionId[] = ['edit', 'addchild'];
 
 /** The panel's props. */
 export type PanelProps = {
@@ -56,8 +59,15 @@ export type PanelProps = {
     usage: Usage | null,
     related: PathItem[],
     moving: StructureNode | null,
-    canUp: boolean,
-    canDown: boolean,
+    // The registry's actions offered here: on the selected competency, on the move, at the top level.
+    nodeactions: ActionView[],
+    // Whether the node's menu is open from the panel's "More actions".
+    menuopen: boolean,
+    moveactions: ActionView[],
+    topactions: ActionView[],
+    summary: SummaryLine[],
+    // The summary's heading, which the palette's "Framework summary" focuses.
+    summaryRef: RefObject<HTMLHeadingElement | null>,
     actions: PanelActions,
 };
 
@@ -122,22 +132,58 @@ const UsageLists = ({labels, usage}: {labels: Labels, usage: Usage | null}): Rea
 };
 
 /**
- * The move mode's controls: what to do next, top level, cancel.
+ * The Bootstrap classes of an action's button: the first of the list is the primary one, a destructive
+ * one is drawn as such.
+ *
+ * @param {object} view The action.
+ * @param {boolean} first Whether it is the list's first.
+ * @returns {string} The classes.
+ */
+const buttonClass = (view: ActionView, first: boolean): string => {
+    if (view.spec.danger) {
+        return 'btn btn-sm btn-outline-danger';
+    }
+    return first ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
+};
+
+/**
+ * The buttons of a list of actions, each with its icon; a disabled one says why when it can.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The buttons.
+ */
+const ActionButtons = ({labels, views, run}: {labels: Labels, views: ActionView[], run: (id: ActionId) => void}): ReactNode => (
+    <div className="local-dimensions-hubv2-actions d-flex flex-wrap gap-2">
+        {views.map((view, index) => (
+            <button
+                key={view.spec.id}
+                type="button"
+                className={buttonClass(view, index === 0)}
+                disabled={view.state === 'disabled'}
+                title={view.state === 'disabled' && view.spec.id === 'rule' ? labels.central_rule_nochildren : undefined}
+                onClick={() => run(view.spec.id)}
+            >
+                <i className={`fa ${view.spec.icon} me-1`} aria-hidden="true" />{labels[view.spec.label]}
+            </button>
+        ))}
+    </div>
+);
+
+/**
+ * The move mode's controls: what to do next, and the move's own actions (top level, cancel).
  *
  * @param {object} props The props.
  * @returns {ReactNode} The section.
  */
-const MoveSection = ({labels, moving, actions}: {labels: Labels, moving: StructureNode, actions: PanelActions}): ReactNode => (
+const MoveSection = ({labels, moving, views, run}: {
+    labels: Labels,
+    moving: StructureNode,
+    views: ActionView[],
+    run: (id: ActionId) => void,
+}): ReactNode => (
     <section className="local-dimensions-hubv2-sec local-dimensions-hubv2-movesec">
         <p className="mb-2">{fill(labels.hubv2_movepick, moving.shortname)}</p>
-        <div className="d-flex flex-wrap gap-2">
-            {moving.parentid !== 0 ? (
-                <button type="button" className="btn btn-sm btn-primary" onClick={actions.moveRoot}>{labels.hubv2_moveroot}</button>
-            ) : null}
-            <button type="button" className="btn btn-sm btn-secondary" onClick={actions.cancelMove}>
-                {labels.hubv2_movecancel}
-            </button>
-        </div>
+        <ActionButtons labels={labels} views={views} run={run} />
     </section>
 );
 
@@ -148,12 +194,14 @@ const MoveSection = ({labels, moving, actions}: {labels: Labels, moving: Structu
  * @returns {ReactNode} The panel.
  */
 const Panel = (props: PanelProps): ReactNode => {
-    const {labels, framework, count, node, path, usage, related, moving, canUp, canDown, actions} = props;
+    const {labels, framework, count, node, path, usage, related, moving, nodeactions, menuopen, moveactions, topactions,
+        summary, summaryRef, actions} = props;
+    const movesection = moving ? <MoveSection labels={labels} moving={moving} views={moveactions} run={actions.run} /> : null;
 
     if (!node) {
         return (
             <aside className="local-dimensions-hubv2-panel" aria-label={framework.shortname}>
-                {moving ? <MoveSection labels={labels} moving={moving} actions={actions} /> : null}
+                {movesection}
                 <section className="local-dimensions-hubv2-sec">
                     <p className="local-dimensions-hubv2-kicker">
                         {labels.central_browseframeworks_framework}
@@ -163,13 +211,15 @@ const Panel = (props: PanelProps): ReactNode => {
                     <p className="text-muted mb-0">{fillCount(labels, 'hubv2_competencies', count)}</p>
                 </section>
                 <section className="local-dimensions-hubv2-sec">
-                    <p className="text-muted mb-0">{labels.hubv2_noselection}</p>
+                    <h4 ref={summaryRef} tabIndex={-1} className="local-dimensions-hubv2-sectitle">{labels.hubv2_summary_title}</h4>
+                    <dl className="local-dimensions-hubv2-kv mb-0">
+                        {summary.map((line) => <Pair key={line.label} label={line.label}>{line.value}</Pair>)}
+                    </dl>
+                    <p className="text-muted small mb-0">{labels.hubv2_noselection}</p>
                 </section>
-                {framework.canmanage && !moving ? (
+                {topactions.length > 0 ? (
                     <section className="local-dimensions-hubv2-sec">
-                        <button type="button" className="btn btn-sm btn-primary" onClick={() => actions.addChild(null)}>
-                            <i className="fa fa-plus me-1" aria-hidden="true" />{labels.managecompetencies_addcompetency}
-                        </button>
+                        <ActionButtons labels={labels} views={topactions} run={actions.run} />
                     </section>
                 ) : null}
             </aside>
@@ -178,7 +228,7 @@ const Panel = (props: PanelProps): ReactNode => {
 
     return (
         <aside className="local-dimensions-hubv2-panel" aria-label={node.shortname}>
-            {moving ? <MoveSection labels={labels} moving={moving} actions={actions} /> : null}
+            {movesection}
             <section className="local-dimensions-hubv2-sec">
                 <p className="local-dimensions-hubv2-kicker">
                     {node.taxonomy}
@@ -259,44 +309,20 @@ const Panel = (props: PanelProps): ReactNode => {
                 ) : null}
             </section>
 
-            {node.canmanage && !moving ? (
+            {nodeactions.length > 0 ? (
                 <section className="local-dimensions-hubv2-sec">
                     <h4 className="local-dimensions-hubv2-sectitle">{labels.hubv2_actions}</h4>
                     <div className="local-dimensions-hubv2-actions d-flex flex-wrap gap-2">
-                        <button type="button" className="btn btn-sm btn-primary" onClick={() => actions.edit(node)}>
-                            <i className="fa fa-pen me-1" aria-hidden="true" />{labels.hubv2_edit}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => actions.addChild(node)}>
-                            <i className="fa fa-plus me-1" aria-hidden="true" />{labels.managecompetencies_addchild}
-                        </button>
+                        <ActionButtons labels={labels} views={nodeactions.filter((view) => PANEL_BUTTONS.includes(view.spec.id))}
+                            run={actions.run} />
                         <button
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
-                            disabled={!node.haschildren}
-                            title={node.haschildren ? undefined : labels.central_rule_nochildren}
-                            onClick={() => actions.rule(node)}
+                            aria-haspopup="menu"
+                            aria-expanded={menuopen}
+                            onClick={(event) => actions.menu(event.currentTarget)}
                         >
-                            <i className="fa fa-diagram-project me-1" aria-hidden="true" />{labels.hubv2_rule}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => actions.links(node)}>
-                            <i className="fa fa-link me-1" aria-hidden="true" />{labels.central_links_button}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => actions.relate(node)}>
-                            <i className="fa fa-share-nodes me-1" aria-hidden="true" />{labels.hubv2_relate}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => actions.move(node)}>
-                            <i className="fa fa-arrows-up-down-left-right me-1" aria-hidden="true" />{labels.hubv2_move}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!canUp}
-                            onClick={() => actions.moveOne(node, true)}>
-                            <i className="fa fa-arrow-up me-1" aria-hidden="true" />{labels.hubv2_moveup}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!canDown}
-                            onClick={() => actions.moveOne(node, false)}>
-                            <i className="fa fa-arrow-down me-1" aria-hidden="true" />{labels.hubv2_movedown}
-                        </button>
-                        <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => actions.remove(node)}>
-                            <i className="fa fa-trash me-1" aria-hidden="true" />{labels.hubv2_delete}
+                            {labels.hubv2_moreactions}<i className="fa fa-chevron-down ms-1" aria-hidden="true" />
                         </button>
                     </div>
                 </section>

@@ -151,3 +151,29 @@ export const scrollToShow = (top: number, height: number, scrolltop: number, vie
     }
     return null;
 };
+
+/**
+ * The row the inline editor of a new competency is drawn after: the parent's row for a new first
+ * child, else the last row of the anchor's drawn subtree, so the editor stands right below the anchor
+ * and its open branch. Null when the row it needs is not drawn.
+ *
+ * @param {Array} rows The outline's rows.
+ * @param {string} parentkey The new competency's parent's key.
+ * @param {string|null} afterkey The sibling it follows, or null for a first child.
+ * @returns {string|null} The key of the row the editor follows.
+ */
+export const editorSlot = (rows: OutlineRow[], parentkey: string, afterkey: string | null): string | null => {
+    const anchor = afterkey ?? parentkey;
+    const index = rows.findIndex((row) => row.key === anchor);
+    if (index < 0) {
+        return null;
+    }
+    if (afterkey === null) {
+        return anchor;
+    }
+    let last = index;
+    while (last + 1 < rows.length && rows[last + 1].level > rows[index].level) {
+        last++;
+    }
+    return rows[last].key;
+};

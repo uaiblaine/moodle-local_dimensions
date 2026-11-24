@@ -8,7 +8,8 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  * keyboard (keynav.ts) moves the focus between; the card holds the one control a node has of its
  * own, the button that opens or closes its children, for the pointer only: tabindex -1 keeps the map
  * one Tab stop, Right and Left do its work from the keyboard, and it stops its click from also
- * selecting the node. The "load more" card's button is the same.
+ * selecting the node. The "load more" card's button is the same, and so is the selected card's "more"
+ * button, which opens its actions' menu (Shift+F10 on the node does it from the keyboard).
  *
  * In a language written right to left the tree grows leftwards: a card's parent edge arrives on its
  * right and its children's leave from its left, and the chevrons point the other way. React Flow's
@@ -49,17 +50,17 @@ const Handles = /* @__PURE__ */ __name(({ source = true, target = true }) => {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     target ? /* @__PURE__ */ jsxDEV(Handle, { type: "target", position: rtl ? Position.Right : Position.Left, isConnectable: false, className: HANDLE }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 108,
+      lineNumber: 114,
       columnNumber: 17
     }) : null,
     source ? /* @__PURE__ */ jsxDEV(Handle, { type: "source", position: rtl ? Position.Left : Position.Right, isConnectable: false, className: HANDLE }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 111,
+      lineNumber: 117,
       columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-    lineNumber: 106,
+    lineNumber: 112,
     columnNumber: 9
   });
 }, "Handles");
@@ -75,32 +76,32 @@ const FrameworkNode = /* @__PURE__ */ __name(({ data, selected }) => {
       children: [
         /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-tile local-dimensions-hubv2-tile-framework", "aria-hidden": "true", children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-sitemap" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-          lineNumber: 140,
+          lineNumber: 146,
           columnNumber: 17
         }) }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-          lineNumber: 139,
+          lineNumber: 145,
           columnNumber: 13
         }),
         /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-card-text", children: [
           /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-card-title", children: framework.shortname }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-            lineNumber: 143,
+            lineNumber: 149,
             columnNumber: 17
           }),
           /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-card-sub", children: fillCount(labels, "hubv2_competencies", count) }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-            lineNumber: 144,
+            lineNumber: 150,
             columnNumber: 17
           })
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-          lineNumber: 142,
+          lineNumber: 148,
           columnNumber: 13
         }),
         /* @__PURE__ */ jsxDEV(Handles, { target: false }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-          lineNumber: 146,
+          lineNumber: 152,
           columnNumber: 13
         })
       ]
@@ -109,19 +110,19 @@ const FrameworkNode = /* @__PURE__ */ __name(({ data, selected }) => {
     true,
     {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 137,
+      lineNumber: 143,
       columnNumber: 9
     }
   );
 }, "FrameworkNode");
 const CompetencyNode = /* @__PURE__ */ __name(({ data, selected }) => {
-  const { labels, rtl, toggle } = useCanvas();
+  const { labels, rtl, toggle, menuFor, menuOpen, openMenu } = useCanvas();
   const { node, expanded, childcount, depth, moving } = data;
   const tilestyle = isHexColour(node.bgcolor) ? { backgroundColor: node.bgcolor, color: isHexColour(node.textcolor) ? node.textcolor : void 0 } : void 0;
   const tileclass = tilestyle ? "local-dimensions-hubv2-tile-custom" : DEPTH_TILES[Math.min(depth, DEPTH_TILES.length) - 1];
   const glyph = !tilestyle || tilestyle.color ? /* @__PURE__ */ jsxDEV("i", { className: "fa fa-bullseye" }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-    lineNumber: 167,
+    lineNumber: 173,
     columnNumber: 51
   }) : null;
   const shown = cardCount(node, childcount);
@@ -140,44 +141,72 @@ const CompetencyNode = /* @__PURE__ */ __name(({ data, selected }) => {
   return /* @__PURE__ */ jsxDEV("div", { className: classes.join(" "), dir: rtl ? "rtl" : void 0, children: [
     /* @__PURE__ */ jsxDEV(Handles, {}, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 189,
+      lineNumber: 195,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("span", { className: `local-dimensions-hubv2-tile ${tileclass}`, style: tilestyle, "aria-hidden": "true", children: glyph }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 190,
+      lineNumber: 196,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-card-text", children: [
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-card-title", children: node.shortname }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 192,
+        lineNumber: 198,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-card-sub", children: node.ruletype ? node.rulelabel : node.taxonomy }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 193,
+        lineNumber: 199,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 191,
+      lineNumber: 197,
       columnNumber: 13
     }),
+    menuFor === node.id ? /* @__PURE__ */ jsxDEV(
+      "button",
+      {
+        type: "button",
+        className: "local-dimensions-hubv2-iconbtn local-dimensions-hubv2-cardmenu nodrag nopan",
+        "aria-label": fill(labels.hubv2_actionsof, node.shortname),
+        "aria-haspopup": "menu",
+        "aria-expanded": menuOpen === node.id,
+        tabIndex: -1,
+        onClick: (event) => {
+          event.stopPropagation();
+          openMenu(node.id, event.currentTarget);
+        },
+        onKeyDown: keepKeys,
+        children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-ellipsis-vertical", "aria-hidden": "true" }, void 0, false, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
+          lineNumber: 215,
+          columnNumber: 21
+        })
+      },
+      void 0,
+      false,
+      {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
+        lineNumber: 202,
+        columnNumber: 17
+      }
+    ) : null,
     shown ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pill", title: countlabel, children: [
       /* @__PURE__ */ jsxDEV("span", { "aria-hidden": "true", children: shown.count }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 197,
+        lineNumber: 220,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("span", { className: "visually-hidden", children: countlabel }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 198,
+        lineNumber: 221,
         columnNumber: 21
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 196,
+      lineNumber: 219,
       columnNumber: 17
     }) : null,
     node.haschildren ? /* @__PURE__ */ jsxDEV(
@@ -192,7 +221,7 @@ const CompetencyNode = /* @__PURE__ */ __name(({ data, selected }) => {
         onKeyDown: keepKeys,
         children: /* @__PURE__ */ jsxDEV("i", { className: `fa ${chevron(expanded, rtl)}`, "aria-hidden": "true" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-          lineNumber: 211,
+          lineNumber: 234,
           columnNumber: 21
         })
       },
@@ -200,13 +229,13 @@ const CompetencyNode = /* @__PURE__ */ __name(({ data, selected }) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 202,
+        lineNumber: 225,
         columnNumber: 17
       }
     ) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-    lineNumber: 188,
+    lineNumber: 194,
     columnNumber: 9
   });
 }, "CompetencyNode");
@@ -216,7 +245,7 @@ const MoreNode = /* @__PURE__ */ __name(({ data }) => {
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-card local-dimensions-hubv2-card-more", dir: rtl ? "rtl" : void 0, children: [
     /* @__PURE__ */ jsxDEV(Handles, { source: false }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 229,
+      lineNumber: 252,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -232,13 +261,13 @@ const MoreNode = /* @__PURE__ */ __name(({ data }) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 230,
+        lineNumber: 253,
         columnNumber: 13
       }
     )
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-    lineNumber: 228,
+    lineNumber: 251,
     columnNumber: 9
   });
 }, "MoreNode");
@@ -249,7 +278,7 @@ const RuleEdge = /* @__PURE__ */ __name((props) => {
   return /* @__PURE__ */ jsxDEV(Fragment, { children: [
     /* @__PURE__ */ jsxDEV(BaseEdge, { id, path }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 254,
+      lineNumber: 277,
       columnNumber: 13
     }),
     data && data.label ? /* @__PURE__ */ jsxDEV(EdgeLabelRenderer, { children: /* @__PURE__ */ jsxDEV(
@@ -263,17 +292,17 @@ const RuleEdge = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-        lineNumber: 257,
+        lineNumber: 280,
         columnNumber: 21
       }
     ) }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-      lineNumber: 256,
+      lineNumber: 279,
       columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Nodes.tsx",
-    lineNumber: 253,
+    lineNumber: 276,
     columnNumber: 9
   });
 }, "RuleEdge");

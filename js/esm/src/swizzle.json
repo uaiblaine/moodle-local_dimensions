@@ -1,9 +1,29 @@
 {
+  "hubv2/Dialog": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
+  "hubv2/Editor": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
   "hubv2/Hub": {
     "eject": "risky",
     "wrap": "risky"
   },
+  "hubv2/Menu": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
+  "hubv2/MoveDialog": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
   "hubv2/Outline": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
+  "hubv2/Palette": {
     "eject": "risky",
     "wrap": "risky"
   },

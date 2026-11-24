@@ -30,7 +30,9 @@ Feature: Walk the Competency hub's outline and map with the keyboard
     # A competency with a rule keeps its name on screen: the rule is a mark in the row and words in its description.
     And "//li[@role='treeitem']//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Domain A']" "xpath_element" should be visible
     And I should see "rule: All children are complete" in the "//li[@role='treeitem'][.//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Domain A']]" "xpath_element"
-    And I set the focus on the "Collapse all" "button"
+    # The control just before the tree in the page's order is the outline header's last one, "Display options":
+    # Tab from it proves the tree is entered at one stop.
+    And I set the focus on the "Display options" "button"
     When I press the tab key
     # With nothing selected, Tab enters at the framework, the tree's root.
     Then the focused element is "//li[@role='treeitem'][@aria-level='1']" "xpath_element"
@@ -66,7 +68,9 @@ Feature: Walk the Competency hub's outline and map with the keyboard
     Given I click on "Map" "button" in the ".local-dimensions-central-viewswitch" "css_element"
     And I should see "Domain A" in the ".local-dimensions-hubv2-canvas" "css_element"
     And ".local-dimensions-hubv2-tree" "css_element" should not exist
-    And I set the focus on the "Search the tree" "field"
+    # The control just before the map in the page's order is the workspace bar's last one, "Commands": Tab from
+    # it proves the map is entered at one stop.
+    And I set the focus on the "Commands" "button"
     When I press the tab key
     # With nothing selected, Tab enters at the framework node.
     Then the focused element is "//div[contains(concat(' ', @class, ' '), ' react-flow__node ')][starts-with(@aria-label, 'Behat framework,')]" "xpath_element"

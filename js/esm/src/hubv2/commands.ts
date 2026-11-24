@@ -1,0 +1,360 @@
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * The workspace's one list of actions, and the one decision of when each is offered.
+ *
+ * Every action exists in three places, the panel's buttons, a node's menu and the command palette, and
+ * all three render from ACTIONS through actionState(), so none of them can offer what another refuses.
+ * The keyboard's shortcuts (shortcutAction) name the same ids and pass through the same decision. The
+ * decision is a courtesy: every write goes through a core competency service that checks
+ * moodle/competency:competencymanage in the competency's own context, whatever the client offered.
+ *
+ * Pure: Jest pins the availability matrix and the key map without a DOM.
+ *
+ * @module     local_dimensions/hubv2/commands
+ * @copyright  2026 Anderson Blaine
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+import type {KeyPress} from './keynav';
+import type {Layout} from './selection';
+import {ROOT} from './tree';
+import type {StructureNode} from './types';
+
+/** Every action of the workspace. */
+export type ActionId =
+    'edit' | 'rename' | 'addchild' | 'quicksibling' | 'quickchild'
+    | 'moveto' | 'movepick' | 'moveup' | 'movedown'
+    | 'rule' | 'links' | 'relate'
+    | 'delete'
+    | 'moveroot' | 'movecancel'
+    | 'viewoutline' | 'viewmap' | 'viewboth' | 'expandall' | 'collapseall' | 'addtop' | 'summary';
+
+/**
+ * Where an action applies: to one competency (the panel, its menu and the palette's first group), to
+ * the move in progress (the panel's move section and the palette), or to the workspace (the palette's
+ * last group).
+ */
+export type Scope = 'node' | 'move' | 'workspace';
+
+/** A key and its modifiers; mod is Ctrl, or Cmd on a Mac. */
+export type Shortcut = {key: string, mod?: boolean, shift?: boolean, alt?: boolean};
+
+/** One action: what it is called, how it is drawn, and its key. */
+export type ActionSpec = {
+    id: ActionId,
+    scope: Scope,
+    // The menu draws a separator between two groups.
+    group: number,
+    // A local_dimensions string key, or `component:key`.
+    label: string,
+    // A Font Awesome class.
+    icon: string,
+    shortcut?: Shortcut,
+    danger?: boolean,
+    // Only the outline has the inline editor (owner's decision H5).
+    outlineonly?: boolean,
+    // Picking the new parent is offered where the map is drawn, as "Move to"'s own "Pick on the map".
+    maponly?: boolean,
+};
+
+/** Whether an action is offered: not at all, shown but not now, or ready. */
+export type ActionState = 'hidden' | 'disabled' | 'enabled';
+
+/** What the decision reads. */
+export type ActionContext = {
+    // The competency acted on, or null for the framework.
+    node: StructureNode | null,
+    // Whether the viewer manages competencies in the framework's context (adding at the top level).
+    frameworkcanmanage: boolean,
+    // The competency being moved by picking, or null.
+    moving: StructureNode | null,
+    // Whether the competency is the first, or the last, of its siblings (the last only when all are loaded).
+    first: boolean,
+    last: boolean,
+    layout: Layout,
+    // Whether the framework holds no competency, and whether "Expand all" is running.
+    empty: boolean,
+    expanding: boolean,
+};
+
+/** Every action, in the menu's order. */
+export const ACTIONS: ActionSpec[] = [
+    {id: 'edit', scope: 'node', group: 1, label: 'hubv2_edit', icon: 'fa-pen'},
+    {id: 'rename', scope: 'node', group: 1, label: 'hubv2_cmd_rename', icon: 'fa-i-cursor', shortcut: {key: 'F2'},
+        outlineonly: true},
+    {id: 'addchild', scope: 'node', group: 1, label: 'managecompetencies_addchild', icon: 'fa-plus'},
+    {id: 'quicksibling', scope: 'node', group: 1, label: 'hubv2_cmd_quicksibling', icon: 'fa-turn-down',
+        shortcut: {key: 'Enter', mod: true}, outlineonly: true},
+    {id: 'quickchild', scope: 'node', group: 1, label: 'hubv2_cmd_quickchild', icon: 'fa-indent',
+        shortcut: {key: 'Enter', mod: true, shift: true}, outlineonly: true},
+    {id: 'moveto', scope: 'node', group: 2, label: 'hubv2_cmd_moveto', icon: 'fa-folder-tree'},
+    {id: 'movepick', scope: 'node', group: 2, label: 'hubv2_cmd_movepick', icon: 'fa-arrows-up-down-left-right',
+        maponly: true},
+    {id: 'moveup', scope: 'node', group: 2, label: 'hubv2_moveup', icon: 'fa-arrow-up', shortcut: {key: 'ArrowUp', alt: true}},
+    {id: 'movedown', scope: 'node', group: 2, label: 'hubv2_movedown', icon: 'fa-arrow-down',
+        shortcut: {key: 'ArrowDown', alt: true}},
+    {id: 'rule', scope: 'node', group: 3, label: 'hubv2_cmd_rule', icon: 'fa-diagram-project'},
+    {id: 'links', scope: 'node', group: 3, label: 'hubv2_cmd_links', icon: 'fa-link'},
+    {id: 'relate', scope: 'node', group: 3, label: 'hubv2_cmd_relate', icon: 'fa-share-nodes'},
+    {id: 'delete', scope: 'node', group: 4, label: 'hubv2_delete', icon: 'fa-trash', shortcut: {key: 'Delete'}, danger: true},
+    {id: 'moveroot', scope: 'move', group: 1, label: 'hubv2_moveroot', icon: 'fa-turn-up'},
+    {id: 'movecancel', scope: 'move', group: 1, label: 'hubv2_movecancel', icon: 'fa-xmark'},
+    {id: 'viewoutline', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewoutline', icon: 'fa-list'},
+    {id: 'viewmap', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewmap', icon: 'fa-sitemap'},
+    {id: 'viewboth', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewboth', icon: 'fa-table-columns'},
+    {id: 'expandall', scope: 'workspace', group: 2, label: 'managecompetencies_expandall', icon: 'fa-angles-down'},
+    {id: 'collapseall', scope: 'workspace', group: 2, label: 'managecompetencies_collapseall', icon: 'fa-angles-up'},
+    {id: 'addtop', scope: 'workspace', group: 3, label: 'managecompetencies_addcompetency', icon: 'fa-plus'},
+    {id: 'summary', scope: 'workspace', group: 3, label: 'hubv2_cmd_summary', icon: 'fa-chart-simple'},
+];
+
+/** The views the palette switches to, by action. */
+export const VIEW_ACTIONS: Partial<Record<ActionId, Layout>> = {viewoutline: 'outline', viewmap: 'map', viewboth: 'both'};
+
+/**
+ * An action's specification.
+ *
+ * @param {string} id The action.
+ * @returns {object} Its specification.
+ */
+export const specOf = (id: ActionId): ActionSpec => ACTIONS.find((spec) => spec.id === id) as ActionSpec;
+
+/**
+ * Whether an action acting on one competency is offered, and whether now.
+ *
+ * Hidden without a competency, without the right to manage it, or while a move is being picked (the
+ * panel shows the move's own controls then); the inline editor's actions only while the outline is
+ * drawn, picking the new parent only while the map is. Shown but disabled where the action exists and
+ * cannot run now: a rule without children, up for the first, down for the last.
+ *
+ * @param {object} spec The action.
+ * @param {object} context What the decision reads.
+ * @returns {string} The state.
+ */
+const nodeState = (spec: ActionSpec, context: ActionContext): ActionState => {
+    const {node} = context;
+    if (!node || !node.canmanage || context.moving) {
+        return 'hidden';
+    }
+    if ((spec.outlineonly && context.layout === 'map') || (spec.maponly && context.layout === 'outline')) {
+        return 'hidden';
+    }
+    switch (spec.id) {
+        case 'rule':
+            return node.haschildren ? 'enabled' : 'disabled';
+        case 'moveup':
+            return context.first ? 'disabled' : 'enabled';
+        case 'movedown':
+            return context.last ? 'disabled' : 'enabled';
+        default:
+            return 'enabled';
+    }
+};
+
+/**
+ * Whether an action of the workspace is offered: a view other than the current one, the tree's own
+ * commands when there is a tree, adding at the top level for a manager outside the move mode.
+ *
+ * @param {object} spec The action.
+ * @param {object} context What the decision reads.
+ * @returns {string} The state.
+ */
+const workspaceState = (spec: ActionSpec, context: ActionContext): ActionState => {
+    const view = VIEW_ACTIONS[spec.id];
+    if (view) {
+        return view === context.layout ? 'hidden' : 'enabled';
+    }
+    switch (spec.id) {
+        case 'expandall':
+            if (context.empty) {
+                return 'hidden';
+            }
+            return context.expanding ? 'disabled' : 'enabled';
+        case 'collapseall':
+            return context.empty ? 'hidden' : 'enabled';
+        case 'addtop':
+            return context.frameworkcanmanage && !context.moving ? 'enabled' : 'hidden';
+        default:
+            return 'enabled';
+    }
+};
+
+/**
+ * Whether an action is offered, and whether now: the one decision the panel, the menu, the palette
+ * and the keys read.
+ *
+ * @param {string} id The action.
+ * @param {object} context What the decision reads.
+ * @returns {string} The state.
+ */
+export const actionState = (id: ActionId, context: ActionContext): ActionState => {
+    const spec = specOf(id);
+    if (spec.scope === 'node') {
+        return nodeState(spec, context);
+    }
+    if (spec.scope === 'move') {
+        if (!context.moving) {
+            return 'hidden';
+        }
+        // Core's own move to the top level for one already there would change nothing.
+        return spec.id === 'moveroot' && context.moving.parentid === ROOT ? 'hidden' : 'enabled';
+    }
+    return workspaceState(spec, context);
+};
+
+/** An action as a place draws it. */
+export type ActionView = {spec: ActionSpec, state: ActionState};
+
+/**
+ * The actions of some scopes that are offered, in the menu's order.
+ *
+ * @param {Array} scopes The scopes.
+ * @param {object} context What the decision reads.
+ * @returns {Array} The actions, each with its state; none hidden.
+ */
+export const actionsFor = (scopes: Scope[], context: ActionContext): ActionView[] =>
+    ACTIONS.filter((spec) => scopes.includes(spec.scope))
+        .map((spec) => ({spec, state: actionState(spec.id, context)}))
+        .filter((view) => view.state !== 'hidden');
+
+/** What a key asks of the workspace, besides walking the tree. */
+export type KeyCommand = ActionId | 'menu' | 'palette';
+
+/**
+ * Whether a key is pressed with Ctrl, or Cmd on a Mac (the command key of that platform).
+ *
+ * @param {object} key The key.
+ * @returns {boolean} Whether it is.
+ */
+const withMod = (key: KeyPress): boolean => !!(key.ctrlKey || key.metaKey);
+
+/**
+ * Whether a key is pressed with no modifier at all.
+ *
+ * @param {object} key The key.
+ * @returns {boolean} Whether it is.
+ */
+const bare = (key: KeyPress): boolean => !key.altKey && !key.ctrlKey && !key.metaKey && !key.shiftKey;
+
+/**
+ * The commands both panes share: the menu (Shift+F10, the context-menu key), the palette (Ctrl+K,
+ * Cmd+K), reordering (Alt+Up, Alt+Down, as core's reorder lists do) and Delete, which still confirms.
+ *
+ * @param {object} key The key and its modifiers.
+ * @returns {string|null} The command.
+ */
+const sharedCommand = (key: KeyPress): KeyCommand | null => {
+    if ((key.key === 'F10' && key.shiftKey && !key.altKey && !withMod(key)) || (key.key === 'ContextMenu' && bare(key))) {
+        return 'menu';
+    }
+    if (withMod(key) && !key.altKey && !key.shiftKey && key.key.toLowerCase() === 'k') {
+        return 'palette';
+    }
+    const arrows: Record<string, ActionId> = {ArrowUp: 'moveup', ArrowDown: 'movedown'};
+    if (key.altKey && !withMod(key) && !key.shiftKey && arrows[key.key]) {
+        return arrows[key.key];
+    }
+    return key.key === 'Delete' && bare(key) ? 'delete' : null;
+};
+
+/**
+ * The inline editor's keys, the outline's alone: F2 renames, Ctrl+Enter (Cmd+Enter) adds a sibling
+ * below, with Shift a first child, and Insert is the sibling's alias.
+ *
+ * @param {object} key The key and its modifiers.
+ * @returns {string|null} The command.
+ */
+const authoringCommand = (key: KeyPress): KeyCommand | null => {
+    if (bare(key)) {
+        const plain: Record<string, ActionId> = {F2: 'rename', Insert: 'quicksibling'};
+        return plain[key.key] ?? null;
+    }
+    if (key.key === 'Enter' && withMod(key) && !key.altKey) {
+        return key.shiftKey ? 'quickchild' : 'quicksibling';
+    }
+    return null;
+};
+
+/**
+ * The command a key names on an item of a pane, or null for a key that is not a command.
+ *
+ * Enter alone selects and Tab leaves the tree, so neither is an authoring key, whatever a mind map
+ * editor would make of them.
+ *
+ * @param {object} key The key and its modifiers.
+ * @param {string} pane The pane the item is in.
+ * @returns {string|null} The command.
+ */
+export const shortcutAction = (key: KeyPress, pane: 'outline' | 'map'): KeyCommand | null =>
+    sharedCommand(key) ?? (pane === 'outline' ? authoringCommand(key) : null);
+
+/** The key caps of the arrows, which read better as arrows. */
+const KEY_CAPS: Record<string, string> = {ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Delete: 'Del'};
+
+/**
+ * The caps a shortcut is drawn with: the modifiers in the platform's order and words, then the key.
+ *
+ * @param {object} shortcut The shortcut.
+ * @param {boolean} mac Whether the viewer is on a Mac.
+ * @returns {Array} The caps.
+ */
+export const shortcutCaps = (shortcut: Shortcut, mac: boolean): string[] => {
+    const caps: string[] = [];
+    if (shortcut.mod) {
+        caps.push(mac ? '⌘' : 'Ctrl');
+    }
+    if (shortcut.alt) {
+        caps.push(mac ? '⌥' : 'Alt');
+    }
+    if (shortcut.shift) {
+        caps.push(mac ? '⇧' : 'Shift');
+    }
+    caps.push(KEY_CAPS[shortcut.key] ?? shortcut.key);
+    return caps;
+};
+
+/**
+ * A shortcut as aria-keyshortcuts spells it.
+ *
+ * @param {object} shortcut The shortcut.
+ * @param {boolean} mac Whether the viewer is on a Mac.
+ * @returns {string} The value.
+ */
+export const ariaShortcut = (shortcut: Shortcut, mac: boolean): string => {
+    const parts: string[] = [];
+    if (shortcut.mod) {
+        parts.push(mac ? 'Meta' : 'Control');
+    }
+    if (shortcut.alt) {
+        parts.push('Alt');
+    }
+    if (shortcut.shift) {
+        parts.push('Shift');
+    }
+    parts.push(shortcut.key);
+    return parts.join('+');
+};
+
+/** The palette's own shortcut, shown on its button. */
+export const PALETTE_SHORTCUT: Shortcut = {key: 'K', mod: true};
+
+/**
+ * Whether the viewer is on a Mac, where Cmd stands for Ctrl.
+ *
+ * @returns {boolean} Whether it is.
+ */
+export const isMac = (): boolean => /Mac|iPhone|iPad/.test(window.navigator.platform || window.navigator.userAgent);

@@ -9862,3 +9862,491 @@ a.local-dimensions-central-links-badge-warn:focus {
 .local-dimensions-hubv2 .react-flow__attribution {
     display: none;
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * Competency hub v2, commands: a node's menu, the command palette, "Move to", the outline's inline
+ * editor and its display options (js/esm/src/hubv2: Menu, Palette, MoveDialog, Editor).
+ *
+ * The menu and the two dialogues are drawn on the page's body, fixed to the viewport, so neither pane
+ * clips them: the menu on the popover rung of the Design System's z ladder (1040), the dialogues on the
+ * sheet rung (1050) with a veil of the page's own surface behind them.
+ * ------------------------------------------------------------------------------------------- */
+
+/* The Design System's menu (menu.md): radius md, padding 4 px, 32 px items at radius xs. */
+.local-dimensions-hubv2-menu {
+    position: fixed;
+    z-index: 1040;
+    min-width: 13.75rem;
+    max-width: 22rem;
+    padding: 0.25rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: var(--local-dimensions-surface);
+    box-shadow: 0 4px 12px var(--local-dimensions-shadow);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-hubv2-menu-sep {
+    height: 1px;
+    margin: 0.25rem 0;
+    background-color: var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 2rem;
+    padding: 0.25rem 0.5rem;
+    border: 0;
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: transparent;
+    color: var(--local-dimensions-ink);
+    font-size: 0.875rem;
+    text-align: start;
+    transition:
+        background-color var(--local-dimensions-motion-base) var(--local-dimensions-motion-ease),
+        color var(--local-dimensions-motion-base) var(--local-dimensions-motion-ease);
+}
+
+.local-dimensions-hubv2-menu-item:hover {
+    background-color: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-brand-ink);
+    transition-duration: var(--local-dimensions-motion-fast);
+}
+
+/* The items touch each other: the ring is drawn inwards so it never covers a neighbour. */
+.local-dimensions-hubv2-menu-item:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-menu-item[aria-checked="true"] {
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-menu .local-dimensions-hubv2-menu-item.local-dimensions-hubv2-menu-item--danger {
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-hubv2-menu-item[aria-disabled="true"],
+.local-dimensions-hubv2-menu-item[aria-disabled="true"]:hover {
+    background-color: transparent;
+    color: var(--local-dimensions-ink-faint);
+    cursor: default;
+}
+
+.local-dimensions-hubv2-menu-icon {
+    flex: none;
+    width: 1rem;
+    color: var(--local-dimensions-ink-muted);
+    text-align: center;
+}
+
+.local-dimensions-hubv2-menu .local-dimensions-hubv2-menu-item--danger .local-dimensions-hubv2-menu-icon {
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-hubv2-menu-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-menu-box {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--local-dimensions-ink-muted);
+    border-radius: var(--local-dimensions-radius-xs);
+    font-size: 0.75rem;
+}
+
+.local-dimensions-hubv2-menu-box .fa {
+    visibility: hidden;
+}
+
+[aria-checked="true"] > .local-dimensions-hubv2-menu-box {
+    border-color: var(--local-dimensions-brand-fill);
+    background-color: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+}
+
+[aria-checked="true"] > .local-dimensions-hubv2-menu-box .fa {
+    visibility: visible;
+}
+
+/* Key caps: a quiet hint at the end of a line, never the theme's dark kbd. */
+.local-dimensions-hubv2-keys {
+    display: inline-flex;
+    flex: none;
+    gap: 0.125rem;
+    margin-inline-start: auto;
+}
+
+.local-dimensions-hubv2-keys kbd,
+.local-dimensions-hubv2-palette-foot kbd {
+    padding: 0 0.25rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink-muted);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 400;
+    box-shadow: none;
+}
+
+.local-dimensions-hubv2-cmdbtn {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-inline-start: auto;
+}
+
+.local-dimensions-hubv2-bar .local-dimensions-hubv2-hint + .local-dimensions-hubv2-cmdbtn {
+    margin-inline-start: 0;
+}
+
+.local-dimensions-hubv2-iconbtn-chevron {
+    font-size: 0.75rem;
+}
+
+/* The selected row's and card's "more" buttons: 24 px targets (WCAG 2.5.8) that leave the name its room. */
+.local-dimensions-hubv2-orow .local-dimensions-hubv2-orowmenu,
+.local-dimensions-hubv2-card .local-dimensions-hubv2-cardmenu {
+    flex: none;
+    min-width: 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+}
+
+.local-dimensions-hubv2-iconbtn[aria-expanded="true"] {
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+/* A button's tooltip hides while its menu is open (Design System, tooltip.md). */
+.local-dimensions-hubv2-iconbtn.local-dimensions-tip[aria-expanded="true"]::after,
+.local-dimensions-hubv2-iconbtn.local-dimensions-tip[aria-expanded="true"]::before {
+    opacity: 0;
+    transition-delay: 0s;
+}
+
+.local-dimensions-hubv2-oextra {
+    flex: 0 50 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-ohints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid var(--local-dimensions-line);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+}
+
+.local-dimensions-hubv2-ohint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.local-dimensions-hubv2-ohint .local-dimensions-hubv2-keys {
+    margin-inline-start: 0;
+}
+
+/* The inline editor: a row of the tree holding two fields and two buttons. */
+.local-dimensions-hubv2-oeditor {
+    padding-block: 0.25rem;
+    padding-inline-end: 0.375rem;
+}
+
+.local-dimensions-hubv2-oeditor-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.local-dimensions-hubv2-oeditor-group .local-dimensions-hubv2-oeditor-name {
+    flex: 2 1 10rem;
+    width: auto;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-oeditor-group .local-dimensions-hubv2-oeditor-id {
+    flex: 1 1 6rem;
+    width: auto;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-outline .local-dimensions-hubv2-oeditor-error {
+    margin: 0.25rem 0 0;
+    padding-inline-start: 1.875rem;
+    color: var(--local-dimensions-danger-ink);
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-oeditor-error:empty {
+    display: none;
+}
+
+/* The dialogues: a veil of the page's surface, a box at radius lg on the sheet rung. */
+.local-dimensions-hubv2-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 4rem 1rem 1rem;
+    background-color: var(--local-dimensions-scrim);
+}
+
+.local-dimensions-hubv2-dialog {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: calc(100vh - 6rem);
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-lg);
+    background-color: var(--local-dimensions-surface);
+    box-shadow: 0 12px 32px var(--local-dimensions-shadow);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-hubv2-palette {
+    max-width: 36rem;
+}
+
+.local-dimensions-hubv2-movedialog {
+    max-width: 32rem;
+}
+
+.local-dimensions-hubv2-dialog-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-dialog-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-dialog-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+    padding: 0.75rem 1rem;
+}
+
+.local-dimensions-hubv2-dialog-label {
+    margin: 0;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-dialog-note {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-dialog-foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--local-dimensions-line);
+}
+
+/* The palette: its field, its list of labelled groups, its foot naming the keys. */
+.local-dimensions-hubv2-palette-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--local-dimensions-line);
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-palette-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background-color: transparent;
+    color: var(--local-dimensions-ink);
+    font-size: 1rem;
+}
+
+.local-dimensions-hubv2-palette-input:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-hubv2-palette-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.25rem;
+}
+
+.local-dimensions-hubv2-palette-head {
+    padding: 0.375rem 0.5rem 0.125rem;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-palette-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--local-dimensions-radius-xs);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2-palette-option:hover {
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+/* The active option is the field's aria-activedescendant: drawn as the focus would be. */
+.local-dimensions-hubv2-palette-option.local-dimensions-hubv2-palette-option--active {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-brand-ink);
+}
+
+.local-dimensions-hubv2-palette-hint {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-palette-none {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-palette-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--local-dimensions-line);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+}
+
+.local-dimensions-hubv2-palette-foot span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* "Move to": the possible parents, a tree or a list of hits, one chosen. */
+.local-dimensions-hubv2-picklist {
+    min-height: 8rem;
+    max-height: 18rem;
+    margin: 0;
+    padding: 0.25rem;
+    overflow-y: auto;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-md);
+    list-style: none;
+}
+
+.local-dimensions-hubv2-pick {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    padding-inline-end: 0.5rem;
+    border-radius: var(--local-dimensions-radius-sm);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2-pick:hover {
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-pick:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-pick.local-dimensions-hubv2-pick--chosen {
+    background-color: var(--local-dimensions-brand-tint);
+    box-shadow: inset 0 0 0 1px var(--local-dimensions-brand-edge);
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-pick[aria-disabled="true"] {
+    color: var(--local-dimensions-ink-faint);
+    cursor: default;
+}
+
+.local-dimensions-hubv2-pick-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-pick-note {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    font-weight: 400;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-hubv2-menu-item {
+        transition: none;
+    }
+}

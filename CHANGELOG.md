@@ -6,6 +6,58 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Commands: a node's menu, a command palette, "Move to" and typing in the outline
+
+Version `2026100536`. Every action of the workspace (Outline, Map, Both) is in one registry
+(`js/esm/src/hubv2/commands.ts`) with one decision of when it is offered, and the panel's buttons, a
+node's menu, the command palette and the keys all draw from it and run it through one function, so
+no place offers what another refuses. No web service was added: the writes are core's
+`core_competency_create_competency`, `_update_competency`, `_move_up_competency`,
+`_move_down_competency` and `_set_parent_competency`, which check the competency rights themselves.
+
+- **A node's menu**: a "more" button on the selected row and the selected map card ("Actions of
+  <name>"), and Shift+F10 or the context-menu key on the focused item of either pane. The Design
+  System's menu: an icon per item, separators between groups, Delete last, shortcuts at the line's
+  end; the ARIA menu keys (Up, Down, Home, End, type-ahead, Enter, Escape, Tab). It is drawn over the
+  page, under its anchor or above it when below would leave the pane or the screen, so the panes never
+  clip it; closing it gives the focus back to the item.
+- **The command palette** (`Commands` in the workspace's bar, or Ctrl+K / Cmd+K while the focus is in
+  the workspace; outside it the browser keeps its own shortcut): a dialogue with one field driving a
+  list (the combobox pattern with `aria-activedescendant`), in three groups: the actions on the
+  selected competency, "Go to" (the tree's search, from two characters; choosing a hit reveals and
+  selects it in both panes), and structure and view (Outline, Map, Both, Expand all, Collapse all,
+  Add competency, Framework summary, and the move's own controls while a move is being picked).
+- **Move to…**: a dialogue titled with the competency's name, with a search field and the possible
+  parents as a single-select tree (branches load as they are opened) or the search's hits with their
+  paths; the top level first, the competency and its descendants never selectable, its current parent
+  marked. Once a parent is chosen it says which rules core resets (the sentences the pick-on-the-map
+  confirmation shows, read afresh); "Pick on the map" starts the existing move mode; the commit names
+  the target and runs the same move as picking.
+- **Reorder from the keyboard**: Alt+Up and Alt+Down on the focused item of either pane move it among
+  its siblings, keep the focus on it and say where it now stands ("moved down, now 2 of 4"), or that it
+  is already first or last. A move down past the loaded siblings reloads them as far as its new place,
+  so it no longer drops out of the tree.
+- **Typing in the outline** (owner's decision H5, for a manager): F2 renames in place; Ctrl+Enter
+  (Cmd+Enter, or Insert) opens a row with a name and an ID number for a new sibling right below, and
+  Ctrl+Shift+Enter for a new first child. The ID number is offered when the siblings' end in a number
+  or a dotted number (`DCE-1.2` gives `DCE-1.3`; zero padding kept); Enter saves and opens the row
+  again for the next sibling, Escape stops and returns the focus to the row; the server's refusal (a
+  taken ID number, a missing right) shows under the fields. The foot of the outline names the keys.
+- **Framework summary** (the panel with nothing selected, and a palette command): the total from the
+  server, then levels, rules and open branches counted over the loaded tree and labelled so while it is
+  not the whole framework. Relations are not counted: the tree's nodes do not carry them.
+- **Display options** in the outline's header: "Show identifiers" and "Show taxonomy", check boxes in a
+  menu, kept in the same preference the classic list's switches write
+  (`local_dimensions_central_display`, `structure.id` and `structure.tax`).
+- **The panel** keeps three controls for the selected competency: **Edit**, **Add child** and **More
+  actions**, which opens the same menu under itself (Delete is there, last). Closing a menu, the
+  palette or "Move to" gives the focus back to the row or node it belongs to, to the panel's button,
+  or, after a layer opened by another, to the selected item of the pane that last had the focus.
+- A reader (no `moodle/competency:competencymanage` on the competency) gets no menu button, no action
+  in the panel or the palette, and no key that writes.
+- New strings: `hubv2_actionsof`, `hubv2_cmd_*`, `hubv2_commands`, `hubv2_editor_*`, `hubv2_hint_*`,
+  `hubv2_moveto_*`, `hubv2_palette_*`, `hubv2_reorder_*`, `hubv2_reordered_*`, `hubv2_summary_*`.
+
 ### The outline beside the map, and the keyboard of both
 
 Version `2026100535`. The Competencies tab's switch has four views: **Classic** (the list, still the
