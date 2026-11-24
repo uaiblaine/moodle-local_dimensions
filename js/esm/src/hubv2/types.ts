@@ -97,4 +97,6 @@ export type HubProps = {
     /** Whether the page's language is written right to left: the tree then grows leftwards. */
     rtl: boolean,
     reveal: RevealTarget | null,
+    /** The workspace's layout when it mounts: the tab's view (structure::VIEWS), the classic list aside. */
+    layout: 'outline' | 'map' | 'both',
 };

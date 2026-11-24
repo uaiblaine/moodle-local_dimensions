@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The map view of the hub's Competencies tab: the canvas's props, its strings and its deep link.
+ * The workspace of the hub's Competencies tab (its Outline, Map and Both views): the props, the strings
+ * and the deep link.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -29,7 +30,8 @@ use core_competency\competency_framework;
 use local_dimensions\helper;
 
 /**
- * What the Competencies tab hands the React canvas (js/esm/src/hubv2/Hub.tsx) in its map view.
+ * What the Competencies tab hands the React workspace (js/esm/src/hubv2/Hub.tsx) in its Outline, Map and
+ * Both views.
  *
  * The tab ({@see \local_dimensions\output\dynamictabs\structure}) resolves the context, the framework
  * list and the selected framework once, for both views; this class only shapes what it resolved into
@@ -52,9 +54,15 @@ final class hub_map {
         'central_related_button',
         'central_related_empty',
         'central_rule_nochildren',
+        'hubv2_a11y_collapsed',
         'hubv2_a11y_controls',
+        'hubv2_a11y_expanded',
         'hubv2_a11y_handle',
+        'hubv2_a11y_level',
         'hubv2_a11y_node',
+        'hubv2_a11y_position',
+        'hubv2_a11y_related',
+        'hubv2_a11y_rule',
         'hubv2_actions',
         'hubv2_appearance',
         'hubv2_assessment',
@@ -94,6 +102,7 @@ final class hub_map {
         'hubv2_description',
         'hubv2_edit',
         'hubv2_expand',
+        'hubv2_expandall_capped',
         'hubv2_fitview',
         'hubv2_loading',
         'hubv2_loadmore',
@@ -103,8 +112,8 @@ final class hub_map {
         'hubv2_movecancelled',
         'hubv2_moveconfirm',
         'hubv2_moveconfirmroot',
-        'hubv2_movedown',
         'hubv2_moved',
+        'hubv2_movedown',
         'hubv2_moveinvalid',
         'hubv2_movepick',
         'hubv2_moveroot',
@@ -115,9 +124,14 @@ final class hub_map {
         'hubv2_nocolour',
         'hubv2_noderole',
         'hubv2_noselection',
+        'hubv2_outline',
+        'hubv2_outline_related',
+        'hubv2_outline_related_one',
+        'hubv2_outline_remaining',
+        'hubv2_outline_remaining_one',
         'hubv2_path',
         'hubv2_relate',
-        'hubv2_related_offcanvas',
+        'hubv2_resizeoutline',
         'hubv2_rootlevel',
         'hubv2_rule',
         'hubv2_scale',
@@ -139,8 +153,11 @@ final class hub_map {
         'hubv2_zoomout',
         'managecompetencies_addchild',
         'managecompetencies_addcompetency',
+        'managecompetencies_collapseall',
+        'managecompetencies_expandall',
         'managecompetencies_norule',
         'managecompetencies_searchplaceholder',
+        'nocompetencies',
     ];
 
     /**
@@ -207,7 +224,9 @@ final class hub_map {
      * @param int $roottotal How many roots it has.
      * @param bool $canmanage Whether the viewer manages competencies in the framework's context.
      * @param array|null $reveal The deep link's target ({@see reveal_target()}), or null.
-     * @return array Keys: framework, roots, pagesize, rulesmodules, courseoutcomes, moduleoutcomes, rtl, reveal.
+     * @param string $layout The view shown, one of structure::WORKSPACE_VIEWS; anything else is the map.
+     * @return array Keys: framework, roots, pagesize, rulesmodules, courseoutcomes, moduleoutcomes, rtl, reveal,
+     *     layout.
      */
     public static function props(
         competency_framework $framework,
@@ -215,7 +234,8 @@ final class hub_map {
         array $roots,
         int $roottotal,
         bool $canmanage,
-        ?array $reveal
+        ?array $reveal,
+        string $layout
     ): array {
         $context = $framework->get_context();
         return [
@@ -237,6 +257,8 @@ final class hub_map {
             // The page's language decides the direction the tree grows in, as it decides the page's.
             'rtl' => right_to_left(),
             'reveal' => $reveal,
+            // The workspace's first layout; the tab's switch tells it of every later one without a reload.
+            'layout' => in_array($layout, \local_dimensions\output\dynamictabs\structure::WORKSPACE_VIEWS, true) ? $layout : 'map',
         ];
     }
 

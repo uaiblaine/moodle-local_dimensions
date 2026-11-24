@@ -147,8 +147,8 @@ final class preferences_test extends advanced_testcase {
     }
 
     /**
-     * The Competencies tab's saved view is the list by default, the map when stored, and the list for
-     * anything else stored, whatever its type.
+     * The Competencies tab's saved view is the list by default, any of the four views when stored, and
+     * the list for anything else stored, whatever its type.
      *
      * @return void
      */
@@ -162,9 +162,10 @@ final class preferences_test extends advanced_testcase {
             set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['view' => $view]]), $USER->id);
             return helper::get_central_prefs()['display']['structure']['view'];
         };
-        $this->assertSame('map', $stored('map'));
-        $this->assertSame('list', $stored('list'));
-        foreach (['MAP', 'canvas', '', '<b>map</b>', 1, true, null, ['map']] as $value) {
+        foreach (['list', 'outline', 'map', 'both'] as $view) {
+            $this->assertSame($view, $stored($view));
+        }
+        foreach (['MAP', 'canvas', '', '<b>map</b>', 'Both', 'classic', 1, true, null, ['map'], ['both']] as $value) {
             $this->assertSame('list', $stored($value), 'Stored ' . json_encode($value));
         }
         // The other structure toggles are read beside it, untouched.

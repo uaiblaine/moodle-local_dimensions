@@ -76,12 +76,19 @@ final class hub_map_test extends advanced_testcase {
             $missing = array_values(array_diff(hub_map::STRINGS, array_keys($string)));
             $this->assertSame([], $missing, "lang/{$lang} lacks strings the canvas reads");
             // The tab's own strings for the view switch and the mount's placeholder.
-            $tabkeys = ['managecompetencies_view', 'managecompetencies_view_list', 'managecompetencies_view_map', 'hubv2_loading'];
+            $tabkeys = [
+                'managecompetencies_view',
+                'managecompetencies_view_list',
+                'managecompetencies_view_outline',
+                'managecompetencies_view_map',
+                'managecompetencies_view_both',
+                'hubv2_loading',
+            ];
             foreach ($tabkeys as $key) {
                 $this->assertArrayHasKey($key, $string, "lang/{$lang} lacks {$key}");
             }
-            // The retired page's own strings are gone with it.
-            foreach (['hubv2', 'hubv2_apply', 'hubv2_listview'] as $key) {
+            // The retired page's own strings are gone with it, and the panel lists every relation (H10).
+            foreach (['hubv2', 'hubv2_apply', 'hubv2_listview', 'hubv2_related_offcanvas'] as $key) {
                 $this->assertArrayNotHasKey($key, $string, "lang/{$lang} still carries {$key}");
             }
         }

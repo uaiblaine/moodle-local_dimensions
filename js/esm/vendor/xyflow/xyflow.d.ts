@@ -239,6 +239,7 @@ export type ReactFlowInstance = {
     setCenter: (x: number, y: number, options?: {zoom?: number, duration?: number}) => Promise<boolean>,
     fitView: (options?: FitViewOptions) => Promise<boolean>,
     getZoom: () => number,
+    getViewport: () => {x: number, y: number, zoom: number},
 };
 
 /** The canvas's imperative helpers, inside a ReactFlowProvider. */

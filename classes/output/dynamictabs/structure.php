@@ -35,19 +35,28 @@ use local_dimensions\output\hub_map;
  * Structure tab: navigate frameworks and their competencies without reloading.
  *
  * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, frameworkid,
- * showhidden, view ('list' or 'map'), competencyid (the map's deep link).
+ * showhidden, view (one of VIEWS), competencyid (the workspace's deep link).
  *
- * Both views share everything this class resolves (the context, the framework list with its
+ * Every view shares everything this class resolves (the context, the framework list with its
  * unlisted-category filter, the selected framework, canmanage); only the body differs: the classic
- * tree and detail panes, or the React canvas ({@see hub_map}).
+ * tree and detail panes, or the React workspace ({@see hub_map}) in one of its three layouts.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class structure extends \core\output\dynamic_tabs\base {
-    /** @var string[] The tab's views; the first is the default. */
-    public const array VIEWS = ['list', 'map'];
+    /**
+     * @var string[] The tab's views; the first, the classic list, is the default. 'map' is the map alone, as
+     * links and saved preferences from before the outline name it.
+     */
+    public const array VIEWS = ['list', 'outline', 'map', 'both'];
+
+    /**
+     * @var string[] The views the React workspace draws, one mount for the three: the tab's switch moves among
+     * them without reloading the pane (amd/src/central/structure.js), and only a move to or from the list does.
+     */
+    public const array WORKSPACE_VIEWS = ['outline', 'map', 'both'];
 
     /**
      * The view the tab shows: the one the pane names, else the viewer's saved one, else the list.
@@ -68,6 +77,35 @@ class structure extends \core\output\dynamic_tabs\base {
             return $saved;
         }
         return self::VIEWS[0];
+    }
+
+    /**
+     * The view switch's cells, in VIEWS' order: each view's value, label, icon and whether it is shown.
+     *
+     * @param string $view The view shown.
+     * @return array Each: value (string), label (string), icon (string, a Font Awesome class), pressed (bool).
+     */
+    public static function view_cells(string $view): array {
+        $cells = [];
+        foreach (self::VIEWS as $value) {
+            $cells[] = [
+                'value' => $value,
+                'label' => match ($value) {
+                    'list' => get_string('managecompetencies_view_list', 'local_dimensions'),
+                    'outline' => get_string('managecompetencies_view_outline', 'local_dimensions'),
+                    'map' => get_string('managecompetencies_view_map', 'local_dimensions'),
+                    'both' => get_string('managecompetencies_view_both', 'local_dimensions'),
+                },
+                'icon' => match ($value) {
+                    'list' => 'fa-list',
+                    'outline' => 'fa-folder-tree',
+                    'map' => 'fa-sitemap',
+                    'both' => 'fa-table-columns',
+                },
+                'pressed' => $value === $view,
+            ];
+        }
+        return $cells;
     }
 
     /**
@@ -139,7 +177,7 @@ class structure extends \core\output\dynamic_tabs\base {
             (string) ($data['view'] ?? ''),
             (string) helper::get_central_prefs()['display']['structure']['view']
         );
-        $ismap = $view === 'map';
+        $isworkspace = in_array($view, self::WORKSPACE_VIEWS, true);
 
         // Frameworks readable in the resolved context. All (including hidden) are sent so the
         // "show hidden" toggle can reveal them client-side without reloading the tab; the default
@@ -216,9 +254,9 @@ class structure extends \core\output\dynamic_tabs\base {
 
         $jsonoptions = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 
-        // The map draws the selected framework even when it holds no competency yet: its panel adds the first.
+        // The workspace draws the selected framework even when it holds no competency yet: it adds the first.
         $mapprops = '';
-        if ($ismap && $selected) {
+        if ($isworkspace && $selected) {
             hub_map::require_strings($PAGE);
             $props = hub_map::props(
                 $selected,
@@ -226,7 +264,8 @@ class structure extends \core\output\dynamic_tabs\base {
                 $rootnodes,
                 $roottotal,
                 $canmanage,
-                hub_map::reveal_target($selected, (int) ($data['competencyid'] ?? 0))
+                hub_map::reveal_target($selected, (int) ($data['competencyid'] ?? 0)),
+                $view
             );
             // Read back by core's React helper with JSON.parse; the hex flags keep the markup inert, and a
             // stray invalid byte in admin text must not empty the whole props, and the mount with them.
@@ -239,9 +278,8 @@ class structure extends \core\output\dynamic_tabs\base {
         return [
             'contexttype' => $contexttype,
             'view' => $view,
-            'ismap' => $mapprops !== '',
-            'islistview' => $view === 'list',
-            'ismapview' => $ismap,
+            'views' => self::view_cells($view),
+            'isworkspace' => $mapprops !== '',
             'mapprops' => $mapprops,
             'selectedcategoryid' => $categoryid,
             // Flags for the shared detail partial: the inline pane has clickable usage

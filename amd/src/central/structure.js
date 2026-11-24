@@ -91,8 +91,15 @@ const SELECTORS = {
     switchView: '[data-action="switch-view"]',
 };
 
-/** @type {String[]} The tab's views (structure::VIEWS); the first is the default. */
-const VIEWS = ['list', 'map'];
+/** @type {String[]} The tab's views (structure::VIEWS); the first, the classic list, is the default. */
+const VIEWS = ['list', 'outline', 'map', 'both'];
+/** @type {String[]} The views of the one React workspace (structure::WORKSPACE_VIEWS). */
+const WORKSPACE_VIEWS = ['outline', 'map', 'both'];
+/**
+ * @type {String} The event that tells the workspace its new layout (LAYOUT_EVENT in
+ * js/esm/src/hubv2/selection.ts; hub_javascript_guards_test holds the two names equal).
+ */
+const LAYOUT_EVENT = 'local_dimensions:hubv2-layout';
 
 /** @type {HTMLElement|null} */
 let activeRow = null;
@@ -1370,18 +1377,25 @@ const initStructureResize = (region) => {
 };
 
 /**
- * Wire what both views share: the framework select, its "show hidden" filter and the view switch.
+ * Wire what every view shares: the framework select, its "show hidden" filter and the view switch.
  *
  * Each re-renders the pane from its dataset, the tab's single source of truth for its arguments. The
- * map's deep link is carried by the dataset too: a framework change drops it (it names a competency
- * of the framework left behind), the list has no use for it, and a switch to the map takes the one
- * the address holds, which the canvas keeps on the competency selected last.
+ * workspace's deep link is carried by the dataset too: a framework change drops it (it names a
+ * competency of the framework left behind), the list has no use for it, and a switch from the list to
+ * the workspace takes the one the address holds, which the workspace keeps on the competency selected
+ * last.
+ *
+ * A switch among the workspace's three views (Outline, Map, Both) reloads nothing: the workspace keeps
+ * its tree, its opened branches and its selection, and only hears the new layout (LAYOUT_EVENT). The
+ * view is still written where a reload reads it (the dataset, the address, the saved preference), so
+ * the next reload of the pane, a framework change, opens the same layout.
  *
  * @param {HTMLElement} region
  * @param {HTMLElement|null} pane
  * @param {String} view The view shown.
  */
 const initSharedControls = (region, pane, view) => {
+    let shown = view;
     const select = region.querySelector(SELECTORS.frameworkSelect);
     if (select && pane) {
         select.addEventListener('change', () => {
@@ -1414,19 +1428,28 @@ const initSharedControls = (region, pane, view) => {
         });
     }
 
-    region.querySelectorAll(SELECTORS.switchView).forEach((button) => {
+    const buttons = region.querySelectorAll(SELECTORS.switchView);
+    buttons.forEach((button) => {
         button.addEventListener('click', () => {
             const next = button.dataset.view;
-            if (!pane || !VIEWS.includes(next) || next === view) {
+            if (!pane || !VIEWS.includes(next) || next === shown) {
+                return;
+            }
+            const inworkspace = WORKSPACE_VIEWS.includes(next) && WORKSPACE_VIEWS.includes(shown);
+            shown = next;
+            pane.dataset.view = next;
+            // The address names the view too, so a reload keeps it before the debounced preference lands.
+            Preferences.saveDisplay({structure: {view: next}});
+            if (inworkspace) {
+                setUrlParams({view: next});
+                buttons.forEach((cell) => cell.setAttribute('aria-pressed', String(cell.dataset.view === next)));
+                document.dispatchEvent(new CustomEvent(LAYOUT_EVENT, {detail: {layout: next}}));
                 return;
             }
             window.clearTimeout(searchDebounce);
-            pane.dataset.view = next;
-            const competencyid = next === 'map' ? urlCompetencyId() : 0;
+            const competencyid = WORKSPACE_VIEWS.includes(next) ? urlCompetencyId() : 0;
             pane.dataset.competencyid = competencyid;
-            // The address names the view too, so a reload keeps it before the debounced preference lands.
             setUrlParams({view: next, competencyid: competencyid || null});
-            Preferences.saveDisplay({structure: {view: next}});
             reloadPane(pane).catch(notifyError);
         });
     });
@@ -1435,8 +1458,8 @@ const initSharedControls = (region, pane, view) => {
 /**
  * Initialise the Structure tab. Re-runs after each tab refresh.
  *
- * In the map view only the shared controls are wired: the canvas owns its tree, its selection and
- * its actions, and the list's footer stays hidden with no row to act on.
+ * In the workspace's views only the shared controls are wired: the workspace owns its tree, its
+ * selection and its actions, and the list's footer stays hidden with no row to act on.
  */
 export const init = () => {
     const region = document.querySelector(SELECTORS.region);
@@ -1465,7 +1488,7 @@ export const init = () => {
     }
 
     initSharedControls(region, pane, view);
-    if (view === 'map') {
+    if (WORKSPACE_VIEWS.includes(view)) {
         activeRow = null;
         return;
     }

@@ -64,20 +64,40 @@ category only. It is locked to the category: no switch, the category and its sub
 The hub has three tabs: **Structures** (frameworks), **Competencies** and **Learning plans**. The
 selected row's actions sit in a bar at the foot of the page.
 
-### The Competencies tab's map view (preview)
+### The Competencies tab's outline and map (preview)
 
-The Competencies tab has two views, switched by **List** and **Map** beside the framework select:
-the list (the tree and its detail pane, the default) and the map, which draws the selected framework's
-tree as a canvas of nodes: the framework at the left (at the right in a language written right to
+The Competencies tab has four views, switched beside the framework select: **Classic** (the tree and
+its detail pane, the default), **Outline**, **Map** and **Both**. The last three are one workspace
+over one selection, with the panel described below at their side; switching among them keeps the
+opened branches and the selection, and does not reload the tab.
+
+- **Outline**: the framework as a real tree (an ARIA tree view) of 32 px rows (40 px on a touch
+  screen), indented by level, each with an expand chevron, the competency's colour, its name and,
+  at the end, its number of children, its rule and, for the selected one, its related competencies.
+  It is one Tab stop: the arrow keys walk it (Right opens a branch or goes into it, Left closes it or
+  goes to its parent, Up and Down, Home and End; Left and Right swap in a language written right to
+  left), Enter or Space selects, and typing a letter jumps to the next name it starts. A partly loaded
+  branch ends in a "Load more" row. **Expand all** opens every branch level by level and stops at
+  500 competencies, saying so; **Collapse all** closes them all.
+- **Map**: the tree as a canvas of nodes, below.
+- **Both**: the outline at the left (about 264 px, resizable by dragging its splitter or with the
+  arrow keys, Home and End, the width kept in the browser) and the map beside it. Selecting in the
+  outline selects on the map and brings the node into view; selecting on the map scrolls the
+  outline to the row. Below 992 px wide the outline, the map and the panel are stacked.
+
+The map draws the selected framework's tree as a canvas of nodes: the framework at the left (at the right in a language written right to
 left), a column per level, each card with its colour, name, taxonomy or rule and a count,
 parent-child edges in the rule's colour under a competency with a rule, and dotted edges to the
 selected competency's related ones. The tree loads lazily (25 children at a time), pans and zooms,
 and has an overview map. The panel beside it shows the selected competency (path, where it is used,
 scale and rule, appearance, description, related competencies) and its actions, which are the hub's
 own dialogues: add (the panel's own button, which knows the selection, takes the place of the tab's),
-edit, add a child, rule, courses and activities, relate, move (pick the new parent on the canvas;
-the confirmation names the current or new parent whose rule core resets), move up or down, and
-delete. Delete first asks the read-only `local_dimensions_competency_delete_check` service: when
+edit, add a child, rule, courses and activities, relate, move (pick the new parent in the outline or
+on the map, by click or Enter; the confirmation names the current or new parent whose rule core
+resets), move up or down, and delete. The panel lists every related competency in words, each a
+button that reveals it; the map also draws a dotted edge to those it shows. The map is one Tab stop
+too, walked by the same keys as the outline, each node named with its level, its position among its
+siblings, whether it is open, its children, its rule and its relation to the selected competency. Delete first asks the read-only `local_dimensions_competency_delete_check` service: when
 core would refuse (the competency or one of its descendants is in a learning plan template, a
 learning plan or a course, has a user's record or rating, or is a badge criterion) a dialogue lists
 the reasons, with counts that are exact only for a site-level manager (a course category's manager
@@ -85,19 +105,19 @@ sees which reasons apply); otherwise the confirmation says that the competency a
 descendant, their relations and their prior-learning links are deleted permanently; the list view
 deletes through the same check and dialogues.
 
-The map is a view of the tab, not a page: it lists exactly the frameworks the list does, in the
+The workspace is a view of the tab, not a page: it lists exactly the frameworks the list does, in the
 same context, so it is reached from Site administration and from a course category's menu alike,
 locked to that category with its subcategories, and keeps the category rules of
 `local_unlistedcourses`. The chosen view is remembered in `local_dimensions_central_display`, and
-the address carries it: `central.php?tab=structure&frameworkid=N&view=map` opens the map, and
-`&competencyid=M` selects and reveals that competency when it belongs to the framework shown
-(anything else is ignored). Selecting a competency on the map keeps it in the address, without
-adding a history entry. The map moves the view without animation for a viewer who asks the system
+the address carries it: `central.php?tab=structure&frameworkid=N&view=map` opens the map
+(`view=outline`, `view=both`, `view=list` the others), and `&competencyid=M` selects and reveals
+that competency when it belongs to the framework shown (anything else is ignored). Selecting a
+competency keeps it in the address, without adding a history entry. The map moves the view without animation for a viewer who asks the system
 for reduced motion, and leaves its edges out of what a screen reader reads. The former address of
 the map, `local/dimensions/hubv2.php`, redirects to the map view for whoever the hub's Site
 administration entry admits.
 
-The canvas is a React component built into one file, `js/esm/build/bundle.js`, which inlines
+The workspace is a React component built into one file, `js/esm/build/bundle.js`, which inlines
 **React Flow** (`@xyflow/react` 13.0.3, MIT), vendored under `js/esm/vendor/xyflow` and declared in
 `thirdpartylibs.xml`; its README says how it was built. Nothing needs to be installed on the site.
 
@@ -553,8 +573,8 @@ The plugin has no database tables of its own (no `db/install.xml`). It keeps:
   changes; and `returncontext`, a session cache of the plan a learner came from, which expires
   after four hours.
 - **Browser storage**, in the user's own browser only and never sent to the site: the widths of
-  the Competency hub's two resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
-  `local_dimensions_plans_master_width`), and the position of the *Return to plan* button in
+  the Competency hub's resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
+  `local_dimensions_plans_master_width`, `local_dimensions_hubv2_outline_width`), and the position of the *Return to plan* button in
   `sessionStorage` (`local_dimensions_fab_pos`), which the browser drops when the tab closes.
 - **Events** in the standard log for the hub's administrative decisions (cohort attach and detach,
   links, duplication, cohort roles, bulk enrolment methods, custom field changes). The log store

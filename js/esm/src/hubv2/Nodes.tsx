@@ -16,9 +16,11 @@
 /**
  * The canvas's node cards and its rule edge.
  *
- * React Flow wraps each card in a focusable element (role group, named by the competency, Enter or
- * Space selects it); the card itself holds the one control a node has of its own, the button that
- * opens or closes its children, which stops its key and click from also selecting the node.
+ * React Flow wraps each card in an element (role group, named by graph.ts) that the workspace's
+ * keyboard (keynav.ts) moves the focus between; the card holds the one control a node has of its
+ * own, the button that opens or closes its children, for the pointer only: tabindex -1 keeps the map
+ * one Tab stop, Right and Left do its work from the keyboard, and it stops its click from also
+ * selecting the node. The "load more" card's button is the same.
  *
  * In a language written right to left the tree grows leftwards: a card's parent edge arrives on its
  * right and its children's leave from its left, and the chevrons point the other way. React Flow's
@@ -202,6 +204,7 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
                     className="local-dimensions-hubv2-toggle nodrag nopan"
                     aria-expanded={expanded}
                     aria-label={fill(labels[expanded ? 'hubv2_collapse' : 'hubv2_expand'], node.shortname)}
+                    tabIndex={-1}
                     onClick={onToggle}
                     onKeyDown={keepKeys}
                 >
@@ -224,7 +227,8 @@ export const MoreNode = ({data}: NodeProps<CanvasNode>): ReactNode => {
     return (
         <div className="local-dimensions-hubv2-card local-dimensions-hubv2-card-more" dir={rtl ? 'rtl' : undefined}>
             <Handles source={false} />
-            <button type="button" className="btn btn-sm btn-outline-secondary nodrag nopan" onClick={() => loadMore(parent)}>
+            <button type="button" className="btn btn-sm btn-outline-secondary nodrag nopan" tabIndex={-1}
+                onClick={() => loadMore(parent)}>
                 {fill(labels.hubv2_loadmore, String(Math.min(remaining, pagesize)))}
             </button>
         </div>

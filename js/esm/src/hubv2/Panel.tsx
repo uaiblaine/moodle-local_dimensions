@@ -14,8 +14,11 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The panel beside the canvas: the selected competency's details and actions, or the framework's
- * when nothing is selected, and the controls of the move mode while it lasts.
+ * The panel beside the outline and the map: the selected competency's details and actions, or the
+ * framework's when nothing is selected, and the controls of the move mode while it lasts.
+ *
+ * Every related competency is listed in words, each a button that reveals it in both panes; the map
+ * draws, besides, a dotted edge to those it shows. A relation is never said by the drawing alone.
  *
  * @module     local_dimensions/hubv2/Panel
  * @copyright  2026 Anderson Blaine
@@ -52,7 +55,6 @@ export type PanelProps = {
     path: string[],
     usage: Usage | null,
     related: PathItem[],
-    onCanvas: (id: number) => boolean,
     moving: StructureNode | null,
     canUp: boolean,
     canDown: boolean,
@@ -146,7 +148,7 @@ const MoveSection = ({labels, moving, actions}: {labels: Labels, moving: Structu
  * @returns {ReactNode} The panel.
  */
 const Panel = (props: PanelProps): ReactNode => {
-    const {labels, framework, count, node, path, usage, related, onCanvas, moving, canUp, canDown, actions} = props;
+    const {labels, framework, count, node, path, usage, related, moving, canUp, canDown, actions} = props;
 
     if (!node) {
         return (
@@ -174,8 +176,6 @@ const Panel = (props: PanelProps): ReactNode => {
         );
     }
 
-    // Related competencies on the canvas are drawn as dotted edges; the others are listed here.
-    const offcanvas = related.filter((item) => !onCanvas(item.id));
     return (
         <aside className="local-dimensions-hubv2-panel" aria-label={node.shortname}>
             {moving ? <MoveSection labels={labels} moving={moving} actions={actions} /> : null}
@@ -244,21 +244,18 @@ const Panel = (props: PanelProps): ReactNode => {
             <section className="local-dimensions-hubv2-sec">
                 <h4 className="local-dimensions-hubv2-sectitle">{labels.central_related_button} ({related.length})</h4>
                 {related.length === 0 ? <p className="text-muted small mb-0">{labels.central_related_empty}</p> : null}
-                {offcanvas.length > 0 ? (
-                    <>
-                        <p className="small text-muted mb-1">{labels.hubv2_related_offcanvas}</p>
-                        <ul className="list-unstyled small mb-0">
-                            {offcanvas.map((item) => (
-                                <li key={item.id}>
-                                    <button type="button" className="btn btn-link btn-sm p-0 text-start"
-                                        onClick={() => actions.reveal(item)}>
-                                        {item.shortname}
-                                    </button>
-                                    {item.path ? <span className="text-muted"> · {item.path}</span> : null}
-                                </li>
-                            ))}
-                        </ul>
-                    </>
+                {related.length > 0 ? (
+                    <ul className="list-unstyled small mb-0">
+                        {related.map((item) => (
+                            <li key={item.id}>
+                                <button type="button" className="btn btn-link btn-sm p-0 text-start"
+                                    onClick={() => actions.reveal(item)}>
+                                    {item.shortname}
+                                </button>
+                                {item.path ? <span className="text-muted"> · {item.path}</span> : null}
+                            </li>
+                        ))}
+                    </ul>
                 ) : null}
             </section>
 

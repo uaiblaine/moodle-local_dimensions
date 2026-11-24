@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Tests for the Competencies tab's two views: which one shows, and what the map receives.
+ * Tests for the Competencies tab's views: which one shows, what the switch offers, and what the
+ * workspace (Outline, Map, Both) receives.
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -32,8 +33,9 @@ use local_dimensions\output\hub_map;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
- * The list or the map: the URL's view, else the saved one, else the list; and the map lists exactly
- * what the list lists, because both come from the one resolution the tab makes.
+ * The classic list or the workspace in one of its three layouts: the URL's view, else the saved one,
+ * else the list; and the workspace lists exactly what the list lists, because both come from the one
+ * resolution the tab makes.
  */
 #[CoversClass(structure::class)]
 #[CoversClass(hub_map::class)]
@@ -82,15 +84,37 @@ final class structure_view_test extends advanced_testcase {
      * @return void
      */
     public function test_resolve_view_orders_the_url_the_saved_view_and_the_default(): void {
-        $this->assertSame('map', structure::resolve_view('map', 'list'));
-        $this->assertSame('list', structure::resolve_view('list', 'map'));
-        $this->assertSame('map', structure::resolve_view('', 'map'));
-        $this->assertSame('list', structure::resolve_view('', 'list'));
+        $this->assertSame(['list', 'outline', 'map', 'both'], structure::VIEWS);
+        foreach (structure::VIEWS as $view) {
+            $this->assertSame($view, structure::resolve_view($view, 'list'));
+            $this->assertSame($view, structure::resolve_view('', $view));
+            $this->assertSame($view, structure::resolve_view('garbage', $view));
+        }
+        $this->assertSame('list', structure::resolve_view('list', 'both'));
+        $this->assertSame('outline', structure::resolve_view('outline', 'map'));
         $this->assertSame('list', structure::resolve_view('', ''));
         // An unknown value is no value: the saved view, else the list.
         $this->assertSame('map', structure::resolve_view('canvas', 'map'));
         $this->assertSame('list', structure::resolve_view('canvas', 'garbage'));
         $this->assertSame('list', structure::resolve_view('MAP', ''));
+        $this->assertSame('list', structure::resolve_view('Both', 'OUTLINE'));
+        $this->assertSame('list', structure::resolve_view('classic', ''));
+    }
+
+    /**
+     * The switch offers the four views in order, the one shown pressed, each with its label and icon.
+     *
+     * @return void
+     */
+    public function test_the_switch_offers_every_view_and_presses_the_one_shown(): void {
+        $cells = structure::view_cells('both');
+        $this->assertSame(structure::VIEWS, array_column($cells, 'value'));
+        $this->assertSame([false, false, false, true], array_column($cells, 'pressed'));
+        $this->assertSame(['Classic', 'Outline', 'Map', 'Both'], array_column($cells, 'label'));
+        $this->assertSame(['fa-list', 'fa-folder-tree', 'fa-sitemap', 'fa-table-columns'], array_column($cells, 'icon'));
+        $this->assertSame([true, false, false, false], array_column(structure::view_cells('list'), 'pressed'));
+        // A value that is no view presses none.
+        $this->assertSame([false, false, false, false], array_column(structure::view_cells('bogus'), 'pressed'));
     }
 
     /**
@@ -105,15 +129,16 @@ final class structure_view_test extends advanced_testcase {
 
         $default = $this->export(['frameworkid' => $frameworkid]);
         $this->assertSame('list', $default['view']);
-        $this->assertFalse($default['ismap']);
+        $this->assertFalse($default['isworkspace']);
         $this->assertSame('', $default['mapprops']);
+        $this->assertSame([true, false, false, false], array_column($default['views'], 'pressed'));
 
         $this->save_view('map');
         $saved = $this->export(['frameworkid' => $frameworkid]);
         $this->assertSame('map', $saved['view']);
-        $this->assertTrue($saved['ismap']);
-        $this->assertTrue($saved['ismapview']);
-        $this->assertFalse($saved['islistview']);
+        $this->assertTrue($saved['isworkspace']);
+        $this->assertSame('map', $saved['decoded']['layout']);
+        $this->assertSame([false, false, true, false], array_column($saved['views'], 'pressed'));
 
         $this->assertSame('list', $this->export(['frameworkid' => $frameworkid, 'view' => 'list'])['view']);
         $this->assertSame('map', $this->export(['frameworkid' => $frameworkid, 'view' => 'bogus'])['view']);
@@ -121,6 +146,33 @@ final class structure_view_test extends advanced_testcase {
         $this->save_view('<script>');
         $this->assertSame('list', $this->export(['frameworkid' => $frameworkid, 'view' => 'bogus'])['view']);
         $this->assertSame('map', $this->export(['frameworkid' => $frameworkid, 'view' => 'map'])['view']);
+    }
+
+    /**
+     * Outline, Map and Both are one workspace with the view as its first layout; the list draws none.
+     *
+     * @return void
+     */
+    public function test_the_three_workspace_views_draw_one_workspace_with_their_layout(): void {
+        $this->resetAfterTest();
+        $frameworkid = (int) $this->one_framework()->get('id');
+
+        foreach (structure::WORKSPACE_VIEWS as $view) {
+            $data = $this->export(['frameworkid' => $frameworkid, 'view' => $view]);
+            $this->assertSame($view, $data['view']);
+            $this->assertTrue($data['isworkspace'], "{$view} draws the workspace");
+            $this->assertSame($view, $data['decoded']['layout']);
+            $this->assertSame($frameworkid, $data['decoded']['framework']['id']);
+        }
+        // The saved view opens the workspace in it, as the URL's does.
+        $this->save_view('both');
+        $this->assertSame('both', $this->export(['frameworkid' => $frameworkid])['decoded']['layout']);
+        $this->save_view('outline');
+        $this->assertSame('outline', $this->export(['frameworkid' => $frameworkid])['decoded']['layout']);
+        // The control: the list draws no workspace, whatever was saved.
+        $list = $this->export(['frameworkid' => $frameworkid, 'view' => 'list']);
+        $this->assertFalse($list['isworkspace']);
+        $this->assertNull($list['decoded']);
     }
 
     /**
@@ -147,7 +199,7 @@ final class structure_view_test extends advanced_testcase {
 
         $props = $data['decoded'];
         $this->assertSame(
-            ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal'],
+            ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal', 'layout'],
             array_keys($props)
         );
         $this->assertSame([
@@ -216,7 +268,7 @@ final class structure_view_test extends advanced_testcase {
 
         $this->assertSame((int) $visible->get('id'), $data['decoded']['framework']['id']);
         // The map draws a framework without competencies: its panel adds the first one.
-        $this->assertTrue($data['ismap']);
+        $this->assertTrue($data['isworkspace']);
         $this->assertSame(0, $data['decoded']['roots']['total']);
     }
 
@@ -321,7 +373,7 @@ final class structure_view_test extends advanced_testcase {
         $data = $this->export(['contexttype' => 'coursecat', 'categoryid' => 0, 'view' => 'map']);
 
         $this->assertTrue($data['needscategoryselection']);
-        $this->assertFalse($data['ismap']);
+        $this->assertFalse($data['isworkspace']);
         $this->assertSame('', $data['mapprops']);
     }
 
@@ -381,7 +433,7 @@ final class structure_view_test extends advanced_testcase {
         $this->export(['frameworkid' => (int) $framework->get('id'), 'view' => 'list']);
         $this->assertArrayNotHasKey('hubv2_moverule_oldparent', array_flip($handed()['local_dimensions'] ?? []));
 
-        $this->export(['frameworkid' => (int) $framework->get('id'), 'view' => 'map']);
+        $this->export(['frameworkid' => (int) $framework->get('id'), 'view' => 'outline']);
         $strings = $handed();
         $this->assertSame([], array_values(array_diff(hub_map::STRINGS, $strings['local_dimensions'] ?? [])));
         $this->assertSame([], array_values(array_diff(hub_map::OTHER_STRINGS['tool_lp'], $strings['tool_lp'] ?? [])));

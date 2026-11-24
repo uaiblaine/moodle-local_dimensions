@@ -6,6 +6,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The outline beside the map, and the keyboard of both
+
+Version `2026100535`. The Competencies tab's switch has four views: **Classic** (the list, still the
+default; its cell was **List**), **Outline**, **Map** and **Both**. The last three are one React
+workspace over one store, so moving among them keeps the opened branches and the selection and
+reloads nothing; only a move to or from Classic reloads the tab. `view=map` keeps meaning the map
+alone, in links and saved preferences.
+
+- **The outline** is an ARIA tree: a flat list of `treeitem` rows with `aria-level`, `aria-setsize`
+  (the parent's total from the server, since a lazy branch is never whole in the page),
+  `aria-posinset`, `aria-expanded` on parents and `aria-selected` on the selected row; the framework
+  is its root. One Tab stop with a roving tabindex, the keys of core's `core/tree` (Left and Right
+  swapped right to left) and type-ahead on the visible names. A row's click selects it, its chevron
+  only opens or closes; a "Load more" row loads the next page; a branch loading shows the Design
+  System's skeleton, an empty framework its empty state with "Add competency" for a manager.
+- **One selection**: selecting in the outline selects on the map and pans it to the node (at once
+  under reduced motion); selecting on the map, or revealing a search result, moves the outline's Tab
+  stop to the row and scrolls the outline alone to it. The move mode's "choose the new parent" takes
+  a click or Enter in either pane, and Escape cancels it.
+- **The map's keyboard** (from the stage 0 spike): one Tab stop instead of one per node, the same
+  keys as the outline, every node a group named with its level, position, state, children, rule and
+  relation to the selected competency (`hubv2_a11y_level`, `_position`, `_expanded`, `_collapsed`,
+  `_rule`, `_related`), React Flow's English role description and its own Enter and Space handling
+  dropped, the key help (`hubv2_a11y_node`) reworded. A key repeated faster than the panes draw acts
+  on where the previous one went, and a branch whose page is loading is asked for once. The pan that
+  follows the focus keeps the node clear of the overview map and the controls on a short canvas too.
+  A branch opened on the map, by key or by its card's button, moves the view just enough to show the
+  parent and the start of its children when they open outside it (at once under reduced motion, no
+  move when they fit).
+- **Both**: the outline at the left, 264 px by default, behind a splitter (`role="separator"`) moved
+  by the arrow keys, Home, End or a drag and reset by a double click; its width is kept in
+  `localStorage` (`local_dimensions_hubv2_outline_width`). Below 992 px the panes stack and the
+  splitter is not drawn.
+- **Expand all and Collapse all** in the outline's header: Expand all opens the visible tree level by
+  level, loading each closed branch's first page, and stops before passing 500 competencies with a
+  notice (`hubv2_expandall_capped`); Collapse all closes every branch, ending an Expand all still
+  running.
+- **The panel lists every related competency** (decision H10), not only those off the map; the
+  string `hubv2_related_offcanvas` goes.
+- **Server**: `structure::VIEWS` is `list`, `outline`, `map`, `both` and `structure::WORKSPACE_VIEWS`
+  the last three; the saved preference and the address accept the four; `hub_map::props()` carries
+  the first `layout`. The switch tells the workspace a new layout by the `local_dimensions:hubv2-layout`
+  event, and `hub_workspace_contract_test` holds the event's name, the view lists of the server, the
+  tab's modules and the workspace, and the outline width's custom property equal.
+
 ### The competency map becomes the Competencies tab's map view
 
 Version `2026100534`. The canvas leaves its own page for the hub's Competencies tab, where a **List**

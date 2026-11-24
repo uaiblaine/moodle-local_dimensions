@@ -108,12 +108,14 @@ classes/
   local/               plan_access, plan_status, colour_mode (constants only),
                        enrolment_provider*, view_events, category_lifecycle
   output/              renderables: learner pages and hub tabs; hub_map = the Competencies tab's
-                       map view (canvas props, its string list, the deep link)
+                       workspace views, Outline, Map, Both (props, its string list, the deep link)
   privacy/             preference-only provider (core_user owns preference deletion)
 db/                    access, caches, events, hooks, services, install, upgrade, uninstall; NO install.xml
 templates/, amd/src (plain AMD), amd/build, lang/{en,pt_br}
-js/esm/src/hubv2     the map view's React canvas (TypeScript), bundled into js/esm/build/bundle.js
-                     with the vendored React Flow (js/esm/vendor/xyflow); Jest tests in js/esm/tests
+js/esm/src/hubv2     the workspace (TypeScript): one store (Hub.tsx), the outline (an ARIA tree) and
+                     the React Flow map on it, one key map (keynav.ts); bundled into
+                     js/esm/build/bundle.js with the vendored React Flow (js/esm/vendor/xyflow); Jest
+                     tests in js/esm/tests
 docs/design-kit, docs/learner-kit   design kits; tokens.html names core's --mds-* in DOCS only
 tests/                 PHPUnit incl. the file-scanner suites under tests/local/; behat/
 mutations/             one spec per area (plan_access, detail_access, sec_*, followups_*, enrolment_provider*)
