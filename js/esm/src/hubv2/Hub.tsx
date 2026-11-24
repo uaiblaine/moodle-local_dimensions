@@ -36,6 +36,13 @@
  * competency is kept in the address (deeplink.ts), and a competency the link named is revealed at
  * mount when the server found it in this framework (props.reveal).
  *
+ * Commands, not gestures: every action is in the action registry (commands.ts) and runs through one
+ * function here (runAction), whether the panel's button, a node's menu (Menu.tsx, the "more" button or
+ * Shift+F10), the command palette (Palette.tsx, Ctrl+K while the focus is in the workspace) or a key on
+ * an item (Alt+Up and Alt+Down reorder; F2, Ctrl+Enter and Ctrl+Shift+Enter open the outline's inline
+ * editor, Editor.tsx) asked for it. A competency moves under a new parent by picking it in a pane or
+ * through "Move to" (MoveDialog.tsx); both end in moveUnder.
+ *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -44,19 +51,33 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode} from 'react';
 import {
+    PALETTE_SHORTCUT, VIEW_ACTIONS, actionState, actionsFor, ariaShortcut, isMac, shortcutAction, shortcutCaps, specOf,
+} from './commands';
+import type {ActionContext, ActionId, ActionView, KeyCommand, Shortcut} from './commands';
+import Editor from './Editor';
+import {focusReturn} from './focusreturn';
+import type {LayerOrigin, Pane} from './focusreturn';
+import {suggestIdnumber} from './idnumber';
+import Menu from './Menu';
+import type {MenuItem} from './Menu';
+import MoveDialog from './MoveDialog';
+import Palette from './Palette';
+import type {PaletteEntry} from './paletteitems';
+import {summaryFacts, summaryLines} from './summary';
+import {
     Background, BackgroundVariant, Controls, MiniMap, ReactFlow, ReactFlowProvider, useReactFlow,
 } from '../../vendor/xyflow/xyflow.js';
 import type {AriaLabelConfig, FitViewOptions, NodeChangeset} from '../../vendor/xyflow/xyflow.js';
 import {load, notifyError} from './amd';
 import type {RuleConfig} from './amd';
-import {CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf, moreKey} from './graph';
+import {CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf, moreKey, parentKey} from './graph';
 import {EXPAND_ALL_BOUND, collapseAll, expandStep} from './expandall';
-import {branchTarget, isTypeAheadKey, keyAction, navOrder, nodeName, panTarget, typeAhead} from './keynav';
+import {branchTarget, entryKey, isTypeAheadKey, keyAction, navOrder, nodeName, panTarget, typeAhead} from './keynav';
 import type {Rect} from './keynav';
 import type {NameInfo} from './keynav';
 import Outline, {OUTLINE_ID} from './Outline';
-import type {OutlineActions} from './Outline';
-import {outlineRows} from './outlinerows';
+import type {OutlineActions, OutlineDisplay, OutlineEditor, OutlineHint} from './Outline';
+import {editorSlot, outlineRows} from './outlinerows';
 import type {OutlineRow} from './outlinerows';
 import {useRoving} from './roving';
 import type {Roving} from './roving';
@@ -77,12 +98,12 @@ import Panel from './Panel';
 import type {PanelActions} from './Panel';
 import {track} from './pending';
 import {
-    allChildren, browse, countCompetencies, deleteCheck, deleteCompetency, getNode, moveOne, selectionData, setParent,
-    updateRule,
+    allChildren, browse, countCompetencies, createCompetency, deleteCheck, deleteCompetency, getNode, moveOne, moveUpTimes,
+    renameCompetency, selectionData, setParent, updateRule,
 } from './repository';
 import type {NodeAnswer} from './repository';
 import Search from './Search';
-import {fill, fillCount, loadLabels} from './strings';
+import {fill, fillCount, fillObject, loadLabels} from './strings';
 import type {Labels} from './strings';
 import {
     ROOT, ancestors, branchHas, createTree, expandPath, forgetBranch, hasBranch, insertChildren, isExpanded, isWithin,
@@ -129,6 +150,28 @@ const TYPE_AHEAD_PAUSE = 500;
 
 /** How many first pages "Expand all" asks for at once. */
 const EXPAND_ALL_PARALLEL = 4;
+
+/** The inline editor of the outline: a rename in place, or a new competency after a sibling (null: first child). */
+type EditorState = {mode: 'rename', id: number} | {mode: 'create', parent: number, after: number | null, serial: number};
+
+/**
+ * A node's menu while it is open: the competency, the element it hangs from, and where it was opened (an
+ * item of a pane, by a key or its "more" button, or the panel's "More actions" button).
+ */
+type MenuState = {id: number, anchor: HTMLElement, origin: Pane | 'panel'};
+
+/**
+ * The words of a refusal from the server, as core/ajax rejects with it.
+ *
+ * @param {*} error The rejection value.
+ * @returns {string} Its message.
+ */
+const messageOf = (error: unknown): string => {
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        return error.message;
+    }
+    return String(error);
+};
 
 /** The class of each layout's root, written whole so the stylesheet test finds it. */
 const LAYOUT_CLASSES: Record<Layout, string> = {
@@ -183,6 +226,26 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const canvasRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
     const typed = useRef({text: '', at: 0});
+    const layoutRef = useRef<Layout>(layout);
+    layoutRef.current = layout;
+    const countRef = useRef(count);
+    countRef.current = count;
+    const expandingRef = useRef(expanding);
+    expandingRef.current = expanding;
+    // The commands' layers: a node's menu, the palette, "Move to", and the outline's inline editor.
+    const [menu, setMenu] = useState<MenuState | null>(null);
+    const [palette, setPalette] = useState(false);
+    const [moveDialog, setMoveDialog] = useState<number | null>(null);
+    const [editor, setEditor] = useState<EditorState | null>(null);
+    const editorRef = useRef<EditorState | null>(null);
+    editorRef.current = editor;
+    const editorSerial = useRef(0);
+    const [display, setDisplay] = useState<OutlineDisplay>({idnumber: false, taxonomy: false});
+    const rootRef = useRef<HTMLDivElement>(null);
+    const summaryRef = useRef<HTMLHeadingElement>(null);
+    const mac = useMemo(isMac, []);
+    // The pane that last had the focus: where a layer opened from another layer gives it back.
+    const lastPane = useRef<Pane | null>(null);
     // A branch just opened on the map, whose children the viewport is to bring into view once drawn, and
     // the end of the pending token that spans the gap from the click or key to that move (pending.ts).
     const revealing = useRef<number | null>(null);
@@ -224,13 +287,15 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }, [commit, framework.id, pagesize]);
 
     /**
-     * Reload a parent's children, as many as were loaded (one page at least), after a change among them.
+     * Reload a parent's children, as many as were loaded (one page at least, and at least `atleast`, so a
+     * competency moved or added past the loaded ones stays drawn), after a change among them.
      *
      * @param {number} parent The parent.
+     * @param {number} atleast How many children must be loaded at least.
      * @returns {Promise} Resolves once in the tree.
      */
-    const reloadBranch = useCallback(async(parent: number): Promise<void> => {
-        const wanted = Math.max(treeRef.current.branches[parent]?.ids.length ?? 0, 1);
+    const reloadBranch = useCallback(async(parent: number, atleast: number = 1): Promise<void> => {
+        const wanted = Math.max(treeRef.current.branches[parent]?.ids.length ?? 0, atleast, 1);
         const items: StructureNode[] = [];
         let total = 0;
         do {
@@ -624,6 +689,68 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
+     * A parent as it is now: read again, since whether it has a rule is what a move's confirmation says.
+     *
+     * @param {number} id The parent, ROOT for the top level.
+     * @returns {Promise} Resolves with the parent, or null for the top level or one gone.
+     */
+    const freshParent = useCallback(async(id: number): Promise<MoveParent | null> => {
+        if (id === ROOT) {
+            return null;
+        }
+        const answer = await getNode(id);
+        return answer.found && answer.node ? answer.node : null;
+    }, []);
+
+    /**
+     * Give a competency a new parent: the one move both ways of choosing the parent end in.
+     *
+     * Refused before any request when the target is the competency or one of its descendants, or its
+     * parent already. Picking on the map asks for the confirmation, which names the rules core resets,
+     * read afresh; "Move to" is its own confirmation and says the same sentences (move.ruleNotes) before
+     * its commit button.
+     *
+     * @param {object} source The competency.
+     * @param {number} target The new parent, ROOT for the top level.
+     * @param {boolean} confirm Whether to ask first.
+     * @returns {void}
+     */
+    const moveUnder = (source: StructureNode, target: number, confirm: boolean): void => {
+        if (target !== ROOT && isWithin(treeRef.current, target, source.id)) {
+            announce(labels.hubv2_moveinvalid);
+            return;
+        }
+        if (target === source.parentid) {
+            return;
+        }
+        (async() => {
+            if (confirm) {
+                const parents = Promise.all([freshParent(source.parentid), freshParent(target)]);
+                const [oldparent, newparent] = await track('move', parents);
+                // A new parent gone meanwhile is named as the canvas knew it; core refuses the move then.
+                const known = target === ROOT ? null : {shortname: treeRef.current.nodes[target]?.shortname ?? '', ruletype: null};
+                const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
+                const notification = await load('core/notification');
+                const confirmed = await notification
+                    .saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move)
+                    .then(() => true, () => false);
+                if (!confirmed) {
+                    return;
+                }
+            }
+            endMove(false);
+            await track('move', (async() => {
+                await setParent(source.id, target);
+                const answer = await getNode(source.id);
+                if (answer.found) {
+                    await relocate(source.id, source.parentid, answer);
+                }
+                announce(fill(labels.hubv2_moved, source.shortname));
+            })());
+        })().catch(notifyError);
+    };
+
+    /**
      * Give the competency being moved its new parent, once confirmed.
      *
      * @param {number} target The new parent, ROOT for the top level.
@@ -643,41 +770,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             endMove(true);
             return;
         }
-        /**
-         * A parent as it is now: read again, since whether it has a rule is what the dialogue says.
-         *
-         * @param {number} id The parent, ROOT for the top level.
-         * @returns {Promise} Resolves with the parent, or null for the top level or one gone.
-         */
-        const freshParent = async(id: number): Promise<MoveParent | null> => {
-            if (id === ROOT) {
-                return null;
-            }
-            const answer = await getNode(id);
-            return answer.found && answer.node ? answer.node : null;
-        };
-        (async() => {
-            const [oldparent, newparent] = await track('move', Promise.all([freshParent(source.parentid), freshParent(target)]));
-            // A new parent gone meanwhile is named as the canvas knew it; core refuses the move then.
-            const known = target === ROOT ? null : {shortname: treeRef.current.nodes[target]?.shortname ?? '', ruletype: null};
-            const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
-            const notification = await load('core/notification');
-            const confirmed = await notification
-                .saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move)
-                .then(() => true, () => false);
-            if (!confirmed) {
-                return;
-            }
-            endMove(false);
-            await track('move', (async() => {
-                await setParent(source.id, target);
-                const answer = await getNode(source.id);
-                if (answer.found) {
-                    await relocate(source.id, source.parentid, answer);
-                }
-                announce(fill(labels.hubv2_moved, source.shortname));
-            })());
-        })().catch(notifyError);
+        moveUnder(source, target, true);
     };
 
     /**
@@ -858,14 +951,29 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
-     * Move a competency one place among its siblings, then reload them.
+     * Move a competency one place among its siblings, reload them and say where it now stands.
+     *
+     * The branch is reloaded as far as the competency's new place: moved down past the loaded siblings,
+     * it would otherwise drop out of the tree, and the focus with it. Its row and node keep their keys,
+     * so a competency moved from the keyboard keeps the focus.
      *
      * @param {object} node The competency.
      * @param {boolean} up Up when true.
      * @returns {void}
      */
     const stepMove = (node: StructureNode, up: boolean): void => {
-        track('refresh', moveOne(node.id, up).then(() => reloadBranch(node.parentid))).catch(notifyError);
+        track('refresh', (async() => {
+            await moveOne(node.id, up);
+            const index = treeRef.current.branches[node.parentid]?.ids.indexOf(node.id) ?? -1;
+            await reloadBranch(node.parentid, index + (up ? 1 : 2));
+            const branch = treeRef.current.branches[node.parentid];
+            const values = {
+                name: node.shortname,
+                position: String((branch?.ids.indexOf(node.id) ?? -1) + 1),
+                total: String(branch?.total ?? 0),
+            };
+            announce(fillObject(up ? labels.hubv2_reordered_up : labels.hubv2_reordered_down, values));
+        })()).catch(notifyError);
     };
 
     /**
@@ -945,36 +1053,6 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
-     * Edit a competency.
-     *
-     * @param {object} node The competency.
-     * @returns {void}
-     */
-    const edit = (node: StructureNode): void => openForm(node, null);
-
-    /**
-     * Add a competency under another, or at the top level with null.
-     *
-     * @param {object|null} node The parent.
-     * @returns {void}
-     */
-    const addChild = (node: StructureNode | null): void => openForm(null, node);
-
-    /**
-     * Make the competency being moved a top-level one.
-     *
-     * @returns {void}
-     */
-    const moveRoot = (): void => pickParent(ROOT);
-
-    /**
-     * Leave the move mode without moving.
-     *
-     * @returns {void}
-     */
-    const cancelMove = (): void => endMove(true);
-
-    /**
      * Load the next page of a parent from the keyboard, then focus the first competency it brought.
      *
      * @param {number} parent The parent.
@@ -1006,57 +1084,6 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             outlineStop.focusKey(key);
         }
         return key !== null;
-    };
-
-    /**
-     * Walk the tree with the keyboard in either pane (keynav.keyAction).
-     *
-     * The item the key acts on is the pane's Tab stop, which moves at once, and the walk is read from
-     * the latest tree, so a key repeated before React renders acts on where the previous one went.
-     *
-     * @param {object} event The key event.
-     * @param {object} stop The pane's Tab stop.
-     * @param {string} selector The CSS selector of the pane's items.
-     * @param {string} from The pane.
-     * @returns {void}
-     */
-    const walk = (event: ReactKeyboardEvent<HTMLElement>, stop: Roving, selector: string, from: 'outline' | 'map'): void => {
-        const target = event.target as HTMLElement;
-        const element = target.closest<HTMLElement>(selector);
-        if (!element || !event.currentTarget.contains(element)) {
-            return;
-        }
-        // Enter and Space on an item's own button (focused by a click) are the button's.
-        if (element !== target && (event.key === 'Enter' || event.key === ' ')) {
-            return;
-        }
-        const action = keyAction(navOrder(treeRef.current), stop.activeRef.current, event, rtl);
-        if (!action) {
-            if (from === 'outline' && isTypeAheadKey(event) && typeTo(event.key, event.timeStamp)) {
-                event.preventDefault();
-            }
-            return;
-        }
-        event.preventDefault();
-        switch (action.type) {
-            case 'focus':
-                stop.focusKey(action.key);
-                break;
-            case 'expand':
-                openBranch(action.id, from === 'map');
-                break;
-            case 'collapse':
-                closeBranch(action.id);
-                break;
-            case 'select':
-                activate(action.id, from);
-                break;
-            case 'loadmore':
-                loadMoreAndFocus(action.parent, stop);
-                break;
-            default:
-                break;
-        }
     };
 
     /**
@@ -1112,10 +1139,543 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         commit(collapseAll);
     };
 
-    const actions: PanelActions = {
-        edit, addChild, rule: editRule, links: openLinks, relate: openRelated, move: startMove, moveRoot, cancelMove,
-        moveOne: stepMove, remove, reveal: revealItem,
+    /**
+     * What the registry's decision reads for one competency, from the latest store (commands.actionState).
+     *
+     * @param {number|null} id The competency, or null for the framework.
+     * @returns {object} The context.
+     */
+    const contextFor = (id: number | null): ActionContext => {
+        const current = treeRef.current;
+        const target = id !== null && id !== ROOT ? current.nodes[id] ?? null : null;
+        const siblings = target ? current.branches[target.parentid] : undefined;
+        const index = target && siblings ? siblings.ids.indexOf(target.id) : -1;
+        return {
+            node: target,
+            frameworkcanmanage: framework.canmanage,
+            moving: movingRef.current !== null ? current.nodes[movingRef.current] ?? null : null,
+            first: index <= 0,
+            last: !siblings || index < 0 || (index === siblings.ids.length - 1 && siblings.ids.length >= siblings.total),
+            layout: layoutRef.current,
+            empty: countRef.current === 0,
+            expanding: expandingRef.current,
+        };
     };
+
+    /**
+     * Switch the workspace's view through the tab's own switch, so the tab, the address and the saved
+     * preference follow (amd/src/central/structure.js); without the switch, the workspace alone.
+     *
+     * @param {string} next The layout.
+     * @returns {void}
+     */
+    const switchLayout = (next: Layout): void => {
+        const region = rootRef.current?.closest('[data-region="structure"]');
+        const button = region?.querySelector<HTMLButtonElement>(`[data-action="switch-view"][data-view="${next}"]`);
+        if (button) {
+            button.click();
+        } else {
+            setLayout(next);
+        }
+    };
+
+    /**
+     * Show the framework's summary: the panel's content with nothing selected, its heading focused.
+     *
+     * @returns {void}
+     */
+    const showSummary = (): void => {
+        choose(null);
+        window.requestAnimationFrame(() => summaryRef.current?.focus());
+    };
+
+    /**
+     * Make a competency's row drawn (its ancestors loaded and opened), for the inline editor.
+     *
+     * @param {number} id The competency.
+     * @returns {Promise} Resolves once drawn.
+     */
+    const reach = (id: number): Promise<void> => ensureVisible(id, ancestors(treeRef.current, id));
+
+    /**
+     * Open the outline's inline editor for a new competency: a sibling right after another, or the
+     * first child of a parent, whose branch is opened first.
+     *
+     * @param {number} parent The new competency's parent, ROOT for the top level.
+     * @param {number|null} after The sibling it follows, or null for a first child.
+     * @returns {void}
+     */
+    const startCreate = (parent: number, after: number | null): void => {
+        track('editor', (async() => {
+            if (after !== null) {
+                await reach(after);
+            } else if (parent !== ROOT) {
+                await reach(parent);
+                if (treeRef.current.nodes[parent]?.haschildren && !hasBranch(treeRef.current, parent)) {
+                    await loadPage(parent, false);
+                }
+                commit((current) => setExpanded(current, parent, true));
+            }
+            editorSerial.current++;
+            setEditor({mode: 'create', parent, after, serial: editorSerial.current});
+        })()).catch(notifyError);
+    };
+
+    /**
+     * Open the outline's inline editor on a competency's name.
+     *
+     * @param {number} id The competency.
+     * @returns {void}
+     */
+    const startRename = (id: number): void => {
+        track('editor', reach(id).then(() => setEditor({mode: 'rename', id}))).catch(notifyError);
+    };
+
+    /**
+     * Close the inline editor and give the focus back to its row: the competency renamed, the last one
+     * created, or the row the editor was opened from.
+     *
+     * @returns {void}
+     */
+    const closeEditor = (): void => {
+        const current = editorRef.current;
+        setEditor(null);
+        if (!current) {
+            return;
+        }
+        if (current.mode === 'rename') {
+            outlineStop.focusKey(competencyKey(current.id));
+        } else {
+            outlineStop.focusKey(current.after !== null ? competencyKey(current.after) : parentKey(current.parent));
+        }
+    };
+
+    /**
+     * Create the competency the inline editor holds, place it right after its anchor, and open the
+     * editor again for the next sibling. Core appends a new competency after its siblings; the moves up
+     * that bring it under its anchor go in one request.
+     *
+     * @param {number} parent The parent, ROOT for the top level.
+     * @param {number|null} after The sibling it follows, or null for a first child.
+     * @param {string} name The name.
+     * @param {string} idnumber The ID number.
+     * @returns {Promise} Resolves with the server's refusal in words, or null once created.
+     */
+    const saveCreate = async(parent: number, after: number | null, name: string, idnumber: string): Promise<string | null> => {
+        try {
+            const created = await track('editor', (async() => {
+                const id = await createCompetency(framework.id, parent, name, idnumber);
+                const total = (await browse(framework.id, parent, 0, 1)).total;
+                const anchor = after === null ? -1 : treeRef.current.branches[parent]?.ids.indexOf(after) ?? -1;
+                const place = after === null ? 0 : anchor + 1;
+                if (after === null || anchor >= 0) {
+                    await moveUpTimes(id, total - 1 - place);
+                }
+                await reloadBranch(parent, place + 1);
+                await refreshParent(parent);
+                commit((current) => setExpanded(current, parent, true));
+                setCount(await countCompetencies(framework.id));
+                announce(fill(labels.hubv2_editor_created, name));
+                return id;
+            })());
+            editorSerial.current++;
+            setEditor({mode: 'create', parent, after: created, serial: editorSerial.current});
+            return null;
+        } catch (error) {
+            return messageOf(error);
+        }
+    };
+
+    /**
+     * Rename the competency the inline editor holds, then close the editor.
+     *
+     * @param {number} id The competency.
+     * @param {string} name The new name.
+     * @returns {Promise} Resolves with the server's refusal in words, or null once stored.
+     */
+    const saveRename = async(id: number, name: string): Promise<string | null> => {
+        try {
+            await track('editor', renameCompetency(id, name).then(() => refreshNode(id)));
+            closeEditor();
+            announce(labels['core:changessaved']);
+            return null;
+        } catch (error) {
+            return messageOf(error);
+        }
+    };
+
+    /**
+     * Run an action on one competency.
+     *
+     * @param {string} id The action.
+     * @param {object} target The competency.
+     * @returns {void}
+     */
+    const runNodeAction = (id: ActionId, target: StructureNode): void => {
+        switch (id) {
+            case 'edit':
+                openForm(target, null);
+                break;
+            case 'rename':
+                startRename(target.id);
+                break;
+            case 'addchild':
+                openForm(null, target);
+                break;
+            case 'quicksibling':
+                startCreate(target.parentid, target.id);
+                break;
+            case 'quickchild':
+                startCreate(target.id, null);
+                break;
+            case 'moveto':
+                setMoveDialog(target.id);
+                break;
+            case 'movepick':
+                startMove(target);
+                break;
+            case 'moveup':
+            case 'movedown':
+                stepMove(target, id === 'moveup');
+                break;
+            case 'rule':
+                editRule(target);
+                break;
+            case 'links':
+                openLinks(target);
+                break;
+            case 'relate':
+                openRelated(target);
+                break;
+            case 'delete':
+                remove(target);
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
+     * Run an action on the move in progress or on the workspace.
+     *
+     * @param {string} id The action.
+     * @returns {void}
+     */
+    const runWorkspaceAction = (id: ActionId): void => {
+        const view = VIEW_ACTIONS[id];
+        if (view) {
+            switchLayout(view);
+            return;
+        }
+        switch (id) {
+            case 'moveroot':
+                pickParent(ROOT);
+                break;
+            case 'movecancel':
+                endMove(true);
+                break;
+            case 'expandall':
+                expandAll();
+                break;
+            case 'collapseall':
+                collapseEverything();
+                break;
+            case 'addtop':
+                openForm(null, null);
+                break;
+            case 'summary':
+                showSummary();
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
+     * Run an action of the registry on a competency (or on the workspace): the one implementation the
+     * panel, the menus, the palette and the keys reach. The registry's decision is read again here, so
+     * no place can run what the registry refuses.
+     *
+     * @param {string} id The action.
+     * @param {number|null} targetid The competency, or null for the framework.
+     * @returns {void}
+     */
+    const runAction = (id: ActionId, targetid: number | null): void => {
+        const context = contextFor(targetid);
+        if (actionState(id, context) !== 'enabled') {
+            return;
+        }
+        if (specOf(id).scope === 'node' && context.node) {
+            runNodeAction(id, context.node);
+        } else {
+            runWorkspaceAction(id);
+        }
+    };
+
+    /**
+     * Open a competency's menu under an element of a pane, when it has an action to offer.
+     *
+     * @param {number} id The competency.
+     * @param {HTMLElement} anchor The element the menu hangs from.
+     * @param {string} origin Where it was opened from: a pane, or the panel's button.
+     * @returns {boolean} Whether it opened.
+     */
+    const openMenu = (id: number, anchor: HTMLElement, origin: Pane | 'panel'): boolean => {
+        if (actionsFor(['node'], contextFor(id)).length === 0) {
+            return false;
+        }
+        setMenu((current) => (current && current.id === id && current.anchor === anchor ? null : {id, anchor, origin}));
+        return true;
+    };
+
+    /**
+     * Give the focus back after a layer closed (focusreturn.focusReturn): to the control that opened it,
+     * or to an item, in the pane the decision names.
+     *
+     * @param {object} origin What opened the layer.
+     * @param {HTMLElement|null} control The control that opened it, if one did.
+     * @param {string} key The item's key.
+     * @returns {void}
+     */
+    const giveFocusBack = (origin: LayerOrigin, control: HTMLElement | null, key: string): void => {
+        const target = focusReturn(origin, lastPane.current, panesRef.current);
+        if (target.kind === 'control' && control) {
+            control.focus();
+        } else if (target.kind === 'item' && target.pane === 'outline') {
+            outlineStop.focusKey(key);
+        } else if (target.kind === 'item') {
+            mapStop.focusKey(key, false);
+        }
+    };
+
+    /**
+     * Close the open menu and give the focus back to what opened it: the item it belongs to (the row or
+     * node that owns the pane's Tab stop, also when its "more" button opened it), or the panel's button.
+     *
+     * @param {boolean} outside Whether a press outside the menu closed it.
+     * @returns {void}
+     */
+    const closeMenu = (outside: boolean = false): void => {
+        const current = menu;
+        if (!current) {
+            return;
+        }
+        setMenu(null);
+        const origin: LayerOrigin = current.origin === 'panel'
+            ? {kind: 'control', connected: current.anchor.isConnected}
+            : {kind: 'item', pane: current.origin};
+        /**
+         * Give the focus back to the item, or to the panel's button.
+         *
+         * @returns {void}
+         */
+        const back = (): void => giveFocusBack(origin, current.anchor, competencyKey(current.id));
+        if (!outside) {
+            back();
+            return;
+        }
+        // A press outside may land on a control that takes the focus; only a press on nothing (which leaves
+        // the focus on the body) gives it back, once the press is over.
+        document.addEventListener('pointerup', () => {
+            window.setTimeout(() => {
+                const active = document.activeElement;
+                if (!active || active === document.body) {
+                    back();
+                }
+            }, 0);
+        }, {once: true, capture: true});
+    };
+
+    /**
+     * Act on a command key pressed on an item of a pane (commands.shortcutAction).
+     *
+     * The menu key selects the item and opens its menu on it; a reorder key at an end moves nothing and
+     * says so; any other command runs when the registry offers it for the item. On the framework's row,
+     * Ctrl+Shift+Enter opens the editor for a new first top-level competency.
+     *
+     * @param {string} command The command.
+     * @param {string} key The focused item's key.
+     * @param {HTMLElement} element The focused item.
+     * @param {string} from The pane.
+     * @returns {boolean} Whether the key was used.
+     */
+    const keyCommand = (command: KeyCommand, key: string, element: HTMLElement, from: 'outline' | 'map'): boolean => {
+        if (key === FRAMEWORK_ID) {
+            const allowed = framework.canmanage && movingRef.current === null && layoutRef.current !== 'map';
+            if (command === 'quickchild' && from === 'outline' && allowed) {
+                startCreate(ROOT, null);
+                return true;
+            }
+            return false;
+        }
+        const id = competencyOf(key);
+        if (id === null || command === 'palette') {
+            return false;
+        }
+        if (command === 'menu') {
+            if (actionsFor(['node'], contextFor(id)).length === 0) {
+                return false;
+            }
+            if (selectedRef.current !== id) {
+                choose(id);
+            }
+            setMenu({id, anchor: element, origin: from});
+            return true;
+        }
+        const context = contextFor(id);
+        const state = actionState(command, context);
+        if ((command === 'moveup' || command === 'movedown') && state === 'disabled' && context.node) {
+            announce(fill(command === 'moveup' ? labels.hubv2_reorder_first : labels.hubv2_reorder_last, context.node.shortname));
+            return true;
+        }
+        if (state !== 'enabled') {
+            return false;
+        }
+        runAction(command, id);
+        return true;
+    };
+
+    /**
+     * Ctrl+K (Cmd+K on a Mac) opens the palette while the focus is anywhere inside the workspace; outside
+     * it the browser keeps its own shortcut.
+     *
+     * @param {object} event The key event.
+     * @returns {void}
+     */
+    const onRootKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
+        if (shortcutAction(event, 'map') !== 'palette' || palette || moveDialog !== null) {
+            return;
+        }
+        event.preventDefault();
+        setMenu(null);
+        setPalette(true);
+    };
+
+    /**
+     * Where the focus goes when a dialogue closes and the element that opened it is gone, or was another
+     * layer: the selected item of the pane that last had the focus.
+     *
+     * @returns {void}
+     */
+    const restoreFocus = (): void => {
+        giveFocusBack({kind: 'layer'}, null, entryKey(treeRef.current, navOrder(treeRef.current), selectedRef.current));
+    };
+
+    /**
+     * Turn one of the outline's display options on or off, kept where the classic list keeps it.
+     *
+     * @param {string} option The option.
+     * @returns {void}
+     */
+    const toggleDisplay = (option: 'idnumber' | 'taxonomy'): void => {
+        const next = {...display, [option]: !display[option]};
+        setDisplay(next);
+        load('local_dimensions/central/preferences')
+            .then((preferences) => {
+                preferences.saveDisplay({structure: option === 'idnumber' ? {id: next.idnumber} : {tax: next.taxonomy}});
+                return null;
+            })
+            .catch(notifyError);
+    };
+
+    /**
+     * Walk the tree with the keyboard in either pane (keynav.keyAction).
+     *
+     * The item the key acts on is the pane's Tab stop, which moves at once, and the walk is read from
+     * the latest tree, so a key repeated before React renders acts on where the previous one went. A
+     * command key (commands.shortcutAction) acts on the same item before the walk sees it.
+     *
+     * @param {object} event The key event.
+     * @param {object} stop The pane's Tab stop.
+     * @param {string} selector The CSS selector of the pane's items.
+     * @param {string} from The pane.
+     * @returns {void}
+     */
+    const walk = (event: ReactKeyboardEvent<HTMLElement>, stop: Roving, selector: string, from: 'outline' | 'map'): void => {
+        const target = event.target as HTMLElement;
+        const element = target.closest<HTMLElement>(selector);
+        if (!element || !event.currentTarget.contains(element)) {
+            return;
+        }
+        // Enter and Space on an item's own button (focused by a click) are the button's.
+        if (element !== target && (event.key === 'Enter' || event.key === ' ')) {
+            return;
+        }
+        const command = shortcutAction(event, from);
+        if (command !== null && command !== 'palette') {
+            if (keyCommand(command, stop.activeRef.current, element, from)) {
+                event.preventDefault();
+            }
+            return;
+        }
+        const action = keyAction(navOrder(treeRef.current), stop.activeRef.current, event, rtl);
+        if (!action) {
+            if (from === 'outline' && isTypeAheadKey(event) && typeTo(event.key, event.timeStamp)) {
+                event.preventDefault();
+            }
+            return;
+        }
+        event.preventDefault();
+        switch (action.type) {
+            case 'focus':
+                stop.focusKey(action.key);
+                break;
+            case 'expand':
+                openBranch(action.id, from === 'map');
+                break;
+            case 'collapse':
+                closeBranch(action.id);
+                break;
+            case 'select':
+                activate(action.id, from);
+                break;
+            case 'loadmore':
+                loadMoreAndFocus(action.parent, stop);
+                break;
+            default:
+                break;
+        }
+    };
+
+    const actions: PanelActions = {
+        /**
+         * Run one of the panel's actions on the selected competency.
+         *
+         * @param {string} id The action.
+         * @returns {void}
+         */
+        run: (id) => runAction(id, selectedRef.current),
+        /**
+         * Open the selected competency's menu under the panel's "More actions" button.
+         *
+         * @param {HTMLElement} anchor The button.
+         * @returns {void}
+         */
+        menu: (anchor) => {
+            if (selectedRef.current !== null) {
+                openMenu(selectedRef.current, anchor, 'panel');
+            }
+        },
+        reveal: revealItem,
+    };
+
+    // The outline's display options are the classic list's, read where it keeps them.
+    useEffect(() => {
+        load('local_dimensions/central/preferences')
+            .then((preferences) => {
+                const saved = preferences.getDisplay().structure;
+                setDisplay({idnumber: !!saved.id, taxonomy: !!saved.tax});
+                return null;
+            })
+            .catch(notifyError);
+    }, []);
+
+    // The inline editor lives in the outline: a view without it closes the editor.
+    useEffect(() => {
+        if (!panes.outline) {
+            setEditor(null);
+        }
+    }, [panes.outline]);
 
     // Escape leaves the move mode, wherever the focus is.
     useEffect(() => {
@@ -1332,9 +1892,28 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             .finally(() => done?.());
     }, [graph, flow, rtl]);
 
+    // The registry's decision for the selected competency: the panel's buttons, and whether its row and
+    // its card carry the "more" button.
+    const selectedcontext = contextFor(selected);
+    const nodeactions = actionsFor(['node'], selectedcontext);
+    const menuFor = selected !== null && nodeactions.length > 0 ? selected : null;
+    const menuOpen = menu ? menu.id : null;
+    const openMenuRef = useRef(openMenu);
+    openMenuRef.current = openMenu;
+    /**
+     * Open a map card's menu under its "more" button; stable, so the cards are not drawn again for it.
+     *
+     * @param {number} id The competency.
+     * @param {HTMLElement} anchor The button.
+     * @returns {void}
+     */
+    const openMapMenu = useCallback((id: number, anchor: HTMLElement): void => {
+        openMenuRef.current(id, anchor, 'map');
+    }, []);
+
     const canvasActions: CanvasActions = useMemo(
-        () => ({labels, pagesize, rtl, toggle: toggleOnMap, loadMore}),
-        [labels, pagesize, rtl, toggleOnMap, loadMore]
+        () => ({labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu}),
+        [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu]
     );
 
     const outlineActions: OutlineActions = {
@@ -1364,7 +1943,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
          *
          * @returns {void}
          */
-        add: () => addChild(null),
+        add: () => runAction('addtop', null),
         /**
          * Walk the outline with the tree's keys.
          *
@@ -1372,9 +1951,112 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
          * @returns {void}
          */
         onKeyDown: (event) => walk(event, outlineStop, ROW_SELECTOR, 'outline'),
-        onFocus: outlineStop.onFocus,
+        /**
+         * Note the outline as the pane that last had the focus, then follow its Tab stop.
+         *
+         * @param {object} event The focus event.
+         * @returns {void}
+         */
+        onFocus: (event) => {
+            lastPane.current = 'outline';
+            outlineStop.onFocus(event);
+        },
         onBlur: outlineStop.onBlur,
+        /**
+         * Open the selected row's menu under its "more" button.
+         *
+         * @param {number} id The competency.
+         * @param {HTMLElement} anchor The button.
+         * @returns {void}
+         */
+        openMenu: (id, anchor) => {
+            openMenu(id, anchor, 'outline');
+        },
+        toggleDisplay,
     };
+
+    /**
+     * The keys the outline's foot names: the authoring keys for a manager, the palette for everyone.
+     *
+     * @returns {Array} The hints.
+     */
+    const outlineHints = (): OutlineHint[] => {
+        const hints: OutlineHint[] = [];
+        if (framework.canmanage) {
+            const keys: [Shortcut, string][] = [
+                [{key: 'F10', shift: true}, labels.hubv2_hint_actions],
+                [{key: 'F2'}, labels.hubv2_cmd_rename],
+                [{key: 'Enter', mod: true}, labels.hubv2_cmd_quicksibling],
+                [{key: 'Enter', mod: true, shift: true}, labels.hubv2_cmd_quickchild],
+                [{key: '↑↓', alt: true}, labels.hubv2_hint_reorder],
+            ];
+            keys.forEach(([shortcut, label]) => hints.push({shortcut, label}));
+        }
+        hints.push({shortcut: PALETTE_SHORTCUT, label: labels.hubv2_commands});
+        return hints;
+    };
+
+    /**
+     * The inline editor, drawn by the outline after its anchor's row or in place of the renamed one.
+     *
+     * @returns {object|null} The editor and its place, or null when none is open or its row is not drawn.
+     */
+    const outlineEditor = (): OutlineEditor | null => {
+        if (editor && editor.mode === 'rename') {
+            const renamedid = editor.id;
+            const renamed = tree.nodes[renamedid];
+            const row = rows.find((item) => item.key === competencyKey(renamedid));
+            if (renamed && row) {
+                return {key: row.key, replace: true, node: (
+                    <Editor key={`rename-${renamedid}`} labels={labels} mode="rename"
+                        label={fill(labels.hubv2_editor_rename, renamed.shortname)} level={row.level}
+                        initialname={renamed.shortname} initialidnumber=""
+                        onSave={(name) => saveRename(renamedid, name)} onCancel={closeEditor} />
+                )};
+            }
+        } else if (editor) {
+            const parentkey = parentKey(editor.parent);
+            const parentrow = rows.find((item) => item.key === parentkey);
+            const slot = editorSlot(rows, parentkey, editor.after === null ? null : competencyKey(editor.after));
+            if (parentrow && slot) {
+                const siblings = (tree.branches[editor.parent]?.ids ?? []).map((id) => tree.nodes[id]?.idnumber ?? '');
+                const taken = Object.values(tree.nodes).map((known) => known.idnumber);
+                const {parent, after} = editor;
+                return {key: slot, replace: false, node: (
+                    <Editor key={`create-${editor.serial}`} labels={labels} mode="create"
+                        label={fill(labels.hubv2_editor_new, parentrow.name)} level={parentrow.level + 1}
+                        initialname="" initialidnumber={suggestIdnumber(siblings, taken)}
+                        onSave={(name, idnumber) => saveCreate(parent, after, name, idnumber)} onCancel={closeEditor} />
+                )};
+            }
+        }
+        return null;
+    };
+
+    /**
+     * An action as the palette lists it.
+     *
+     * @param {object} view The action and its state.
+     * @returns {object} The entry.
+     */
+    const entryOf = (view: ActionView): PaletteEntry =>
+        ({id: view.spec.id, label: labels[view.spec.label], icon: view.spec.icon, shortcut: view.spec.shortcut});
+
+    /**
+     * The open menu's items: the registry's actions on its competency, a separator between groups.
+     *
+     * @param {number} id The competency.
+     * @returns {Array} The items.
+     */
+    const menuItems = (id: number): MenuItem[] => actionsFor(['node'], contextFor(id)).map((view, index, all) => ({
+        id: view.spec.id,
+        label: labels[view.spec.label],
+        icon: view.spec.icon,
+        shortcut: view.spec.shortcut,
+        disabled: view.state === 'disabled',
+        danger: view.spec.danger,
+        separator: index > 0 && all[index - 1].spec.group !== view.spec.group,
+    }));
 
     /**
      * Nothing to say.
@@ -1400,9 +2082,95 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }), [labels]);
 
     const node = selected !== null ? tree.nodes[selected] ?? null : null;
-    const siblings = node ? tree.branches[node.parentid] : undefined;
-    const position = node && siblings ? siblings.ids.indexOf(node.id) : -1;
-    const islast = !!siblings && position === siblings.ids.length - 1 && siblings.ids.length >= siblings.total;
+
+    /**
+     * The pane whose bottom decides whether a menu goes above its anchor; none for the panel's button.
+     *
+     * @param {string} origin Where the menu was opened.
+     * @returns {HTMLElement|null} The pane's element.
+     */
+    const paneOf = (origin: Pane | 'panel'): HTMLElement | null => {
+        if (origin === 'panel') {
+            return null;
+        }
+        return origin === 'outline' ? listRef.current : canvasRef.current;
+    };
+
+    /**
+     * The layers over the workspace: a node's menu, the command palette, the "Move to" dialogue.
+     *
+     * @returns {object} The layers that are open.
+     */
+    const overlays = (): ReactNode => {
+        const menunode = menu ? tree.nodes[menu.id] : undefined;
+        const movingnode = moveDialog !== null ? tree.nodes[moveDialog] : undefined;
+        const offered = palette ? actionsFor(['node', 'move', 'workspace'], selectedcontext) : [];
+        const enabled = offered.filter((view) => view.state === 'enabled');
+        return (
+            <>
+                {menu && menunode ? (
+                    <Menu
+                        label={fill(labels.hubv2_actionsof, menunode.shortname)}
+                        items={menuItems(menu.id)}
+                        anchor={menu.anchor}
+                        pane={paneOf(menu.origin)}
+                        rtl={rtl}
+                        mac={mac}
+                        onRun={(id) => {
+                            closeMenu();
+                            runAction(id as ActionId, menu.id);
+                        }}
+                        onClose={closeMenu}
+                    />
+                ) : null}
+                {palette ? (
+                    <Palette
+                        labels={labels}
+                        mac={mac}
+                        frameworkid={framework.id}
+                        actionstitle={node ? fill(labels.hubv2_palette_on, node.shortname) : labels.hubv2_actions}
+                        actions={enabled.filter((view) => view.spec.scope === 'node').map(entryOf)}
+                        commands={enabled.filter((view) => view.spec.scope !== 'node').map(entryOf)}
+                        onRun={(id, hit) => {
+                            setPalette(false);
+                            if (hit) {
+                                revealItem(hit);
+                            } else {
+                                runAction(id as ActionId, selectedRef.current);
+                            }
+                        }}
+                        onClose={() => setPalette(false)}
+                        onLostFocus={restoreFocus}
+                    />
+                ) : null}
+                {movingnode ? (
+                    <MoveDialog
+                        labels={labels}
+                        tree={tree}
+                        moving={movingnode}
+                        frameworkid={framework.id}
+                        frameworkname={framework.shortname}
+                        rtl={rtl}
+                        pagesize={pagesize}
+                        canpick={panes.map}
+                        loadBranch={(parent, more) => track('children', loadPage(parent, more))}
+                        freshParent={freshParent}
+                        onPick={() => {
+                            setMoveDialog(null);
+                            startMove(movingnode);
+                        }}
+                        onCommit={(target) => {
+                            setMoveDialog(null);
+                            moveUnder(movingnode, target, false);
+                        }}
+                        onClose={() => setMoveDialog(null)}
+                        onLostFocus={restoreFocus}
+                    />
+                ) : null}
+            </>
+        );
+    };
+
     const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
 
     const relatedcount = node && usage !== null ? related.length : null;
@@ -1413,7 +2181,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }
 
     return (
-        <div className={rootclasses.join(' ')} style={widthstyle}>
+        <div className={rootclasses.join(' ')} style={widthstyle} ref={rootRef} onKeyDown={onRootKeyDown}>
             <div className="local-dimensions-hubv2-main">
                 <div className="local-dimensions-hubv2-bar">
                     <Search labels={labels} frameworkid={framework.id} onChoose={actions.reveal} />
@@ -1422,6 +2190,21 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             <i className="fa fa-search-plus me-1" aria-hidden="true" />{labels.hubv2_zoomhint}
                         </span>
                     ) : null}
+                    <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary local-dimensions-hubv2-cmdbtn"
+                        aria-haspopup="dialog"
+                        aria-keyshortcuts={ariaShortcut(PALETTE_SHORTCUT, mac)}
+                        onClick={() => {
+                            setMenu(null);
+                            setPalette(true);
+                        }}
+                    >
+                        {labels.hubv2_commands}
+                        <span className="local-dimensions-hubv2-keys" aria-hidden="true">
+                            {shortcutCaps(PALETTE_SHORTCUT, mac).map((cap) => <kbd key={cap}>{cap}</kbd>)}
+                        </span>
+                    </button>
                 </div>
                 <div className="local-dimensions-hubv2-panes" ref={panesBox}>
                     {panes.outline ? (
@@ -1441,6 +2224,12 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             pagesize={pagesize}
                             listRef={listRef}
                             actions={outlineActions}
+                            display={display}
+                            menuFor={menuFor}
+                            menuOpen={menuOpen}
+                            editor={outlineEditor()}
+                            hints={outlineHints()}
+                            mac={mac}
                         />
                     ) : null}
                     {layout === 'both' ? (
@@ -1461,7 +2250,10 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             aria-label={labels.hubv2_canvas}
                             ref={canvasRef}
                             onKeyDown={(event) => walk(event, mapStop, NODE_SELECTOR, 'map')}
-                            onFocus={mapStop.onFocus}
+                            onFocus={(event) => {
+                                lastPane.current = 'map';
+                                mapStop.onFocus(event);
+                            }}
                             onBlur={mapStop.onBlur}
                         >
                             <CanvasContext.Provider value={canvasActions}>
@@ -1516,11 +2308,16 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 usage={usage}
                 related={related}
                 moving={movingnode}
-                canUp={position > 0}
-                canDown={position >= 0 && !islast}
+                nodeactions={nodeactions}
+                menuopen={menu !== null && menu.origin === 'panel'}
+                moveactions={actionsFor(['move'], selectedcontext)}
+                topactions={actionsFor(['workspace'], selectedcontext).filter((view) => view.spec.id === 'addtop')}
+                summary={summaryLines(labels, summaryFacts(tree, count))}
+                summaryRef={summaryRef}
                 actions={actions}
             />
             <div className="visually-hidden" aria-live="polite">{announcement}</div>
+            {overlays()}
         </div>
     );
 };

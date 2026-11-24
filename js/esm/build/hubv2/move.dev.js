@@ -16,16 +16,18 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 import { escapeHtml } from "./html";
 import { fill, fillObject } from "./strings";
 const hasRule = /* @__PURE__ */ __name((parent) => !!parent && !!parent.ruletype, "hasRule");
+const ruleNotes = /* @__PURE__ */ __name((labels, oldparent, newparent, escape = (text) => text) => [
+  hasRule(oldparent) ? fill(labels.hubv2_moverule_oldparent, escape(oldparent.shortname)) : "",
+  hasRule(newparent) ? fill(labels.hubv2_moverule_newparent, escape(newparent.shortname)) : ""
+].filter((note) => note !== ""), "ruleNotes");
 const moveBody = /* @__PURE__ */ __name((labels, name, oldparent, newparent) => {
   const safe = escapeHtml(name);
   const question = newparent ? fillObject(labels.hubv2_moveconfirm, { name: safe, parent: escapeHtml(newparent.shortname) }) : fill(labels.hubv2_moveconfirmroot, safe);
-  const notes = [
-    hasRule(oldparent) ? fill(labels.hubv2_moverule_oldparent, escapeHtml(oldparent.shortname)) : "",
-    hasRule(newparent) ? fill(labels.hubv2_moverule_newparent, escapeHtml(newparent.shortname)) : ""
-  ].filter((note) => note !== "").map((note) => `<p>${note}</p>`).join("");
+  const notes = ruleNotes(labels, oldparent, newparent, escapeHtml).map((note) => `<p>${note}</p>`).join("");
   return `<p>${question}</p>${notes}`;
 }, "moveBody");
 export {
-  moveBody
+  moveBody,
+  ruleNotes
 };
 //# sourceMappingURL=move.dev.js.map

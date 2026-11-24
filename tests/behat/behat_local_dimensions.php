@@ -256,6 +256,7 @@ class behat_local_dimensions extends behat_base {
      * | Page type       | Identifier meaning                               | Description            |
      * | View plan       | Learning plan name                               | The plan overview      |
      * | View competency | Learning plan name > competency idnumber         | The competency tracker |
+     * | Competency hub  | Course category idnumber                         | The hub's category entry |
      *
      * @param string $type Identifies which type of page this is.
      * @param string $identifier Identifies the particular page.
@@ -273,6 +274,12 @@ class behat_local_dimensions extends behat_base {
                 return new moodle_url('/local/dimensions/view-competency.php', [
                     'id' => $this->get_plan_id_by_name($planname),
                     'competencyid' => $this->get_competency_id_by_idnumber($idnumber),
+                ]);
+            case 'competency hub':
+                // The category's own entry (its "More" menu links here), which a reader of the category's
+                // competencies may open too: the Site administration entry wants competencymanage.
+                return new moodle_url('/local/dimensions/central.php', [
+                    'pagecontextid' => \context_coursecat::instance($this->get_category_id($identifier))->id,
                 ]);
             default:
                 throw new Exception('Unrecognised local_dimensions page type "' . $type . '."');
@@ -513,6 +520,22 @@ class behat_local_dimensions extends behat_base {
         global $DB;
 
         return (int) $DB->get_field('competency_plan', 'id', ['name' => $name], MUST_EXIST);
+    }
+
+    /**
+     * A course category's id from its idnumber.
+     *
+     * @param string $idnumber The category's idnumber.
+     * @return int The id.
+     * @throws Exception When no category has it.
+     */
+    protected function get_category_id(string $idnumber): int {
+        global $DB;
+        $id = $DB->get_field('course_categories', 'id', ['idnumber' => $idnumber]);
+        if (!$id) {
+            throw new Exception('No course category has the idnumber "' . $idnumber . '".');
+        }
+        return (int) $id;
     }
 
     /**

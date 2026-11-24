@@ -32,6 +32,11 @@ const selectionData = /* @__PURE__ */ __name((competencyid) => callMany([
 const deleteCheck = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_competency_delete_check", { competencyid }), "deleteCheck");
 const deleteCompetency = /* @__PURE__ */ __name((id) => call("core_competency_delete_competency", { id }), "deleteCompetency");
 const moveOne = /* @__PURE__ */ __name((id, up) => call(up ? "core_competency_move_up_competency" : "core_competency_move_down_competency", { id }), "moveOne");
+const moveUpTimes = /* @__PURE__ */ __name((id, times) => times > 0 ? callMany(Array.from({ length: times }, () => ({ methodname: "core_competency_move_up_competency", args: { id } }))) : Promise.resolve(null), "moveUpTimes");
+const createCompetency = /* @__PURE__ */ __name((frameworkid, parentid, shortname, idnumber) => call("core_competency_create_competency", {
+  competency: { shortname, idnumber, competencyframeworkid: frameworkid, parentid }
+}).then((record) => Number(record.id)), "createCompetency");
+const renameCompetency = /* @__PURE__ */ __name((id, shortname) => call("core_competency_update_competency", { competency: { id, shortname } }), "renameCompetency");
 const setParent = /* @__PURE__ */ __name((competencyid, parentid) => call("core_competency_set_parent_competency", { competencyid, parentid }), "setParent");
 const updateRule = /* @__PURE__ */ __name((id, config) => call("core_competency_update_competency", {
   competency: { id, ruletype: config.ruletype, ruleoutcome: config.ruleoutcome, ruleconfig: config.ruleconfig }
@@ -43,10 +48,13 @@ export {
   allChildren,
   browse,
   countCompetencies,
+  createCompetency,
   deleteCheck,
   deleteCompetency,
   getNode,
   moveOne,
+  moveUpTimes,
+  renameCompetency,
   search,
   selectionData,
   setParent,

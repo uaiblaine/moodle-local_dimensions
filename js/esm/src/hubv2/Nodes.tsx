@@ -20,7 +20,8 @@
  * keyboard (keynav.ts) moves the focus between; the card holds the one control a node has of its
  * own, the button that opens or closes its children, for the pointer only: tabindex -1 keeps the map
  * one Tab stop, Right and Left do its work from the keyboard, and it stops its click from also
- * selecting the node. The "load more" card's button is the same.
+ * selecting the node. The "load more" card's button is the same, and so is the selected card's "more"
+ * button, which opens its actions' menu (Shift+F10 on the node does it from the keyboard).
  *
  * In a language written right to left the tree grows leftwards: a card's parent edge arrives on its
  * right and its children's leave from its left, and the chevrons point the other way. React Flow's
@@ -49,6 +50,11 @@ export type CanvasActions = {
     rtl: boolean,
     toggle: (id: number) => void,
     loadMore: (parent: number) => void,
+    // The competency whose card carries the "more" button (the selected one, when it has actions), the one
+    // whose menu is open, and opening it under the button.
+    menuFor: number | null,
+    menuOpen: number | null,
+    openMenu: (id: number, anchor: HTMLElement) => void,
 };
 
 /** The canvas's actions, provided by Hub. */
@@ -156,7 +162,7 @@ export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNod
  * @returns {ReactNode} The card.
  */
 export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
-    const {labels, rtl, toggle} = useCanvas();
+    const {labels, rtl, toggle, menuFor, menuOpen, openMenu} = useCanvas();
     const {node, expanded, childcount, depth, moving} = data as CompetencyData;
     // The admin's colours go straight into the style, never through the stylesheet: only a hex value passes.
     const tilestyle = isHexColour(node.bgcolor)
@@ -192,6 +198,23 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
                 <span className="local-dimensions-hubv2-card-title">{node.shortname}</span>
                 <span className="local-dimensions-hubv2-card-sub">{node.ruletype ? node.rulelabel : node.taxonomy}</span>
             </span>
+            {menuFor === node.id ? (
+                <button
+                    type="button"
+                    className="local-dimensions-hubv2-iconbtn local-dimensions-hubv2-cardmenu nodrag nopan"
+                    aria-label={fill(labels.hubv2_actionsof, node.shortname)}
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen === node.id}
+                    tabIndex={-1}
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                        event.stopPropagation();
+                        openMenu(node.id, event.currentTarget);
+                    }}
+                    onKeyDown={keepKeys}
+                >
+                    <i className="fa fa-ellipsis-vertical" aria-hidden="true" />
+                </button>
+            ) : null}
             {shown ? (
                 <span className="local-dimensions-hubv2-pill" title={countlabel}>
                     <span aria-hidden="true">{shown.count}</span>

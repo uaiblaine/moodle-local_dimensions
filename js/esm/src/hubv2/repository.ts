@@ -144,6 +144,44 @@ export const moveOne = (id: number, up: boolean): Promise<unknown> =>
     call(up ? 'core_competency_move_up_competency' : 'core_competency_move_down_competency', {id});
 
 /**
+ * Move a competency up several places among its siblings, in one request: core runs the calls in
+ * order, each one place.
+ *
+ * @param {number} id The competency.
+ * @param {number} times How many places.
+ * @returns {Promise} Resolves once moved.
+ */
+export const moveUpTimes = (id: number, times: number): Promise<unknown> => (times > 0
+    ? callMany(Array.from({length: times}, () => ({methodname: 'core_competency_move_up_competency', args: {id}})))
+    : Promise.resolve(null));
+
+/**
+ * Create a competency from a name and an ID number, as the outline's inline editor does. Core appends it
+ * after its parent's children, checks moodle/competency:competencymanage in the framework's context, and
+ * refuses an empty or taken ID number.
+ *
+ * @param {number} frameworkid The framework.
+ * @param {number} parentid The parent, 0 for the top level.
+ * @param {string} shortname The name.
+ * @param {string} idnumber The ID number.
+ * @returns {Promise} Resolves with the new competency's id.
+ */
+export const createCompetency = (frameworkid: number, parentid: number, shortname: string, idnumber: string): Promise<number> =>
+    call<{id: number}>('core_competency_create_competency', {
+        competency: {shortname, idnumber, competencyframeworkid: frameworkid, parentid},
+    }).then((record) => Number(record.id));
+
+/**
+ * Rename a competency. Only the id and the name are sent: core leaves every omitted field alone.
+ *
+ * @param {number} id The competency.
+ * @param {string} shortname The new name.
+ * @returns {Promise} Resolves once stored.
+ */
+export const renameCompetency = (id: number, shortname: string): Promise<unknown> =>
+    call('core_competency_update_competency', {competency: {id, shortname}});
+
+/**
  * Give a competency a new parent; core appends it after the new parent's children.
  *
  * @param {number} competencyid The competency.

@@ -1,6 +1,6 @@
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-import { jsxDEV } from "react/jsx-dev-runtime";
+import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
 /**
  * The workspace of the hub's Competencies tab: a framework's tree as an outline (Outline.tsx, an ARIA
  * tree) and as a map of nodes (React Flow), side by side or one at a time, with a detail panel.
@@ -24,11 +24,36 @@ import { jsxDEV } from "react/jsx-dev-runtime";
  * competency is kept in the address (deeplink.ts), and a competency the link named is revealed at
  * mount when the server found it in this framework (props.reveal).
  *
+ * Commands, not gestures: every action is in the action registry (commands.ts) and runs through one
+ * function here (runAction), whether the panel's button, a node's menu (Menu.tsx, the "more" button or
+ * Shift+F10), the command palette (Palette.tsx, Ctrl+K while the focus is in the workspace) or a key on
+ * an item (Alt+Up and Alt+Down reorder; F2, Ctrl+Enter and Ctrl+Shift+Enter open the outline's inline
+ * editor, Editor.tsx) asked for it. A competency moves under a new parent by picking it in a pane or
+ * through "Move to" (MoveDialog.tsx); both end in moveUnder.
+ *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  PALETTE_SHORTCUT,
+  VIEW_ACTIONS,
+  actionState,
+  actionsFor,
+  ariaShortcut,
+  isMac,
+  shortcutAction,
+  shortcutCaps,
+  specOf
+} from "./commands";
+import Editor from "./Editor";
+import { focusReturn } from "./focusreturn";
+import { suggestIdnumber } from "./idnumber";
+import Menu from "./Menu";
+import MoveDialog from "./MoveDialog";
+import Palette from "./Palette";
+import { summaryFacts, summaryLines } from "./summary";
 import {
   Background,
   BackgroundVariant,
@@ -39,11 +64,11 @@ import {
   useReactFlow
 } from "../../vendor/xyflow/xyflow.js";
 import { load, notifyError } from "./amd";
-import { CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf, moreKey } from "./graph";
+import { CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf, moreKey, parentKey } from "./graph";
 import { EXPAND_ALL_BOUND, collapseAll, expandStep } from "./expandall";
-import { branchTarget, isTypeAheadKey, keyAction, navOrder, nodeName, panTarget, typeAhead } from "./keynav";
+import { branchTarget, entryKey, isTypeAheadKey, keyAction, navOrder, nodeName, panTarget, typeAhead } from "./keynav";
 import Outline, { OUTLINE_ID } from "./Outline";
-import { outlineRows } from "./outlinerows";
+import { editorSlot, outlineRows } from "./outlinerows";
 import { useRoving } from "./roving";
 import { LAYOUT_EVENT, activation, isLayout, panesOf } from "./selection";
 import Splitter from "./Splitter";
@@ -60,16 +85,19 @@ import {
   allChildren,
   browse,
   countCompetencies,
+  createCompetency,
   deleteCheck,
   deleteCompetency,
   getNode,
   moveOne,
+  moveUpTimes,
+  renameCompetency,
   selectionData,
   setParent,
   updateRule
 } from "./repository";
 import Search from "./Search";
-import { fill, fillCount, loadLabels } from "./strings";
+import { fill, fillCount, fillObject, loadLabels } from "./strings";
 import {
   ROOT,
   ancestors,
@@ -97,6 +125,12 @@ const ROW_SELECTOR = '[role="treeitem"]';
 const OVERLAYS = ".react-flow__minimap, .react-flow__controls";
 const TYPE_AHEAD_PAUSE = 500;
 const EXPAND_ALL_PARALLEL = 4;
+const messageOf = /* @__PURE__ */ __name((error) => {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return String(error);
+}, "messageOf");
 const LAYOUT_CLASSES = {
   outline: "local-dimensions-hubv2-layout-outline",
   map: "local-dimensions-hubv2-layout-map",
@@ -135,6 +169,24 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const canvasRef = useRef(null);
   const listRef = useRef(null);
   const typed = useRef({ text: "", at: 0 });
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
+  const countRef = useRef(count);
+  countRef.current = count;
+  const expandingRef = useRef(expanding);
+  expandingRef.current = expanding;
+  const [menu, setMenu] = useState(null);
+  const [palette, setPalette] = useState(false);
+  const [moveDialog, setMoveDialog] = useState(null);
+  const [editor, setEditor] = useState(null);
+  const editorRef = useRef(null);
+  editorRef.current = editor;
+  const editorSerial = useRef(0);
+  const [display, setDisplay] = useState({ idnumber: false, taxonomy: false });
+  const rootRef = useRef(null);
+  const summaryRef = useRef(null);
+  const mac = useMemo(isMac, []);
+  const lastPane = useRef(null);
   const revealing = useRef(null);
   const revealed = useRef(null);
   const settleReveal = /* @__PURE__ */ __name(() => {
@@ -150,8 +202,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     const loaded = append ? treeRef.current.branches[parent]?.ids.length ?? 0 : 0;
     return browse(framework.id, parent, loaded, pagesize).then((page) => commit((current) => insertChildren(current, parent, page, append)));
   }, [commit, framework.id, pagesize]);
-  const reloadBranch = useCallback(async (parent) => {
-    const wanted = Math.max(treeRef.current.branches[parent]?.ids.length ?? 0, 1);
+  const reloadBranch = useCallback(async (parent, atleast = 1) => {
+    const wanted = Math.max(treeRef.current.branches[parent]?.ids.length ?? 0, atleast, 1);
     const items = [];
     let total = 0;
     do {
@@ -306,12 +358,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     }
   }, [labels]);
   const panTo = /* @__PURE__ */ __name((key) => {
-    const position2 = graphRef.current?.positions[key];
+    const position = graphRef.current?.positions[key];
     const canvas = measureCanvas();
-    if (!position2 || !canvas) {
+    if (!position || !canvas) {
       return;
     }
-    const target = panTarget({ ...position2, ...CARD }, flow.getViewport(), canvas.view, canvas.obstacles);
+    const target = panTarget({ ...position, ...CARD }, flow.getViewport(), canvas.view, canvas.obstacles);
     if (target) {
       flow.setCenter(target.x, target.y, { zoom: flow.getZoom(), duration: motionDuration(200) }).catch(() => null);
     }
@@ -393,6 +445,44 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       mapStop.focusKey(key, pan);
     }
   }, "focusItem");
+  const freshParent = useCallback(async (id) => {
+    if (id === ROOT) {
+      return null;
+    }
+    const answer = await getNode(id);
+    return answer.found && answer.node ? answer.node : null;
+  }, []);
+  const moveUnder = /* @__PURE__ */ __name((source, target, confirm) => {
+    if (target !== ROOT && isWithin(treeRef.current, target, source.id)) {
+      announce(labels.hubv2_moveinvalid);
+      return;
+    }
+    if (target === source.parentid) {
+      return;
+    }
+    (async () => {
+      if (confirm) {
+        const parents = Promise.all([freshParent(source.parentid), freshParent(target)]);
+        const [oldparent, newparent] = await track("move", parents);
+        const known = target === ROOT ? null : { shortname: treeRef.current.nodes[target]?.shortname ?? "", ruletype: null };
+        const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
+        const notification = await load("core/notification");
+        const confirmed = await notification.saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move).then(() => true, () => false);
+        if (!confirmed) {
+          return;
+        }
+      }
+      endMove(false);
+      await track("move", (async () => {
+        await setParent(source.id, target);
+        const answer = await getNode(source.id);
+        if (answer.found) {
+          await relocate(source.id, source.parentid, answer);
+        }
+        announce(fill(labels.hubv2_moved, source.shortname));
+      })());
+    })().catch(notifyError);
+  }, "moveUnder");
   const pickParent = /* @__PURE__ */ __name((target) => {
     const source = movingRef.current !== null ? treeRef.current.nodes[movingRef.current] : void 0;
     if (!source) {
@@ -407,32 +497,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       endMove(true);
       return;
     }
-    const freshParent = /* @__PURE__ */ __name(async (id) => {
-      if (id === ROOT) {
-        return null;
-      }
-      const answer = await getNode(id);
-      return answer.found && answer.node ? answer.node : null;
-    }, "freshParent");
-    (async () => {
-      const [oldparent, newparent] = await track("move", Promise.all([freshParent(source.parentid), freshParent(target)]));
-      const known = target === ROOT ? null : { shortname: treeRef.current.nodes[target]?.shortname ?? "", ruletype: null };
-      const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
-      const notification = await load("core/notification");
-      const confirmed = await notification.saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move).then(() => true, () => false);
-      if (!confirmed) {
-        return;
-      }
-      endMove(false);
-      await track("move", (async () => {
-        await setParent(source.id, target);
-        const answer = await getNode(source.id);
-        if (answer.found) {
-          await relocate(source.id, source.parentid, answer);
-        }
-        announce(fill(labels.hubv2_moved, source.shortname));
-      })());
-    })().catch(notifyError);
+    moveUnder(source, target, true);
   }, "pickParent");
   const activate = /* @__PURE__ */ __name((id, from) => {
     const action = activation(movingRef.current, id);
@@ -536,7 +601,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     focusItem(competencyKey(node2.id));
   }, "startMove");
   const stepMove = /* @__PURE__ */ __name((node2, up) => {
-    track("refresh", moveOne(node2.id, up).then(() => reloadBranch(node2.parentid))).catch(notifyError);
+    track("refresh", (async () => {
+      await moveOne(node2.id, up);
+      const index = treeRef.current.branches[node2.parentid]?.ids.indexOf(node2.id) ?? -1;
+      await reloadBranch(node2.parentid, index + (up ? 1 : 2));
+      const branch = treeRef.current.branches[node2.parentid];
+      const values = {
+        name: node2.shortname,
+        position: String((branch?.ids.indexOf(node2.id) ?? -1) + 1),
+        total: String(branch?.total ?? 0)
+      };
+      announce(fillObject(up ? labels.hubv2_reordered_up : labels.hubv2_reordered_down, values));
+    })()).catch(notifyError);
   }, "stepMove");
   const remove = /* @__PURE__ */ __name((node2) => {
     (async () => {
@@ -588,10 +664,6 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const revealItem = /* @__PURE__ */ __name((item) => {
     track("reveal", reveal(item.id, item.pathids)).catch(notifyError);
   }, "revealItem");
-  const edit = /* @__PURE__ */ __name((node2) => openForm(node2, null), "edit");
-  const addChild = /* @__PURE__ */ __name((node2) => openForm(null, node2), "addChild");
-  const moveRoot = /* @__PURE__ */ __name(() => pickParent(ROOT), "moveRoot");
-  const cancelMove = /* @__PURE__ */ __name(() => endMove(true), "cancelMove");
   const loadMoreAndFocus = /* @__PURE__ */ __name((parent, stop) => {
     nextPage(parent).then((first) => {
       if (first !== null) {
@@ -610,43 +682,6 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     }
     return key !== null;
   }, "typeTo");
-  const walk = /* @__PURE__ */ __name((event, stop, selector, from) => {
-    const target = event.target;
-    const element = target.closest(selector);
-    if (!element || !event.currentTarget.contains(element)) {
-      return;
-    }
-    if (element !== target && (event.key === "Enter" || event.key === " ")) {
-      return;
-    }
-    const action = keyAction(navOrder(treeRef.current), stop.activeRef.current, event, rtl);
-    if (!action) {
-      if (from === "outline" && isTypeAheadKey(event) && typeTo(event.key, event.timeStamp)) {
-        event.preventDefault();
-      }
-      return;
-    }
-    event.preventDefault();
-    switch (action.type) {
-      case "focus":
-        stop.focusKey(action.key);
-        break;
-      case "expand":
-        openBranch(action.id, from === "map");
-        break;
-      case "collapse":
-        closeBranch(action.id);
-        break;
-      case "select":
-        activate(action.id, from);
-        break;
-      case "loadmore":
-        loadMoreAndFocus(action.parent, stop);
-        break;
-      default:
-        break;
-    }
-  }, "walk");
   const expandAll = /* @__PURE__ */ __name(() => {
     const run = ++expandRun.current;
     setExpanding(true);
@@ -686,19 +721,352 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     setNotice("");
     commit(collapseAll);
   }, "collapseEverything");
+  const contextFor = /* @__PURE__ */ __name((id) => {
+    const current = treeRef.current;
+    const target = id !== null && id !== ROOT ? current.nodes[id] ?? null : null;
+    const siblings = target ? current.branches[target.parentid] : void 0;
+    const index = target && siblings ? siblings.ids.indexOf(target.id) : -1;
+    return {
+      node: target,
+      frameworkcanmanage: framework.canmanage,
+      moving: movingRef.current !== null ? current.nodes[movingRef.current] ?? null : null,
+      first: index <= 0,
+      last: !siblings || index < 0 || index === siblings.ids.length - 1 && siblings.ids.length >= siblings.total,
+      layout: layoutRef.current,
+      empty: countRef.current === 0,
+      expanding: expandingRef.current
+    };
+  }, "contextFor");
+  const switchLayout = /* @__PURE__ */ __name((next) => {
+    const region = rootRef.current?.closest('[data-region="structure"]');
+    const button = region?.querySelector(`[data-action="switch-view"][data-view="${next}"]`);
+    if (button) {
+      button.click();
+    } else {
+      setLayout(next);
+    }
+  }, "switchLayout");
+  const showSummary = /* @__PURE__ */ __name(() => {
+    choose(null);
+    window.requestAnimationFrame(() => summaryRef.current?.focus());
+  }, "showSummary");
+  const reach = /* @__PURE__ */ __name((id) => ensureVisible(id, ancestors(treeRef.current, id)), "reach");
+  const startCreate = /* @__PURE__ */ __name((parent, after) => {
+    track("editor", (async () => {
+      if (after !== null) {
+        await reach(after);
+      } else if (parent !== ROOT) {
+        await reach(parent);
+        if (treeRef.current.nodes[parent]?.haschildren && !hasBranch(treeRef.current, parent)) {
+          await loadPage(parent, false);
+        }
+        commit((current) => setExpanded(current, parent, true));
+      }
+      editorSerial.current++;
+      setEditor({ mode: "create", parent, after, serial: editorSerial.current });
+    })()).catch(notifyError);
+  }, "startCreate");
+  const startRename = /* @__PURE__ */ __name((id) => {
+    track("editor", reach(id).then(() => setEditor({ mode: "rename", id }))).catch(notifyError);
+  }, "startRename");
+  const closeEditor = /* @__PURE__ */ __name(() => {
+    const current = editorRef.current;
+    setEditor(null);
+    if (!current) {
+      return;
+    }
+    if (current.mode === "rename") {
+      outlineStop.focusKey(competencyKey(current.id));
+    } else {
+      outlineStop.focusKey(current.after !== null ? competencyKey(current.after) : parentKey(current.parent));
+    }
+  }, "closeEditor");
+  const saveCreate = /* @__PURE__ */ __name(async (parent, after, name, idnumber) => {
+    try {
+      const created = await track("editor", (async () => {
+        const id = await createCompetency(framework.id, parent, name, idnumber);
+        const total = (await browse(framework.id, parent, 0, 1)).total;
+        const anchor = after === null ? -1 : treeRef.current.branches[parent]?.ids.indexOf(after) ?? -1;
+        const place = after === null ? 0 : anchor + 1;
+        if (after === null || anchor >= 0) {
+          await moveUpTimes(id, total - 1 - place);
+        }
+        await reloadBranch(parent, place + 1);
+        await refreshParent(parent);
+        commit((current) => setExpanded(current, parent, true));
+        setCount(await countCompetencies(framework.id));
+        announce(fill(labels.hubv2_editor_created, name));
+        return id;
+      })());
+      editorSerial.current++;
+      setEditor({ mode: "create", parent, after: created, serial: editorSerial.current });
+      return null;
+    } catch (error) {
+      return messageOf(error);
+    }
+  }, "saveCreate");
+  const saveRename = /* @__PURE__ */ __name(async (id, name) => {
+    try {
+      await track("editor", renameCompetency(id, name).then(() => refreshNode(id)));
+      closeEditor();
+      announce(labels["core:changessaved"]);
+      return null;
+    } catch (error) {
+      return messageOf(error);
+    }
+  }, "saveRename");
+  const runNodeAction = /* @__PURE__ */ __name((id, target) => {
+    switch (id) {
+      case "edit":
+        openForm(target, null);
+        break;
+      case "rename":
+        startRename(target.id);
+        break;
+      case "addchild":
+        openForm(null, target);
+        break;
+      case "quicksibling":
+        startCreate(target.parentid, target.id);
+        break;
+      case "quickchild":
+        startCreate(target.id, null);
+        break;
+      case "moveto":
+        setMoveDialog(target.id);
+        break;
+      case "movepick":
+        startMove(target);
+        break;
+      case "moveup":
+      case "movedown":
+        stepMove(target, id === "moveup");
+        break;
+      case "rule":
+        editRule(target);
+        break;
+      case "links":
+        openLinks(target);
+        break;
+      case "relate":
+        openRelated(target);
+        break;
+      case "delete":
+        remove(target);
+        break;
+      default:
+        break;
+    }
+  }, "runNodeAction");
+  const runWorkspaceAction = /* @__PURE__ */ __name((id) => {
+    const view = VIEW_ACTIONS[id];
+    if (view) {
+      switchLayout(view);
+      return;
+    }
+    switch (id) {
+      case "moveroot":
+        pickParent(ROOT);
+        break;
+      case "movecancel":
+        endMove(true);
+        break;
+      case "expandall":
+        expandAll();
+        break;
+      case "collapseall":
+        collapseEverything();
+        break;
+      case "addtop":
+        openForm(null, null);
+        break;
+      case "summary":
+        showSummary();
+        break;
+      default:
+        break;
+    }
+  }, "runWorkspaceAction");
+  const runAction = /* @__PURE__ */ __name((id, targetid) => {
+    const context = contextFor(targetid);
+    if (actionState(id, context) !== "enabled") {
+      return;
+    }
+    if (specOf(id).scope === "node" && context.node) {
+      runNodeAction(id, context.node);
+    } else {
+      runWorkspaceAction(id);
+    }
+  }, "runAction");
+  const openMenu = /* @__PURE__ */ __name((id, anchor, origin) => {
+    if (actionsFor(["node"], contextFor(id)).length === 0) {
+      return false;
+    }
+    setMenu((current) => current && current.id === id && current.anchor === anchor ? null : { id, anchor, origin });
+    return true;
+  }, "openMenu");
+  const giveFocusBack = /* @__PURE__ */ __name((origin, control, key) => {
+    const target = focusReturn(origin, lastPane.current, panesRef.current);
+    if (target.kind === "control" && control) {
+      control.focus();
+    } else if (target.kind === "item" && target.pane === "outline") {
+      outlineStop.focusKey(key);
+    } else if (target.kind === "item") {
+      mapStop.focusKey(key, false);
+    }
+  }, "giveFocusBack");
+  const closeMenu = /* @__PURE__ */ __name((outside = false) => {
+    const current = menu;
+    if (!current) {
+      return;
+    }
+    setMenu(null);
+    const origin = current.origin === "panel" ? { kind: "control", connected: current.anchor.isConnected } : { kind: "item", pane: current.origin };
+    const back = /* @__PURE__ */ __name(() => giveFocusBack(origin, current.anchor, competencyKey(current.id)), "back");
+    if (!outside) {
+      back();
+      return;
+    }
+    document.addEventListener("pointerup", () => {
+      window.setTimeout(() => {
+        const active = document.activeElement;
+        if (!active || active === document.body) {
+          back();
+        }
+      }, 0);
+    }, { once: true, capture: true });
+  }, "closeMenu");
+  const keyCommand = /* @__PURE__ */ __name((command, key, element, from) => {
+    if (key === FRAMEWORK_ID) {
+      const allowed = framework.canmanage && movingRef.current === null && layoutRef.current !== "map";
+      if (command === "quickchild" && from === "outline" && allowed) {
+        startCreate(ROOT, null);
+        return true;
+      }
+      return false;
+    }
+    const id = competencyOf(key);
+    if (id === null || command === "palette") {
+      return false;
+    }
+    if (command === "menu") {
+      if (actionsFor(["node"], contextFor(id)).length === 0) {
+        return false;
+      }
+      if (selectedRef.current !== id) {
+        choose(id);
+      }
+      setMenu({ id, anchor: element, origin: from });
+      return true;
+    }
+    const context = contextFor(id);
+    const state = actionState(command, context);
+    if ((command === "moveup" || command === "movedown") && state === "disabled" && context.node) {
+      announce(fill(command === "moveup" ? labels.hubv2_reorder_first : labels.hubv2_reorder_last, context.node.shortname));
+      return true;
+    }
+    if (state !== "enabled") {
+      return false;
+    }
+    runAction(command, id);
+    return true;
+  }, "keyCommand");
+  const onRootKeyDown = /* @__PURE__ */ __name((event) => {
+    if (shortcutAction(event, "map") !== "palette" || palette || moveDialog !== null) {
+      return;
+    }
+    event.preventDefault();
+    setMenu(null);
+    setPalette(true);
+  }, "onRootKeyDown");
+  const restoreFocus = /* @__PURE__ */ __name(() => {
+    giveFocusBack({ kind: "layer" }, null, entryKey(treeRef.current, navOrder(treeRef.current), selectedRef.current));
+  }, "restoreFocus");
+  const toggleDisplay = /* @__PURE__ */ __name((option) => {
+    const next = { ...display, [option]: !display[option] };
+    setDisplay(next);
+    load("local_dimensions/central/preferences").then((preferences) => {
+      preferences.saveDisplay({ structure: option === "idnumber" ? { id: next.idnumber } : { tax: next.taxonomy } });
+      return null;
+    }).catch(notifyError);
+  }, "toggleDisplay");
+  const walk = /* @__PURE__ */ __name((event, stop, selector, from) => {
+    const target = event.target;
+    const element = target.closest(selector);
+    if (!element || !event.currentTarget.contains(element)) {
+      return;
+    }
+    if (element !== target && (event.key === "Enter" || event.key === " ")) {
+      return;
+    }
+    const command = shortcutAction(event, from);
+    if (command !== null && command !== "palette") {
+      if (keyCommand(command, stop.activeRef.current, element, from)) {
+        event.preventDefault();
+      }
+      return;
+    }
+    const action = keyAction(navOrder(treeRef.current), stop.activeRef.current, event, rtl);
+    if (!action) {
+      if (from === "outline" && isTypeAheadKey(event) && typeTo(event.key, event.timeStamp)) {
+        event.preventDefault();
+      }
+      return;
+    }
+    event.preventDefault();
+    switch (action.type) {
+      case "focus":
+        stop.focusKey(action.key);
+        break;
+      case "expand":
+        openBranch(action.id, from === "map");
+        break;
+      case "collapse":
+        closeBranch(action.id);
+        break;
+      case "select":
+        activate(action.id, from);
+        break;
+      case "loadmore":
+        loadMoreAndFocus(action.parent, stop);
+        break;
+      default:
+        break;
+    }
+  }, "walk");
   const actions = {
-    edit,
-    addChild,
-    rule: editRule,
-    links: openLinks,
-    relate: openRelated,
-    move: startMove,
-    moveRoot,
-    cancelMove,
-    moveOne: stepMove,
-    remove,
+    /**
+     * Run one of the panel's actions on the selected competency.
+     *
+     * @param {string} id The action.
+     * @returns {void}
+     */
+    run: /* @__PURE__ */ __name((id) => runAction(id, selectedRef.current), "run"),
+    /**
+     * Open the selected competency's menu under the panel's "More actions" button.
+     *
+     * @param {HTMLElement} anchor The button.
+     * @returns {void}
+     */
+    menu: /* @__PURE__ */ __name((anchor) => {
+      if (selectedRef.current !== null) {
+        openMenu(selectedRef.current, anchor, "panel");
+      }
+    }, "menu"),
     reveal: revealItem
   };
+  useEffect(() => {
+    load("local_dimensions/central/preferences").then((preferences) => {
+      const saved = preferences.getDisplay().structure;
+      setDisplay({ idnumber: !!saved.id, taxonomy: !!saved.tax });
+      return null;
+    }).catch(notifyError);
+  }, []);
+  useEffect(() => {
+    if (!panes.outline) {
+      setEditor(null);
+    }
+  }, [panes.outline]);
   useEffect(() => {
     if (moving === null) {
       return void 0;
@@ -763,14 +1131,14 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   }, [props.reveal, ensureVisible, choose]);
   useEffect(() => {
     const key = centreOn.current;
-    const position2 = key ? graph.positions[key] : void 0;
-    if (!key || !position2) {
+    const position = key ? graph.positions[key] : void 0;
+    if (!key || !position) {
       return;
     }
     centreOn.current = null;
     if (panesRef.current.map) {
       const zoom = Math.max(flow.getZoom(), 0.8);
-      flow.setCenter(position2.x + CARD.width / 2, position2.y + CARD.height / 2, { zoom, duration: motionDuration(300) }).catch(() => null);
+      flow.setCenter(position.x + CARD.width / 2, position.y + CARD.height / 2, { zoom, duration: motionDuration(300) }).catch(() => null);
     }
     focusItem(key, false);
   }, [graph, flow]);
@@ -819,9 +1187,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     }
     flow.setCenter(target.x, target.y, { zoom: flow.getZoom(), duration: motionDuration(200) }).catch(() => null).finally(() => done?.());
   }, [graph, flow, rtl]);
+  const selectedcontext = contextFor(selected);
+  const nodeactions = actionsFor(["node"], selectedcontext);
+  const menuFor = selected !== null && nodeactions.length > 0 ? selected : null;
+  const menuOpen = menu ? menu.id : null;
+  const openMenuRef = useRef(openMenu);
+  openMenuRef.current = openMenu;
+  const openMapMenu = useCallback((id, anchor) => {
+    openMenuRef.current(id, anchor, "map");
+  }, []);
   const canvasActions = useMemo(
-    () => ({ labels, pagesize, rtl, toggle: toggleOnMap, loadMore }),
-    [labels, pagesize, rtl, toggleOnMap, loadMore]
+    () => ({ labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu }),
+    [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu]
   );
   const outlineActions = {
     /**
@@ -850,7 +1227,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
      *
      * @returns {void}
      */
-    add: /* @__PURE__ */ __name(() => addChild(null), "add"),
+    add: /* @__PURE__ */ __name(() => runAction("addtop", null), "add"),
     /**
      * Walk the outline with the tree's keys.
      *
@@ -858,9 +1235,113 @@ const Workspace = /* @__PURE__ */ __name((props) => {
      * @returns {void}
      */
     onKeyDown: /* @__PURE__ */ __name((event) => walk(event, outlineStop, ROW_SELECTOR, "outline"), "onKeyDown"),
-    onFocus: outlineStop.onFocus,
-    onBlur: outlineStop.onBlur
+    /**
+     * Note the outline as the pane that last had the focus, then follow its Tab stop.
+     *
+     * @param {object} event The focus event.
+     * @returns {void}
+     */
+    onFocus: /* @__PURE__ */ __name((event) => {
+      lastPane.current = "outline";
+      outlineStop.onFocus(event);
+    }, "onFocus"),
+    onBlur: outlineStop.onBlur,
+    /**
+     * Open the selected row's menu under its "more" button.
+     *
+     * @param {number} id The competency.
+     * @param {HTMLElement} anchor The button.
+     * @returns {void}
+     */
+    openMenu: /* @__PURE__ */ __name((id, anchor) => {
+      openMenu(id, anchor, "outline");
+    }, "openMenu"),
+    toggleDisplay
   };
+  const outlineHints = /* @__PURE__ */ __name(() => {
+    const hints = [];
+    if (framework.canmanage) {
+      const keys = [
+        [{ key: "F10", shift: true }, labels.hubv2_hint_actions],
+        [{ key: "F2" }, labels.hubv2_cmd_rename],
+        [{ key: "Enter", mod: true }, labels.hubv2_cmd_quicksibling],
+        [{ key: "Enter", mod: true, shift: true }, labels.hubv2_cmd_quickchild],
+        [{ key: "\u2191\u2193", alt: true }, labels.hubv2_hint_reorder]
+      ];
+      keys.forEach(([shortcut, label]) => hints.push({ shortcut, label }));
+    }
+    hints.push({ shortcut: PALETTE_SHORTCUT, label: labels.hubv2_commands });
+    return hints;
+  }, "outlineHints");
+  const outlineEditor = /* @__PURE__ */ __name(() => {
+    if (editor && editor.mode === "rename") {
+      const renamedid = editor.id;
+      const renamed = tree.nodes[renamedid];
+      const row = rows.find((item) => item.key === competencyKey(renamedid));
+      if (renamed && row) {
+        return { key: row.key, replace: true, node: /* @__PURE__ */ jsxDEV(
+          Editor,
+          {
+            labels,
+            mode: "rename",
+            label: fill(labels.hubv2_editor_rename, renamed.shortname),
+            level: row.level,
+            initialname: renamed.shortname,
+            initialidnumber: "",
+            onSave: (name) => saveRename(renamedid, name),
+            onCancel: closeEditor
+          },
+          `rename-${renamedid}`,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 2011,
+            columnNumber: 21
+          }
+        ) };
+      }
+    } else if (editor) {
+      const parentkey = parentKey(editor.parent);
+      const parentrow = rows.find((item) => item.key === parentkey);
+      const slot = editorSlot(rows, parentkey, editor.after === null ? null : competencyKey(editor.after));
+      if (parentrow && slot) {
+        const siblings = (tree.branches[editor.parent]?.ids ?? []).map((id) => tree.nodes[id]?.idnumber ?? "");
+        const taken = Object.values(tree.nodes).map((known) => known.idnumber);
+        const { parent, after } = editor;
+        return { key: slot, replace: false, node: /* @__PURE__ */ jsxDEV(
+          Editor,
+          {
+            labels,
+            mode: "create",
+            label: fill(labels.hubv2_editor_new, parentrow.name),
+            level: parentrow.level + 1,
+            initialname: "",
+            initialidnumber: suggestIdnumber(siblings, taken),
+            onSave: (name, idnumber) => saveCreate(parent, after, name, idnumber),
+            onCancel: closeEditor
+          },
+          `create-${editor.serial}`,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 2026,
+            columnNumber: 21
+          }
+        ) };
+      }
+    }
+    return null;
+  }, "outlineEditor");
+  const entryOf = /* @__PURE__ */ __name((view) => ({ id: view.spec.id, label: labels[view.spec.label], icon: view.spec.icon, shortcut: view.spec.shortcut }), "entryOf");
+  const menuItems = /* @__PURE__ */ __name((id) => actionsFor(["node"], contextFor(id)).map((view, index, all) => ({
+    id: view.spec.id,
+    label: labels[view.spec.label],
+    icon: view.spec.icon,
+    shortcut: view.spec.shortcut,
+    disabled: view.state === "disabled",
+    danger: view.spec.danger,
+    separator: index > 0 && all[index - 1].spec.group !== view.spec.group
+  })), "menuItems");
   const silent = /* @__PURE__ */ __name(() => "", "silent");
   const aria = useMemo(() => ({
     // Both, because the library shows keyboardDisabled's text when its own keyboard is off
@@ -878,9 +1359,107 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     "handle.ariaLabel": labels.hubv2_a11y_handle
   }), [labels]);
   const node = selected !== null ? tree.nodes[selected] ?? null : null;
-  const siblings = node ? tree.branches[node.parentid] : void 0;
-  const position = node && siblings ? siblings.ids.indexOf(node.id) : -1;
-  const islast = !!siblings && position === siblings.ids.length - 1 && siblings.ids.length >= siblings.total;
+  const paneOf = /* @__PURE__ */ __name((origin) => {
+    if (origin === "panel") {
+      return null;
+    }
+    return origin === "outline" ? listRef.current : canvasRef.current;
+  }, "paneOf");
+  const overlays = /* @__PURE__ */ __name(() => {
+    const menunode = menu ? tree.nodes[menu.id] : void 0;
+    const movingnode2 = moveDialog !== null ? tree.nodes[moveDialog] : void 0;
+    const offered = palette ? actionsFor(["node", "move", "workspace"], selectedcontext) : [];
+    const enabled = offered.filter((view) => view.state === "enabled");
+    return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+      menu && menunode ? /* @__PURE__ */ jsxDEV(
+        Menu,
+        {
+          label: fill(labels.hubv2_actionsof, menunode.shortname),
+          items: menuItems(menu.id),
+          anchor: menu.anchor,
+          pane: paneOf(menu.origin),
+          rtl,
+          mac,
+          onRun: (id) => {
+            closeMenu();
+            runAction(id, menu.id);
+          },
+          onClose: closeMenu
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 2112,
+          columnNumber: 21
+        }
+      ) : null,
+      palette ? /* @__PURE__ */ jsxDEV(
+        Palette,
+        {
+          labels,
+          mac,
+          frameworkid: framework.id,
+          actionstitle: node ? fill(labels.hubv2_palette_on, node.shortname) : labels.hubv2_actions,
+          actions: enabled.filter((view) => view.spec.scope === "node").map(entryOf),
+          commands: enabled.filter((view) => view.spec.scope !== "node").map(entryOf),
+          onRun: (id, hit) => {
+            setPalette(false);
+            if (hit) {
+              revealItem(hit);
+            } else {
+              runAction(id, selectedRef.current);
+            }
+          },
+          onClose: () => setPalette(false),
+          onLostFocus: restoreFocus
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 2127,
+          columnNumber: 21
+        }
+      ) : null,
+      movingnode2 ? /* @__PURE__ */ jsxDEV(
+        MoveDialog,
+        {
+          labels,
+          tree,
+          moving: movingnode2,
+          frameworkid: framework.id,
+          frameworkname: framework.shortname,
+          rtl,
+          pagesize,
+          canpick: panes.map,
+          loadBranch: (parent, more) => track("children", loadPage(parent, more)),
+          freshParent,
+          onPick: () => {
+            setMoveDialog(null);
+            startMove(movingnode2);
+          },
+          onCommit: (target) => {
+            setMoveDialog(null);
+            moveUnder(movingnode2, target, false);
+          },
+          onClose: () => setMoveDialog(null),
+          onLostFocus: restoreFocus
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 2147,
+          columnNumber: 21
+        }
+      ) : null
+    ] }, void 0, true, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+      lineNumber: 2110,
+      columnNumber: 13
+    });
+  }, "overlays");
   const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
   const relatedcount = node && usage !== null ? related.length : null;
   const widthstyle = { [WIDTH_PROPERTY]: `${outlineWidth}px` };
@@ -888,29 +1467,61 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   if (moving !== null) {
     rootclasses.push("local-dimensions-hubv2-picking");
   }
-  return /* @__PURE__ */ jsxDEV("div", { className: rootclasses.join(" "), style: widthstyle, children: [
+  return /* @__PURE__ */ jsxDEV("div", { className: rootclasses.join(" "), style: widthstyle, ref: rootRef, onKeyDown: onRootKeyDown, children: [
     /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-main", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 1419,
+          lineNumber: 2187,
           columnNumber: 21
         }),
         panes.map ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 1422,
+            lineNumber: 2190,
             columnNumber: 29
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 1421,
+          lineNumber: 2189,
           columnNumber: 25
-        }) : null
+        }) : null,
+        /* @__PURE__ */ jsxDEV(
+          "button",
+          {
+            type: "button",
+            className: "btn btn-sm btn-outline-secondary local-dimensions-hubv2-cmdbtn",
+            "aria-haspopup": "dialog",
+            "aria-keyshortcuts": ariaShortcut(PALETTE_SHORTCUT, mac),
+            onClick: () => {
+              setMenu(null);
+              setPalette(true);
+            },
+            children: [
+              labels.hubv2_commands,
+              /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-keys", "aria-hidden": "true", children: shortcutCaps(PALETTE_SHORTCUT, mac).map((cap) => /* @__PURE__ */ jsxDEV("kbd", { children: cap }, cap, false, {
+                fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                lineNumber: 2205,
+                columnNumber: 79
+              })) }, void 0, false, {
+                fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                lineNumber: 2204,
+                columnNumber: 25
+              })
+            ]
+          },
+          void 0,
+          true,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 2193,
+            columnNumber: 21
+          }
+        )
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 1418,
+        lineNumber: 2186,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-panes", ref: panesBox, children: [
@@ -931,13 +1542,19 @@ const Workspace = /* @__PURE__ */ __name((props) => {
             rtl,
             pagesize,
             listRef,
-            actions: outlineActions
+            actions: outlineActions,
+            display,
+            menuFor,
+            menuOpen,
+            editor: outlineEditor(),
+            hints: outlineHints(),
+            mac
           },
           void 0,
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 1428,
+            lineNumber: 2211,
             columnNumber: 25
           }
         ) : null,
@@ -956,7 +1573,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 1447,
+            lineNumber: 2236,
             columnNumber: 25
           }
         ) : null,
@@ -968,7 +1585,10 @@ const Workspace = /* @__PURE__ */ __name((props) => {
             "aria-label": labels.hubv2_canvas,
             ref: canvasRef,
             onKeyDown: (event) => walk(event, mapStop, NODE_SELECTOR, "map"),
-            onFocus: mapStop.onFocus,
+            onFocus: (event) => {
+              lastPane.current = "map";
+              mapStop.onFocus(event);
+            },
             onBlur: mapStop.onBlur,
             children: /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
               ReactFlow,
@@ -1012,18 +1632,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                     false,
                     {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 1500,
+                      lineNumber: 2292,
                       columnNumber: 37
                     }
                   ),
                   /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
                     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                    lineNumber: 1502,
+                    lineNumber: 2294,
                     columnNumber: 37
                   }),
                   /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
                     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                    lineNumber: 1503,
+                    lineNumber: 2295,
                     columnNumber: 37
                   })
                 ]
@@ -1032,12 +1652,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               true,
               {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 1468,
+                lineNumber: 2260,
                 columnNumber: 33
               }
             ) }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 1467,
+              lineNumber: 2259,
               columnNumber: 29
             })
           },
@@ -1045,18 +1665,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 1458,
+            lineNumber: 2247,
             columnNumber: 25
           }
         ) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 1426,
+        lineNumber: 2209,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 1417,
+      lineNumber: 2185,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -1070,26 +1690,31 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         usage,
         related,
         moving: movingnode,
-        canUp: position > 0,
-        canDown: position >= 0 && !islast,
+        nodeactions,
+        menuopen: menu !== null && menu.origin === "panel",
+        moveactions: actionsFor(["move"], selectedcontext),
+        topactions: actionsFor(["workspace"], selectedcontext).filter((view) => view.spec.id === "addtop"),
+        summary: summaryLines(labels, summaryFacts(tree, count)),
+        summaryRef,
         actions
       },
       void 0,
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 1510,
+        lineNumber: 2302,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 1523,
+      lineNumber: 2319,
       columnNumber: 13
-    })
+    }),
+    overlays()
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 1416,
+    lineNumber: 2184,
     columnNumber: 9
   });
 }, "Workspace");
@@ -1101,21 +1726,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 1540,
+      lineNumber: 2337,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Workspace, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 1545,
+    lineNumber: 2342,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 1544,
+    lineNumber: 2341,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 1543,
+    lineNumber: 2340,
     columnNumber: 9
   });
 }, "Hub");

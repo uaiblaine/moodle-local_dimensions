@@ -22,7 +22,7 @@
  */
 
 import {navOrder} from '../../src/hubv2/keynav';
-import {outlineRows, rowMeta, scrollToShow} from '../../src/hubv2/outlinerows';
+import {editorSlot, outlineRows, rowMeta, scrollToShow} from '../../src/hubv2/outlinerows';
 import type {OutlineRow} from '../../src/hubv2/outlinerows';
 import {ROOT, createTree, insertChildren, setExpanded} from '../../src/hubv2/tree';
 import type {StructureNode} from '../../src/hubv2/types';
@@ -139,5 +139,22 @@ describe('the outline\'s own scrolling', () => {
         expect(scrollToShow(32, 32, 100, 200)).toBe(32);
         expect(scrollToShow(400, 32, 0, 200)).toBe(232);
         expect(scrollToShow(190, 32, 0, 200)).toBe(22);
+    });
+});
+
+describe('the inline editor\'s place', () => {
+    it('follows the anchor\'s drawn subtree, or the parent\'s row for a first child', () => {
+        const rows = outlineRows(sample(), 'Framework');
+        // 1 is open: a sibling after 1 goes after its whole drawn subtree, "load more" row included.
+        expect(editorSlot(rows, 'f', 'c1')).toBe(rows[rows.findIndex((row) => row.key === 'c2') - 1].key);
+        expect(editorSlot(rows, 'c1', 'c11')).toBe('c11');
+        expect(editorSlot(rows, 'c1', null)).toBe('c1');
+        expect(editorSlot(rows, 'f', null)).toBe('f');
+    });
+
+    it('is nowhere when the row it needs is not drawn', () => {
+        const rows = outlineRows(sample(), 'Framework');
+        expect(editorSlot(rows, 'c2', 'c21')).toBeNull();
+        expect(editorSlot(rows, 'c9', null)).toBeNull();
     });
 });

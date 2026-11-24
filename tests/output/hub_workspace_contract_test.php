@@ -156,9 +156,11 @@ final class hub_workspace_contract_test extends \basic_testcase {
         // The workspace writes it inline on the root it renders, the element the sheet declares it on
         // (\x60 is the template literal's quote, which the coding standard keeps out of PHP strings).
         $this->assertMatchesRegularExpression('/const widthstyle = \{\[WIDTH_PROPERTY\]: \x60\$\{outlineWidth\}px\x60\}/', $hub);
+        // The root's opening tag carries the style; other attributes it holds (its ref, the workspace's own
+        // key handler) follow it on the same tag, so the style cannot move to another element.
         $this->assertMatchesRegularExpression(
             "/const rootclasses = \['local-dimensions-hubv2-layout',[^\n]*\n(?:[^\n]*\n){0,8}"
-                . "\s*<div className=\{rootclasses\.join\(' '\)\} style=\{widthstyle\}>/",
+                . "\s*<div className=\{rootclasses\.join\(' '\)\} style=\{widthstyle\}(?: [a-zA-Z]+=\{[a-zA-Z]+\})*>/",
             $hub
         );
 

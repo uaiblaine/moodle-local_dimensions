@@ -28,14 +28,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {useEffect, useRef} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import type {FocusEvent, KeyboardEvent, MouseEvent, ReactNode, RefObject} from 'react';
+import {shortcutCaps} from './commands';
+import type {Shortcut} from './commands';
 import {isHexColour} from './html';
+import Menu from './Menu';
 import {rowMeta, scrollToShow} from './outlinerows';
 import type {OutlineRow} from './outlinerows';
 import {fill, fillCount} from './strings';
 import type {Labels} from './strings';
-import type {Framework} from './types';
+import type {Framework, StructureNode} from './types';
 
 /** The mark's colours by depth, when the competency has no colour of its own; deeper ones take the last. */
 const DEPTH_MARKS = [
@@ -63,7 +66,20 @@ export type OutlineActions = {
     onKeyDown: (event: KeyboardEvent<HTMLUListElement>) => void,
     onFocus: (event: FocusEvent<HTMLUListElement>) => void,
     onBlur: (event: FocusEvent<HTMLUListElement>) => void,
+    // The selected row's "more" button: open its actions' menu under it.
+    openMenu: (id: number, anchor: HTMLElement) => void,
+    // A display option of the header's menu, toggled.
+    toggleDisplay: (option: 'idnumber' | 'taxonomy') => void,
 };
+
+/** What the rows show besides the name: the classic list's display options, shared with it. */
+export type OutlineDisplay = {idnumber: boolean, taxonomy: boolean};
+
+/** The inline editor and where it stands: after a row, or in place of one (a rename). */
+export type OutlineEditor = {key: string, replace: boolean, node: ReactNode};
+
+/** One key of the hint row at the outline's foot. */
+export type OutlineHint = {shortcut: Shortcut, label: string};
 
 /** The outline's props. */
 export type OutlineProps = {
@@ -86,6 +102,14 @@ export type OutlineProps = {
     pagesize: number,
     listRef: RefObject<HTMLUListElement | null>,
     actions: OutlineActions,
+    display: OutlineDisplay,
+    // The competency whose row carries the "more" button (the selected one, when it has actions), and
+    // the one whose menu is open.
+    menuFor: number | null,
+    menuOpen: number | null,
+    editor: OutlineEditor | null,
+    hints: OutlineHint[],
+    mac: boolean,
 };
 
 /**
@@ -137,6 +161,58 @@ const meta = (labels: Labels, row: OutlineRow, count: number, related: number | 
 };
 
 /**
+ * What a row shows after its name besides its meta: the classic list's display options, the ID number
+ * and the taxonomy, each shown short and said in words.
+ *
+ * @param {object} labels The labels.
+ * @param {object|null} node The row's competency, null for the framework.
+ * @param {object} display The display options.
+ * @returns {Array} The parts, each {shown, said}.
+ */
+const displayed = (labels: Labels, node: StructureNode | null, display: OutlineDisplay): {shown: string, said: string}[] => {
+    const parts: {shown: string, said: string}[] = [];
+    if (node && display.idnumber && node.idnumber) {
+        parts.push({shown: node.idnumber, said: `${labels['core:idnumber']} ${node.idnumber}`});
+    }
+    if (node && display.taxonomy && node.taxonomy) {
+        parts.push({shown: node.taxonomy, said: node.taxonomy});
+    }
+    return parts;
+};
+
+/**
+ * The selected row's "more" button: after the name in the page's order, so a name-based locator finds
+ * the row first. Pointer only, like the chevron: the keyboard opens the same menu with Shift+F10.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The button.
+ */
+const RowMenuButton = (props: {labels: Labels, row: OutlineRow, open: boolean, actions: OutlineActions}): ReactNode => {
+    const {labels, row, open, actions} = props;
+    return (
+        <button
+            type="button"
+            className="local-dimensions-hubv2-iconbtn local-dimensions-hubv2-orowmenu"
+            tabIndex={-1}
+            aria-label={fill(labels.hubv2_actionsof, row.name)}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                event.stopPropagation();
+                actions.openMenu(row.id, event.currentTarget);
+            }}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.stopPropagation();
+                }
+            }}
+        >
+            <i className="fa fa-ellipsis-vertical" aria-hidden="true" />
+        </button>
+    );
+};
+
+/**
  * One row.
  *
  * @param {object} props The props.
@@ -153,8 +229,11 @@ const Row = (props: {
     rtl: boolean,
     pagesize: number,
     actions: OutlineActions,
+    display: OutlineDisplay,
+    menu: boolean,
+    menuopen: boolean,
 }): ReactNode => {
-    const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions} = props;
+    const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions, display, menu, menuopen} = props;
     // The level's indent, written on the start side, so a right-to-left page indents from the right.
     const indent = {paddingInlineStart: `${0.25 + (row.level - 1) * 1.25}rem`};
     const common = {
@@ -187,8 +266,10 @@ const Row = (props: {
         );
     }
 
-    const {shown, said} = meta(labels, row, count, related);
+    const {shown, said: metasaid} = meta(labels, row, count, related);
     const node = row.node;
+    const extras = displayed(labels, node, display);
+    const said = [...extras.map((extra) => extra.said), metasaid].filter((part) => part !== '').join(', ');
     let markclass = 'local-dimensions-hubv2-mark local-dimensions-hubv2-mark-framework';
     let markstyle;
     if (node) {
@@ -235,7 +316,13 @@ const Row = (props: {
             {/* The browser's title shows a name the row truncates: the Design System's tooltip is for controls
                 and glyphs, and the row's overflow would clip its balloon. */}
             <span id={`${ID}-${row.key}-name`} className="local-dimensions-hubv2-oname" title={row.name}>{row.name}</span>
+            {extras.length > 0 ? (
+                <span className="local-dimensions-hubv2-oextra" aria-hidden="true">
+                    {extras.map((extra) => extra.shown).join(' · ')}
+                </span>
+            ) : null}
             {shown.length > 0 ? <span className="local-dimensions-hubv2-ometa" aria-hidden="true">{shown}</span> : null}
+            {menu ? <RowMenuButton labels={labels} row={row} open={menuopen} actions={actions} /> : null}
             {said ? <span id={`${ID}-${row.key}-desc`} className="visually-hidden">{said}</span> : null}
         </li>
     );
@@ -269,8 +356,10 @@ const SkeletonRows = ({level, parent}: {level: number, parent: string}): ReactNo
  */
 const Outline = (props: OutlineProps): ReactNode => {
     const {labels, framework, count, rows, selected, moving, relatedcount, active, loading, expanding, notice, rtl, pagesize,
-        listRef, actions} = props;
+        listRef, actions, display, menuFor, menuOpen, editor, hints, mac} = props;
     const scrolled = useRef<string | null>(null);
+    const optionsButton = useRef<HTMLButtonElement>(null);
+    const [options, setOptions] = useState(false);
 
     // Keep the Tab stop's row in sight inside the list, never scrolling the page: the stop follows a
     // selection made on the map or by a search, and moves with the keyboard.
@@ -296,6 +385,10 @@ const Outline = (props: OutlineProps): ReactNode => {
     const movingkey = moving === null ? null : `c${moving}`;
     const items: ReactNode[] = [];
     rows.forEach((row) => {
+        if (editor && editor.replace && editor.key === row.key) {
+            items.push(editor.node);
+            return;
+        }
         items.push(
             <Row
                 key={row.key}
@@ -309,12 +402,32 @@ const Outline = (props: OutlineProps): ReactNode => {
                 rtl={rtl}
                 pagesize={pagesize}
                 actions={actions}
+                display={display}
+                menu={row.kind === 'competency' && row.key === selectedkey && menuFor === row.id}
+                menuopen={menuOpen === row.id}
             />
         );
         if (row.kind === 'competency' && !row.expanded && loading.includes(row.id)) {
             items.push(<SkeletonRows key={`${row.key}-loading`} level={row.level + 1} parent={row.key} />);
         }
+        if (editor && !editor.replace && editor.key === row.key) {
+            items.push(editor.node);
+        }
     });
+
+    /**
+     * Close the display options' menu and give the focus back to its button, unless a press elsewhere
+     * closed it: that press decides where the focus goes.
+     *
+     * @param {boolean} outside Whether a press outside the menu closed it.
+     * @returns {void}
+     */
+    const closeOptions = (outside: boolean): void => {
+        setOptions(false);
+        if (!outside) {
+            optionsButton.current?.focus();
+        }
+    };
 
     return (
         <section id={ID} className="local-dimensions-hubv2-outline" aria-labelledby={`${ID}-title`}>
@@ -340,7 +453,35 @@ const Outline = (props: OutlineProps): ReactNode => {
                 >
                     <i className="fa fa-angles-up" aria-hidden="true" />
                 </button>
+                <button
+                    ref={optionsButton}
+                    type="button"
+                    className="local-dimensions-hubv2-iconbtn local-dimensions-tip local-dimensions-tip-bottom"
+                    aria-label={labels.managecompetencies_displayoptions}
+                    data-dim-tip={labels.managecompetencies_displayoptions}
+                    aria-haspopup="menu"
+                    aria-expanded={options}
+                    onClick={() => setOptions((open) => !open)}
+                >
+                    <i className="fa fa-sliders" aria-hidden="true" />
+                    <i className="fa fa-chevron-down local-dimensions-hubv2-iconbtn-chevron" aria-hidden="true" />
+                </button>
             </div>
+            {options && optionsButton.current ? (
+                <Menu
+                    label={labels.managecompetencies_displayoptions}
+                    items={[
+                        {id: 'idnumber', label: labels.managecompetencies_showids, checkbox: true, checked: display.idnumber},
+                        {id: 'taxonomy', label: labels.managecompetencies_showtaxonomy, checkbox: true, checked: display.taxonomy},
+                    ]}
+                    anchor={optionsButton.current}
+                    pane={null}
+                    rtl={rtl}
+                    mac={mac}
+                    onRun={(option) => actions.toggleDisplay(option === 'idnumber' ? 'idnumber' : 'taxonomy')}
+                    onClose={closeOptions}
+                />
+            ) : null}
             {notice ? <p className="local-dimensions-hubv2-onotice">{notice}</p> : null}
             <ul
                 ref={listRef}
@@ -355,6 +496,18 @@ const Outline = (props: OutlineProps): ReactNode => {
                 {items}
             </ul>
             {loading.length > 0 ? <span className="visually-hidden" role="status">{labels.hubv2_loading}</span> : null}
+            {hints.length > 0 && !empty ? (
+                <p className="local-dimensions-hubv2-ohints">
+                    {hints.map((hint) => (
+                        <span key={hint.label} className="local-dimensions-hubv2-ohint">
+                            <span className="local-dimensions-hubv2-keys">
+                                {shortcutCaps(hint.shortcut, mac).map((cap) => <kbd key={cap}>{cap}</kbd>)}
+                            </span>
+                            {hint.label}
+                        </span>
+                    ))}
+                </p>
+            ) : null}
             {empty ? (
                 <div className="local-dimensions-hubv2-oempty">
                     <span className="local-dimensions-hubv2-oempty-icon" aria-hidden="true"><i className="fa fa-sitemap" /></span>

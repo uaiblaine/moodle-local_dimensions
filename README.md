@@ -105,6 +105,28 @@ sees which reasons apply); otherwise the confirmation says that the competency a
 descendant, their relations and their prior-learning links are deleted permanently; the list view
 deletes through the same check and dialogues.
 
+#### Commands and keys of the workspace
+
+Every action is in three places that run the same thing: the panel (**Edit**, **Add child**, and **More
+actions**, which opens the node's menu under it), the node's menu and the command palette. A viewer who may not manage a competency is offered none of them on it, and its keys
+do nothing; core checks the right again on every change.
+
+| Where | Key | What it does |
+|---|---|---|
+| Anywhere in the workspace | Ctrl+K (Cmd+K on a Mac), or **Commands** | The command palette: the actions on the selected competency, "Go to" a competency by name or ID number, and the views, Expand all, Collapse all, Add competency and the framework summary |
+| On an item of the outline or the map | Shift+F10 or the context-menu key | The item's menu (also the "more" button on the selected row or card) |
+| | Alt+Up, Alt+Down | Move the competency up or down among its siblings |
+| | Delete | Delete the competency, after the usual check and confirmation |
+| On a row of the outline | F2 | Rename the competency in place |
+| | Ctrl+Enter (Cmd+Enter), Insert | Type a new sibling right below: a name and an ID number (the next one is offered when the siblings' numbers show a pattern); Enter saves and opens the next one, Escape stops |
+| | Ctrl+Shift+Enter | Type a new first child |
+
+**Move to…** in the menu or the palette opens a dialogue to choose the new parent from a tree of the
+framework or by searching; it cannot offer the competency itself or one of its descendants, marks the
+current parent, and says which parent's rule core will reset before the move is confirmed. The
+outline's **Display options** (identifiers, taxonomy) are the classic list's, saved in the same
+preference.
+
 The workspace is a view of the tab, not a page: it lists exactly the frameworks the list does, in the
 same context, so it is reached from Site administration and from a course category's menu alike,
 locked to that category with its subcategories, and keeps the category rules of
