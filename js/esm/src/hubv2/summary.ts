@@ -19,7 +19,8 @@
  * The total comes from the server (core's count of the framework's competencies). Everything else is
  * counted over the competencies the workspace has loaded, and is said to be so while that is not the
  * whole framework: the tree is lazy, and a count over a part read as the whole would be false. No
- * relation is counted: the tree's nodes do not carry them (only the selected competency's are read).
+ * relation is counted: the tree's nodes do not carry them (only the selected competency's are read). Once the
+ * framework's insights are read (insights.ts), the summary says the server's numbers instead.
  *
  * Pure: Jest pins it without a DOM.
  *
@@ -72,16 +73,31 @@ export const summaryFacts = (tree: Tree, total: number): SummaryFacts => {
 /** One line of the summary: its label and its value. */
 export type SummaryLine = {label: string, value: string};
 
+/** The framework's own numbers, from its insights (get_framework_insights' summary). */
+export type ServerSummary = {competencies: number, maxdepth: number, withrule: number, relations: number, findings: number};
+
 /**
  * The summary's lines: the total; then, over a partly loaded tree, how many are loaded and each count
- * labelled as the loaded part's.
+ * labelled as the loaded part's. Once the framework's insights are read, their numbers replace the loaded
+ * part's: the levels, the competencies with a rule, the related pairs and the findings, all of the framework.
  *
  * @param {object} labels The labels.
  * @param {object} facts The facts.
+ * @param {object|null} server The insights' numbers, or null before they are read.
  * @returns {Array} The lines.
  */
-export const summaryLines = (labels: Labels, facts: SummaryFacts): SummaryLine[] => {
+export const summaryLines = (labels: Labels, facts: SummaryFacts, server: ServerSummary | null = null): SummaryLine[] => {
     const lines: SummaryLine[] = [{label: labels.hubv2_summary_total, value: String(facts.total)}];
+    if (server) {
+        lines.push(
+            {label: labels.hubv2_summary_levels, value: String(server.maxdepth)},
+            {label: labels.hubv2_summary_rules, value: String(server.withrule)},
+            {label: labels.hubv2_summary_relations, value: String(server.relations)},
+            {label: labels.hubv2_summary_findings, value: String(server.findings)},
+            {label: labels.hubv2_summary_opened, value: String(facts.opened)},
+        );
+        return lines;
+    }
     if (!facts.complete) {
         lines.push({label: labels.hubv2_summary_loaded, value: String(facts.loaded)});
     }

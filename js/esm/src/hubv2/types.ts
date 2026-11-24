@@ -106,6 +106,51 @@ export type DeleteCheck = {
     blockedcompetencies: number,
 };
 
+/**
+ * How much usage the viewer is told (get_framework_insights::USAGE_*): counts, presence (0 or 1 per kind), or
+ * nothing.
+ */
+export type UsageLevel = 'exact' | 'presence' | 'none';
+
+/** One competency's use, by kind; only competencies with some use are listed. */
+export type InsightUsage = {competencyid: number, courses: number, modules: number, templates: number, plans: number};
+
+/** One rule: its parent, type, label, outcome, the points it asks and the children it lists (points rules only). */
+export type InsightRule = {
+    competencyid: number,
+    // 'all', 'points', or another rule class's short name.
+    type: string,
+    // The rule's localised label, plain text.
+    label: string,
+    // 'none', 'evidence', 'complete' or 'recommend'.
+    outcome: string,
+    required: number,
+    available: number,
+    requiredchildren: number,
+    children: {id: number, points: number, required: boolean}[],
+    canfire: boolean,
+};
+
+/** One finding of the checker: its code (strings hubv2_check_<code> and _desc), the competency (0: the framework). */
+export type InsightCheck = {code: string, competencyid: number, params: {name: string, value: string}[]};
+
+/**
+ * What local_dimensions_get_framework_insights answers for one framework, field for field its
+ * execute_returns(). Each list holds only the competencies with something to say. `pairs` lists each
+ * related pair of the framework once, the lower id first.
+ */
+export type Insights = {
+    frameworkid: number,
+    exact: boolean,
+    usagelevel: UsageLevel,
+    usage: InsightUsage[],
+    rules: InsightRule[],
+    relations: {competencyid: number, count: number}[],
+    pairs: {a: number, b: number}[],
+    checks: InsightCheck[],
+    summary: {competencies: number, maxdepth: number, withrule: number, relations: number, findings: number},
+};
+
 /** A competency the canvas reveals at mount: the deep link, checked by the server against the framework shown. */
 export type RevealTarget = {id: number, pathids: number[]};
 
@@ -123,4 +168,6 @@ export type HubProps = {
     /** The workspace's layout when it mounts: the tab's view (structure::VIEWS), the classic list aside. */
     layout: 'outline' | 'map' | 'both',
     structures: Structures,
+    /** The lens when it mounts (hub_map::LENSES): the address's, else the saved one, else none. */
+    lens: 'none' | 'usage' | 'rules' | 'relations',
 };

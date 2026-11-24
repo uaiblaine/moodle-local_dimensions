@@ -25,7 +25,7 @@
 
 import {load} from './amd';
 import type {AjaxRequest, RuleConfig} from './amd';
-import type {DeleteCheck, NodePage, PathItem, StructureNode, Usage} from './types';
+import type {DeleteCheck, Insights, NodePage, PathItem, StructureNode, Usage} from './types';
 
 /** A child competency as the rule dialogue lists it. */
 type Child = {id: number, shortname: string};
@@ -91,6 +91,33 @@ export const allChildren = async(frameworkid: number, parentid: number, limitnum
  */
 export const getNode = (competencyid: number): Promise<NodeAnswer> =>
     call<NodeAnswer>('local_dimensions_get_structure_node', {competencyid});
+
+/**
+ * Several competencies, fresh, each with its ancestor chain, in one request: the names of findings and
+ * of unused competencies the tree has not loaded.
+ *
+ * @param {Array} ids The competencies.
+ * @returns {Promise} Resolves with the answers in the same order.
+ */
+export const getNodes = (ids: number[]): Promise<NodeAnswer[]> =>
+    (ids.length === 0
+        ? Promise.resolve([])
+        : callMany(ids.map((competencyid) => ({methodname: 'local_dimensions_get_structure_node', args: {competencyid}})))
+            .then((answers) => answers as NodeAnswer[]));
+
+/**
+ * What the lenses and the checker read of a framework, in one answer: usage, rules, relations, findings
+ * and the summary's numbers (local_dimensions_get_framework_insights).
+ *
+ * @param {number} frameworkid The framework.
+ * @returns {Promise} Resolves with the insights.
+ */
+export const insights = (frameworkid: number): Promise<Insights> =>
+    call<Insights>('local_dimensions_get_framework_insights', {frameworkid}).then((answer) => ({
+        ...answer,
+        // The pairs list is the newest field of the answer: an older server sends none.
+        pairs: answer.pairs ?? [],
+    }));
 
 /**
  * Competencies of the framework matching a text, by name or ID number.

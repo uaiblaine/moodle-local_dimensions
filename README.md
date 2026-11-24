@@ -135,6 +135,47 @@ none. The **Structures** menu beside the framework select holds **New structure*
 CSV** (each then shows the new framework), **Show hidden structures** and **Manage scales** (the
 scales page, for whoever may open it); the palette offers the first two as well.
 
+#### Lenses and the structure check
+
+A **Lens** switch in the workspace's bar answers one question at a time over the same tree: **None**,
+**Usage**, **Rules** or **Relations**. Each lens says its answer in words as well as in the drawing: a
+line under each card's name, a quiet mark at each outline row's end, the same words in what a screen
+reader reads of the card and the row, and, first in the panel, a sentence, a legend with how many
+competencies carry each mark and the list of them, each a button that reveals it. No answer is given
+by colour alone: an unused competency has a dashed edge, a rule that can never fire a dashed warning
+edge and a triangle, a related one the relation edges' colour and an icon.
+
+- **Usage**: each competency's own use (a parent's does not add its children's), counted by courses,
+  activities, plan templates or learning plans (a switch in the panel), in four steps of the brand's
+  colour (none; 1 to 2; 3 to 5; 6 or more), and the competencies no course (or activity, template,
+  plan) uses.
+- **Rules**: each rule on its parent ("6 of 8 points" for a points rule), what each child gives and
+  whether it is required, the edges of the children the rule counts in the rule's style, and a rule
+  that can never fire; in the panel one block per rule with what it asks, what is available, the
+  required children by name, its outcome and, for a manager, **Set the rule…**.
+- **Relations**: every relation between two competencies of the framework, drawn as a dotted line when
+  both are on the map; a competency whose related one is not on the map says "+2 elsewhere". The
+  panel lists the related pairs.
+
+**Check** in the bar (with the number of findings) opens the structure check in the panel: rules that
+can never fire, rules over a single child or over no child, competencies no course, activity,
+template or plan uses, missing ID numbers, empty descriptions, and custom colours whose text is hard
+to read. Each finding names its competency, says what is wrong, reveals it in both panes and, for a
+manager, offers the action that fixes it (the rule, the competency's form, or its courses and
+activities). **F8** and **Shift+F8** go to the next and the previous finding from anywhere in the
+workspace, and say which one it is. **Check again** reads the framework afresh; the answers are also
+read again after any change made in the workspace. While a delete or a move waits for its
+confirmation, the competencies it touches are outlined on the map and in the outline.
+
+What each viewer is shown: a viewer holding at the site every capability core's own usage lists ask
+(course and activity visibility, template management, plan reading), with no role on the site refusing
+one of them anywhere, sees exact counts; a manager of the framework's competencies who lacks one of
+them, or on a site where a role refuses one, sees only whether each competency is used, and the
+panel says so; a viewer who only reads the framework is told that usage is not shown, and the check
+lists no unused competency. The rules, relations and other findings are shown to whoever may read the
+framework. The chosen lens is remembered in `local_dimensions_central_display` and carried by the
+address (`&lens=usage`, `rules`, `relations`).
+
 #### Commands and keys of the workspace
 
 Every action is in three places that run the same thing: the panel (**Edit**, **Add child**, and **More
@@ -143,7 +184,8 @@ do nothing; core checks the right again on every change.
 
 | Where | Key | What it does |
 |---|---|---|
-| Anywhere in the workspace | Ctrl+K (Cmd+K on a Mac), or **Commands** | The command palette: the actions on the selected competency, "Go to" a competency by name or ID number, and the views, Expand all, Collapse all, Add competency and the framework summary |
+| Anywhere in the workspace | Ctrl+K (Cmd+K on a Mac), or **Commands** | The command palette: the actions on the selected competency, "Go to" a competency by name or ID number, and the views, the lenses, Check structure, Expand all, Collapse all, Add competency and the framework summary |
+| | F8, Shift+F8 | The next or the previous finding of the structure check, revealed and selected |
 | On an item of the outline or the map | Shift+F10 or the context-menu key | The item's menu (also the "more" button on the selected row or card); on the root, the framework's |
 | | Alt+Up, Alt+Down | Move the competency up or down among its siblings |
 | | Delete | Delete the competency, after the usual check and confirmation |
@@ -618,7 +660,7 @@ The plugin has no database tables of its own (no `db/install.xml`). It keeps:
 
 - **Five user preferences**: `local_dimensions_central_nav` and `local_dimensions_central_display`
   (the Competency hub's last tab, context, selection, display toggles, the Competencies tab's
-  view and whether the hub opens in its classic view),
+  view and lens and whether the hub opens in its classic view),
   `local_dimensions_learner_view` (each learner view's scope, sort and layout),
   `local_dimensions_learner_fav` (the favourite competencies, per plan) and
   `local_dimensions_learner_hero` (which headers are folded). They are kept until the user changes

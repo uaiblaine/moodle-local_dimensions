@@ -36,8 +36,30 @@ const parentKey = /* @__PURE__ */ __name((id) => id === ROOT ? FRAMEWORK_ID : co
 const moreKey = /* @__PURE__ */ __name((parent) => `m${parent}`, "moreKey");
 const NODE_ATTRIBUTES = { tabIndex: -1, "aria-roledescription": void 0 };
 const competencyOf = /* @__PURE__ */ __name((key) => /^c\d+$/.test(key) ? Number(key.slice(1)) : null, "competencyOf");
+const addWords = /* @__PURE__ */ __name((info, lens, findings) => {
+  if (lens) {
+    info.lens = lens;
+  }
+  if (findings) {
+    info.findings = findings;
+  }
+}, "addWords");
+const frameworkLabel = /* @__PURE__ */ __name((input, findings) => {
+  const { framework, labels } = input;
+  const name = labels.framework ? labels.framework(framework.competencycount) : framework.shortname;
+  return findings ? `${name}, ${findings}` : name;
+}, "frameworkLabel");
+const cardDecor = /* @__PURE__ */ __name((decor, id) => ({
+  mark: decor.marks?.get(id) ?? null,
+  findings: decor.findings?.get(id) ?? 0,
+  impact: !!decor.impact?.has(id)
+}), "cardDecor");
+const ruleStyled = /* @__PURE__ */ __name((parent, decor, parentid, child) => !!(parent && parent.ruletype) && (!decor.counts || decor.counts(parentid, child)), "ruleStyled");
 const buildGraph = /* @__PURE__ */ __name((input) => {
   const { tree, framework, selected, related, moving, labels } = input;
+  const decor = input.decor ?? {};
+  const findingsOf = /* @__PURE__ */ __name((id) => decor.findings?.get(id) ?? 0, "findingsOf");
+  const said = /* @__PURE__ */ __name((count) => count > 0 && decor.findingwords ? decor.findingwords(count) : "", "said");
   const items = visibleItems(tree);
   const layoutinput = [{ key: FRAMEWORK_ID, parent: null }];
   items.forEach((item) => {
@@ -55,10 +77,16 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
     id: FRAMEWORK_ID,
     type: "framework",
     position: positions[FRAMEWORK_ID],
-    data: { kind: "framework", framework, count: framework.competencycount },
+    data: {
+      kind: "framework",
+      framework,
+      count: framework.competencycount,
+      findings: findingsOf(ROOT),
+      impact: !!decor.impact?.has(ROOT)
+    },
     ...CARD,
     selected: selected === null,
-    ariaLabel: labels.framework ? labels.framework(framework.competencycount) : framework.shortname,
+    ariaLabel: frameworkLabel(input, said(findingsOf(ROOT))),
     ariaRole: "group",
     domAttributes: { ...NODE_ATTRIBUTES, "aria-current": selected === null ? "true" : void 0 }
   }];
@@ -104,6 +132,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       rule: node.ruletype ? node.rulelabel : "",
       relatedto: relatedset.has(item.id) ? relatedto : null
     };
+    const decorated = cardDecor(decor, item.id);
+    addWords(info, decorated.mark ? decorated.mark.said : "", said(decorated.findings));
     nodes.push({
       id: key,
       type: "competency",
@@ -114,7 +144,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
         expanded: isExpanded(tree, item.id),
         childcount: branch ? branch.total : null,
         depth: item.depth,
-        moving: moving === item.id
+        moving: moving === item.id,
+        ...decorated
       },
       ...CARD,
       selected: selected === item.id,
@@ -127,7 +158,7 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       }
     });
     const parent = item.parent === ROOT ? null : tree.nodes[item.parent];
-    const hasrule = !!(parent && parent.ruletype);
+    const hasrule = ruleStyled(parent, decor, item.parent, item.id);
     const first = hasrule && !ruled.has(item.parent);
     if (first) {
       ruled.add(item.parent);
@@ -142,8 +173,22 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       ...EDGE_A11Y
     });
   });
+  const paired = /* @__PURE__ */ new Set();
+  (decor.pairs ?? []).forEach(([a, b]) => {
+    paired.add(`${a}-${b}`);
+    edges.push({
+      id: `p-${a}-${b}`,
+      source: competencyKey(a),
+      target: competencyKey(b),
+      type: "default",
+      className: "local-dimensions-hubv2-edge-related",
+      zIndex: 1,
+      ...EDGE_A11Y
+    });
+  });
   if (selected !== null && drawn.has(selected)) {
-    related.filter((id) => id !== selected && drawn.has(id)).forEach((id) => {
+    const pairKey = /* @__PURE__ */ __name((id) => `${Math.min(id, selected)}-${Math.max(id, selected)}`, "pairKey");
+    related.filter((id) => id !== selected && drawn.has(id) && !paired.has(pairKey(id))).forEach((id) => {
       edges.push({
         id: `r-${selected}-${id}`,
         source: competencyKey(selected),

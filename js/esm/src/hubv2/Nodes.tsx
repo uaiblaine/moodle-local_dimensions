@@ -16,6 +16,12 @@
 /**
  * The canvas's node cards and its rule edge.
  *
+ * A lens's mark (lenses.ts) adds a class to a card (a stepped ground with its own ink, a dashed edge, a quieter
+ * card), replaces the line under its name with the lens's words and may put an icon and a "+2 elsewhere" count
+ * on it; while the checker is open a card with findings carries a warning mark and their count; while a
+ * dialogue confirms a change, the cards it touches carry the impact mark. Each is said in the node's name
+ * (graph.ts), never by the drawing alone.
+ *
  * React Flow wraps each card in an element (role group, named by graph.ts) that the workspace's
  * keyboard (keynav.ts) moves the focus between; the card holds the one control a node has of its
  * own, the button that opens or closes its children, for the pointer only: tabindex -1 keeps the map
@@ -39,6 +45,8 @@ import type {EdgeProps, NodeProps} from '../../vendor/xyflow/xyflow.js';
 import {cardCount} from './graph';
 import type {CanvasEdge, CanvasNode, CompetencyData, FrameworkData, MoreData} from './graph';
 import {isHexColour} from './html';
+import {elsewhereText} from './lenses';
+import type {ItemMark} from './lenses';
 import {fill, fillCount} from './strings';
 import type {Labels} from './strings';
 import {ROOT} from './tree';
@@ -97,8 +105,31 @@ const DEPTH_TILES = [
     'local-dimensions-hubv2-tile-depth4',
 ];
 
-/** The class a selected card adds, with its leading space. */
-const SELECTED = ' local-dimensions-hubv2-selected';
+/** The class of a card a change being confirmed touches (an impact preview). */
+const IMPACT = 'local-dimensions-hubv2-impact';
+
+/**
+ * The warning mark of a card with findings while the checker is open: a triangle and the count, hidden from
+ * assistive technology (the card's name says "2 findings").
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The mark, or nothing without findings.
+ */
+const FindingMark = ({count}: {count: number}): ReactNode => (count > 0 ? (
+    <span className="local-dimensions-hubv2-findmark" aria-hidden="true">
+        <i className="fa fa-triangle-exclamation" />{count}
+    </span>
+) : null);
+
+/**
+ * The mark of a card a change being confirmed touches: the dialogue names the change, the card only shows it.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The mark, or nothing.
+ */
+const ImpactMark = ({on}: {on: boolean}): ReactNode => (on ? (
+    <span className="local-dimensions-hubv2-impactmark" aria-hidden="true"><i className="fa fa-bolt" /></span>
+) : null);
 
 /**
  * The two connection points every edge needs; nothing connects through them. The parent's edge
@@ -139,10 +170,17 @@ export const chevron = (expanded: boolean, rtl: boolean): string =>
  */
 export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
     const {labels, rtl, menuFor, menuOpen, openMenu} = useCanvas();
-    const {framework, count} = data as FrameworkData;
+    const {framework, count, findings, impact} = data as FrameworkData;
+    const classes = ['local-dimensions-hubv2-card', 'local-dimensions-hubv2-card-framework'];
+    if (selected) {
+        classes.push('local-dimensions-hubv2-selected');
+    }
+    if (impact) {
+        classes.push(IMPACT);
+    }
     return (
-        <div className={`local-dimensions-hubv2-card local-dimensions-hubv2-card-framework${selected ? SELECTED : ''}`}
-            dir={rtl ? 'rtl' : undefined}>
+        <div className={classes.join(' ')} dir={rtl ? 'rtl' : undefined}>
+            <ImpactMark on={impact} />
             <span className="local-dimensions-hubv2-tile local-dimensions-hubv2-tile-framework" aria-hidden="true">
                 <i className="fa fa-sitemap" />
             </span>
@@ -150,6 +188,7 @@ export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNod
                 <span className="local-dimensions-hubv2-card-title">{framework.shortname}</span>
                 <span className="local-dimensions-hubv2-card-sub">{fillCount(labels, 'hubv2_competencies', count)}</span>
             </span>
+            <FindingMark count={findings} />
             {menuFor === ROOT ? (
                 <button
                     type="button"
@@ -173,6 +212,62 @@ export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNod
 };
 
 /**
+ * The "+2 elsewhere" mark of a card whose related competencies are not all drawn; its words are in the name.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The mark, or nothing.
+ */
+const Elsewhere = ({labels, mark}: {labels: Labels, mark: ItemMark | null}): ReactNode => (mark && mark.elsewhere > 0 ? (
+    <span className="local-dimensions-hubv2-elsewhere" aria-hidden="true">{elsewhereText(labels, mark.elsewhere)}</span>
+) : null);
+
+/**
+ * A competency card's classes: selected, being moved, the lens's mark, touched by a change being confirmed.
+ *
+ * @param {boolean} selected Whether it is selected.
+ * @param {boolean} moving Whether it is being moved.
+ * @param {object|null} mark The lens's mark.
+ * @param {boolean} impact Whether a change being confirmed touches it.
+ * @returns {Array} The classes.
+ */
+const cardClasses = (selected: boolean, moving: boolean, mark: ItemMark | null, impact: boolean): string[] => {
+    const classes = ['local-dimensions-hubv2-card'];
+    if (selected) {
+        classes.push('local-dimensions-hubv2-selected');
+    }
+    if (moving) {
+        classes.push('local-dimensions-hubv2-moving');
+    }
+    if (mark && mark.className) {
+        classes.push(mark.className);
+    }
+    if (impact) {
+        classes.push(IMPACT);
+    }
+    return classes;
+};
+
+/**
+ * The line under a competency's name: the lens's answer, with its icon, in place of the taxonomy; without a lens,
+ * the rule's label or the taxonomy.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The line.
+ */
+const CardLine = ({data}: {data: CompetencyData}): ReactNode => {
+    const {node, mark} = data;
+    if (!mark || !mark.line) {
+        return node.ruletype ? node.rulelabel : node.taxonomy;
+    }
+    return (
+        <>
+            {mark.icon ? <i className={`fa ${mark.icon} me-1`} aria-hidden="true" /> : null}
+            {mark.line}
+        </>
+    );
+};
+
+/**
  * A competency's card: its colour or depth tile, its name, its taxonomy or rule, a count, and
  * the button that opens its children.
  *
@@ -181,7 +276,7 @@ export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNod
  */
 export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
     const {labels, rtl, toggle, menuFor, menuOpen, openMenu} = useCanvas();
-    const {node, expanded, childcount, depth, moving} = data as CompetencyData;
+    const {node, expanded, childcount, depth, moving, mark, findings, impact} = data as CompetencyData;
     // The admin's colours go straight into the style, never through the stylesheet: only a hex value passes.
     const tilestyle = isHexColour(node.bgcolor)
         ? {backgroundColor: node.bgcolor, color: isHexColour(node.textcolor) ? node.textcolor : undefined}
@@ -191,13 +286,7 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
     const glyph = !tilestyle || tilestyle.color ? <i className="fa fa-bullseye" /> : null;
     const shown = cardCount(node, childcount);
     const countlabel = shown ? fillCount(labels, shown.kind === 'children' ? 'hubv2_children' : 'hubv2_courses', shown.count) : '';
-    const classes = ['local-dimensions-hubv2-card'];
-    if (selected) {
-        classes.push('local-dimensions-hubv2-selected');
-    }
-    if (moving) {
-        classes.push('local-dimensions-hubv2-moving');
-    }
+    const classes = cardClasses(!!selected, moving, mark, impact);
     /**
      * Open or close the children, without selecting the node.
      *
@@ -211,11 +300,14 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
     return (
         <div className={classes.join(' ')} dir={rtl ? 'rtl' : undefined}>
             <Handles />
+            <ImpactMark on={impact} />
             <span className={`local-dimensions-hubv2-tile ${tileclass}`} style={tilestyle} aria-hidden="true">{glyph}</span>
             <span className="local-dimensions-hubv2-card-text">
                 <span className="local-dimensions-hubv2-card-title">{node.shortname}</span>
-                <span className="local-dimensions-hubv2-card-sub">{node.ruletype ? node.rulelabel : node.taxonomy}</span>
+                <span className="local-dimensions-hubv2-card-sub"><CardLine data={data as CompetencyData} /></span>
             </span>
+            <Elsewhere labels={labels} mark={mark} />
+            <FindingMark count={findings} />
             {menuFor === node.id ? (
                 <button
                     type="button"

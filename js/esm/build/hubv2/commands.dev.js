@@ -22,7 +22,7 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
  */
 import { ROOT } from "./tree";
 const ACTIONS = [
-  { id: "edit", scope: "node", group: 1, label: "hubv2_edit", icon: "fa-pen" },
+  { id: "edit", scope: "node", group: 1, label: "hubv2_edit", icon: "fa-pen", changes: true },
   {
     id: "rename",
     scope: "node",
@@ -32,7 +32,7 @@ const ACTIONS = [
     shortcut: { key: "F2" },
     outlineonly: true
   },
-  { id: "addchild", scope: "node", group: 1, label: "managecompetencies_addchild", icon: "fa-plus" },
+  { id: "addchild", scope: "node", group: 1, label: "managecompetencies_addchild", icon: "fa-plus", changes: true },
   {
     id: "quicksibling",
     scope: "node",
@@ -40,7 +40,8 @@ const ACTIONS = [
     label: "hubv2_cmd_quicksibling",
     icon: "fa-turn-down",
     shortcut: { key: "Enter", mod: true },
-    outlineonly: true
+    outlineonly: true,
+    changes: true
   },
   {
     id: "quickchild",
@@ -49,16 +50,18 @@ const ACTIONS = [
     label: "hubv2_cmd_quickchild",
     icon: "fa-indent",
     shortcut: { key: "Enter", mod: true, shift: true },
-    outlineonly: true
+    outlineonly: true,
+    changes: true
   },
-  { id: "moveto", scope: "node", group: 2, label: "hubv2_cmd_moveto", icon: "fa-folder-tree" },
+  { id: "moveto", scope: "node", group: 2, label: "hubv2_cmd_moveto", icon: "fa-folder-tree", changes: true },
   {
     id: "movepick",
     scope: "node",
     group: 2,
     label: "hubv2_cmd_movepick",
     icon: "fa-arrows-up-down-left-right",
-    maponly: true
+    maponly: true,
+    changes: true
   },
   { id: "moveup", scope: "node", group: 2, label: "hubv2_moveup", icon: "fa-arrow-up", shortcut: { key: "ArrowUp", alt: true } },
   {
@@ -69,10 +72,19 @@ const ACTIONS = [
     icon: "fa-arrow-down",
     shortcut: { key: "ArrowDown", alt: true }
   },
-  { id: "rule", scope: "node", group: 3, label: "hubv2_cmd_rule", icon: "fa-diagram-project" },
-  { id: "links", scope: "node", group: 3, label: "hubv2_cmd_links", icon: "fa-link" },
-  { id: "relate", scope: "node", group: 3, label: "hubv2_cmd_relate", icon: "fa-share-nodes" },
-  { id: "delete", scope: "node", group: 4, label: "hubv2_delete", icon: "fa-trash", shortcut: { key: "Delete" }, danger: true },
+  { id: "rule", scope: "node", group: 3, label: "hubv2_cmd_rule", icon: "fa-diagram-project", changes: true },
+  { id: "links", scope: "node", group: 3, label: "hubv2_cmd_links", icon: "fa-link", changes: true },
+  { id: "relate", scope: "node", group: 3, label: "hubv2_cmd_relate", icon: "fa-share-nodes", changes: true },
+  {
+    id: "delete",
+    scope: "node",
+    group: 4,
+    label: "hubv2_delete",
+    icon: "fa-trash",
+    shortcut: { key: "Delete" },
+    danger: true,
+    changes: true
+  },
   { id: "fwedit", scope: "framework", group: 1, label: "central_frameworks_edit", icon: "fa-pen" },
   { id: "fwscale", scope: "framework", group: 1, label: "central_frameworks_configurescale", icon: "fa-scale-balanced" },
   { id: "fwhide", scope: "framework", group: 2, label: "hubv2_fw_hide", icon: "fa-eye-slash" },
@@ -80,19 +92,46 @@ const ACTIONS = [
   { id: "fwduplicate", scope: "framework", group: 2, label: "central_frameworks_duplicate", icon: "fa-copy" },
   { id: "fwexport", scope: "framework", group: 2, label: "hubv2_fw_export", icon: "fa-download" },
   { id: "fwdelete", scope: "framework", group: 3, label: "hubv2_fw_delete", icon: "fa-trash", danger: true },
-  { id: "moveroot", scope: "move", group: 1, label: "hubv2_moveroot", icon: "fa-turn-up" },
+  { id: "moveroot", scope: "move", group: 1, label: "hubv2_moveroot", icon: "fa-turn-up", changes: true },
   { id: "movecancel", scope: "move", group: 1, label: "hubv2_movecancel", icon: "fa-xmark" },
   { id: "viewoutline", scope: "workspace", group: 1, label: "hubv2_cmd_viewoutline", icon: "fa-list" },
   { id: "viewmap", scope: "workspace", group: 1, label: "hubv2_cmd_viewmap", icon: "fa-sitemap" },
   { id: "viewboth", scope: "workspace", group: 1, label: "hubv2_cmd_viewboth", icon: "fa-table-columns" },
   { id: "expandall", scope: "workspace", group: 2, label: "managecompetencies_expandall", icon: "fa-angles-down" },
   { id: "collapseall", scope: "workspace", group: 2, label: "managecompetencies_collapseall", icon: "fa-angles-up" },
-  { id: "addtop", scope: "workspace", group: 3, label: "managecompetencies_addcompetency", icon: "fa-plus" },
+  { id: "addtop", scope: "workspace", group: 3, label: "managecompetencies_addcompetency", icon: "fa-plus", changes: true },
   { id: "summary", scope: "workspace", group: 3, label: "hubv2_cmd_summary", icon: "fa-chart-simple" },
+  { id: "lensnone", scope: "workspace", group: 4, label: "hubv2_cmd_lensnone", icon: "fa-eye-slash" },
+  { id: "lensusage", scope: "workspace", group: 4, label: "hubv2_cmd_lensusage", icon: "fa-chart-column" },
+  { id: "lensrules", scope: "workspace", group: 4, label: "hubv2_cmd_lensrules", icon: "fa-diagram-project" },
+  { id: "lensrelations", scope: "workspace", group: 4, label: "hubv2_cmd_lensrelations", icon: "fa-share-nodes" },
+  { id: "check", scope: "workspace", group: 5, label: "hubv2_cmd_check", icon: "fa-list-check" },
+  {
+    id: "nextfinding",
+    scope: "workspace",
+    group: 5,
+    label: "hubv2_cmd_nextfinding",
+    icon: "fa-arrow-down",
+    shortcut: { key: "F8" }
+  },
+  {
+    id: "prevfinding",
+    scope: "workspace",
+    group: 5,
+    label: "hubv2_cmd_prevfinding",
+    icon: "fa-arrow-up",
+    shortcut: { key: "F8", shift: true }
+  },
   { id: "fwnew", scope: "structures", group: 1, label: "central_frameworks_new", icon: "fa-plus" },
   { id: "fwimport", scope: "structures", group: 1, label: "central_frameworks_import_title", icon: "fa-upload" }
 ];
 const VIEW_ACTIONS = { viewoutline: "outline", viewmap: "map", viewboth: "both" };
+const LENS_ACTIONS = {
+  lensnone: "none",
+  lensusage: "usage",
+  lensrules: "rules",
+  lensrelations: "relations"
+};
 const specOf = /* @__PURE__ */ __name((id) => ACTIONS.find((spec) => spec.id === id), "specOf");
 const nodeState = /* @__PURE__ */ __name((spec, context) => {
   const { node } = context;
@@ -113,10 +152,20 @@ const nodeState = /* @__PURE__ */ __name((spec, context) => {
       return "enabled";
   }
 }, "nodeState");
+const lensState = /* @__PURE__ */ __name((lens, context) => {
+  if (lens === (context.lens ?? "none") || lens === "usage" && context.usagelevel === "none") {
+    return "hidden";
+  }
+  return "enabled";
+}, "lensState");
 const workspaceState = /* @__PURE__ */ __name((spec, context) => {
   const view = VIEW_ACTIONS[spec.id];
   if (view) {
     return view === context.layout ? "hidden" : "enabled";
+  }
+  const lens = LENS_ACTIONS[spec.id];
+  if (lens) {
+    return lensState(lens, context);
   }
   switch (spec.id) {
     case "expandall":
@@ -128,6 +177,9 @@ const workspaceState = /* @__PURE__ */ __name((spec, context) => {
       return context.empty ? "hidden" : "enabled";
     case "addtop":
       return context.frameworkcanmanage && !context.moving ? "enabled" : "hidden";
+    case "nextfinding":
+    case "prevfinding":
+      return context.findings === 0 ? "hidden" : "enabled";
     default:
       return "enabled";
   }
@@ -167,12 +219,22 @@ const actionState = /* @__PURE__ */ __name((id, context) => {
 const actionsFor = /* @__PURE__ */ __name((scopes, context) => ACTIONS.filter((spec) => scopes.includes(spec.scope)).map((spec) => ({ spec, state: actionState(spec.id, context) })).filter((view) => view.state !== "hidden"), "actionsFor");
 const withMod = /* @__PURE__ */ __name((key) => !!(key.ctrlKey || key.metaKey), "withMod");
 const bare = /* @__PURE__ */ __name((key) => !key.altKey && !key.ctrlKey && !key.metaKey && !key.shiftKey, "bare");
+const findingCommand = /* @__PURE__ */ __name((key) => {
+  if (key.key !== "F8" || key.altKey || withMod(key)) {
+    return null;
+  }
+  return key.shiftKey ? "prevfinding" : "nextfinding";
+}, "findingCommand");
 const sharedCommand = /* @__PURE__ */ __name((key) => {
   if (key.key === "F10" && key.shiftKey && !key.altKey && !withMod(key) || key.key === "ContextMenu" && bare(key)) {
     return "menu";
   }
   if (withMod(key) && !key.altKey && !key.shiftKey && key.key.toLowerCase() === "k") {
     return "palette";
+  }
+  const finding = findingCommand(key);
+  if (finding) {
+    return finding;
   }
   const arrows = { ArrowUp: "moveup", ArrowDown: "movedown" };
   if (key.altKey && !withMod(key) && !key.shiftKey && arrows[key.key]) {
@@ -224,6 +286,7 @@ const PALETTE_SHORTCUT = { key: "K", mod: true };
 const isMac = /* @__PURE__ */ __name(() => /Mac|iPhone|iPad/.test(window.navigator.platform || window.navigator.userAgent), "isMac");
 export {
   ACTIONS,
+  LENS_ACTIONS,
   PALETTE_SHORTCUT,
   VIEW_ACTIONS,
   actionState,

@@ -75,6 +75,8 @@ export type MoveDialogProps = {
     onCommit: (target: number) => void,
     onClose: () => void,
     onLostFocus: () => void,
+    // Told the parent chosen, null for none, so the workspace marks what the move touches (an impact preview).
+    onTarget?: (target: number | null) => void,
 };
 
 /** The chosen parent: ROOT for the top level. */
@@ -112,7 +114,7 @@ const choiceClass = (chosen: boolean): string => (chosen
  */
 const MoveDialog = (props: MoveDialogProps): ReactNode => {
     const {labels, tree, moving, frameworkid, frameworkname, rtl, canpick, loadBranch, freshParent, onPick, onCommit, onClose,
-        onLostFocus} = props;
+        onLostFocus, onTarget} = props;
     const [open, setOpen] = useState<number[]>([]);
     const [active, setActive] = useState<string>(FRAMEWORK_ID);
     const [target, setTarget] = useState<Target | null>(null);
@@ -128,6 +130,12 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
     const id = useId();
     const titleid = `${id}-title`;
     const topname = fill(labels.hubv2_moveto_top, frameworkname);
+
+    // The workspace marks the old and the new parent while a new one is chosen.
+    const targetid = target ? target.id : null;
+    useEffect(() => {
+        onTarget?.(targetid);
+    }, [targetid, onTarget]);
 
     const choices = useMemo(() => parentChoices(tree, open, moving.id, topname), [tree, open, moving.id, topname]);
     const order = useMemo(() => navOrder(pickerTree(tree, open, moving.id)), [tree, open, moving.id]);

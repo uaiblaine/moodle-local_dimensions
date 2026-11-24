@@ -29,6 +29,9 @@
  * ("Edit structure", then "More actions", the root's menu) and "Add competency". During a move it shows what the
  * move needs.
  *
+ * A lens shown puts its section first (its sentence, legend and list, LensPanel.tsx), above whatever is selected;
+ * the checker, while open, is the panel's whole content until its close button or a selection closes it.
+ *
  * @module     local_dimensions/hubv2/Panel
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -77,6 +80,10 @@ export type PanelProps = {
     // The summary's heading, which the palette's "Framework summary" focuses.
     summaryRef: RefObject<HTMLHeadingElement | null>,
     actions: PanelActions,
+    // The lens's section (LensPanel.tsx LensSection), first in the panel while a lens is shown.
+    lens?: ReactNode,
+    // The checker (LensPanel.tsx Checker): while it is open it is the panel's whole content.
+    checker?: ReactNode,
 };
 
 /**
@@ -288,13 +295,23 @@ const MoveSection = ({labels, moving, views, run}: {
  */
 const Panel = (props: PanelProps): ReactNode => {
     const {labels, framework, count, node, path, usage, related, moving, nodeactions, menuopen, moveactions, topactions,
-        frameworkactions, summary, summaryRef, actions} = props;
+        frameworkactions, summary, summaryRef, actions, lens, checker} = props;
     const movesection = moving ? <MoveSection labels={labels} moving={moving} views={moveactions} run={actions.run} /> : null;
+
+    if (checker) {
+        return (
+            <aside className="local-dimensions-hubv2-panel" aria-label={labels.hubv2_checker_title}>
+                {movesection}
+                {checker}
+            </aside>
+        );
+    }
 
     if (!node) {
         return (
             <aside className="local-dimensions-hubv2-panel" aria-label={framework.shortname}>
                 {movesection}
+                {lens}
                 <section className="local-dimensions-hubv2-sec">
                     <p className="local-dimensions-hubv2-kicker">
                         {labels.central_browseframeworks_framework}
@@ -335,6 +352,7 @@ const Panel = (props: PanelProps): ReactNode => {
     return (
         <aside className="local-dimensions-hubv2-panel" aria-label={node.shortname}>
             {movesection}
+            {lens}
             <section className="local-dimensions-hubv2-sec">
                 <p className="local-dimensions-hubv2-kicker">
                     {node.taxonomy}

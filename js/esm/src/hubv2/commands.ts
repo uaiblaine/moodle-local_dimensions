@@ -34,10 +34,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+import type {Lens} from './insights';
 import type {KeyPress} from './keynav';
 import type {Layout} from './selection';
 import {ROOT} from './tree';
-import type {StructureNode} from './types';
+import type {StructureNode, UsageLevel} from './types';
 
 /** Every action of the workspace. */
 export type ActionId =
@@ -47,6 +48,7 @@ export type ActionId =
     | 'delete'
     | 'moveroot' | 'movecancel'
     | 'viewoutline' | 'viewmap' | 'viewboth' | 'expandall' | 'collapseall' | 'addtop' | 'summary'
+    | 'lensnone' | 'lensusage' | 'lensrules' | 'lensrelations' | 'check' | 'nextfinding' | 'prevfinding'
     | 'fwedit' | 'fwscale' | 'fwhide' | 'fwshow' | 'fwduplicate' | 'fwexport' | 'fwdelete'
     | 'fwnew' | 'fwimport';
 
@@ -77,6 +79,9 @@ export type ActionSpec = {
     outlineonly?: boolean,
     // Picking the new parent is offered where the map is drawn, as "Move to"'s own "Pick on the map".
     maponly?: boolean,
+    // Whether, once done, it can change what the framework's insights say (usage, rules, relations, findings):
+    // the workspace reads them again then (insights.ts).
+    changes?: boolean,
 };
 
 /** Whether an action is offered: not at all, shown but not now, or ready. */
@@ -101,28 +106,35 @@ export type ActionContext = {
     frameworkvisible?: boolean,
     // Whether the viewer may create or import a framework in the tab's context.
     cancreate?: boolean,
+    // The lens shown; none when not said.
+    lens?: Lens,
+    // How much usage the insights tell the viewer, null before they are read.
+    usagelevel?: UsageLevel | null,
+    // How many findings the checker has, null before the insights are read.
+    findings?: number | null,
 };
 
 /** Every action, in the menu's order. */
 export const ACTIONS: ActionSpec[] = [
-    {id: 'edit', scope: 'node', group: 1, label: 'hubv2_edit', icon: 'fa-pen'},
+    {id: 'edit', scope: 'node', group: 1, label: 'hubv2_edit', icon: 'fa-pen', changes: true},
     {id: 'rename', scope: 'node', group: 1, label: 'hubv2_cmd_rename', icon: 'fa-i-cursor', shortcut: {key: 'F2'},
         outlineonly: true},
-    {id: 'addchild', scope: 'node', group: 1, label: 'managecompetencies_addchild', icon: 'fa-plus'},
+    {id: 'addchild', scope: 'node', group: 1, label: 'managecompetencies_addchild', icon: 'fa-plus', changes: true},
     {id: 'quicksibling', scope: 'node', group: 1, label: 'hubv2_cmd_quicksibling', icon: 'fa-turn-down',
-        shortcut: {key: 'Enter', mod: true}, outlineonly: true},
+        shortcut: {key: 'Enter', mod: true}, outlineonly: true, changes: true},
     {id: 'quickchild', scope: 'node', group: 1, label: 'hubv2_cmd_quickchild', icon: 'fa-indent',
-        shortcut: {key: 'Enter', mod: true, shift: true}, outlineonly: true},
-    {id: 'moveto', scope: 'node', group: 2, label: 'hubv2_cmd_moveto', icon: 'fa-folder-tree'},
+        shortcut: {key: 'Enter', mod: true, shift: true}, outlineonly: true, changes: true},
+    {id: 'moveto', scope: 'node', group: 2, label: 'hubv2_cmd_moveto', icon: 'fa-folder-tree', changes: true},
     {id: 'movepick', scope: 'node', group: 2, label: 'hubv2_cmd_movepick', icon: 'fa-arrows-up-down-left-right',
-        maponly: true},
+        maponly: true, changes: true},
     {id: 'moveup', scope: 'node', group: 2, label: 'hubv2_moveup', icon: 'fa-arrow-up', shortcut: {key: 'ArrowUp', alt: true}},
     {id: 'movedown', scope: 'node', group: 2, label: 'hubv2_movedown', icon: 'fa-arrow-down',
         shortcut: {key: 'ArrowDown', alt: true}},
-    {id: 'rule', scope: 'node', group: 3, label: 'hubv2_cmd_rule', icon: 'fa-diagram-project'},
-    {id: 'links', scope: 'node', group: 3, label: 'hubv2_cmd_links', icon: 'fa-link'},
-    {id: 'relate', scope: 'node', group: 3, label: 'hubv2_cmd_relate', icon: 'fa-share-nodes'},
-    {id: 'delete', scope: 'node', group: 4, label: 'hubv2_delete', icon: 'fa-trash', shortcut: {key: 'Delete'}, danger: true},
+    {id: 'rule', scope: 'node', group: 3, label: 'hubv2_cmd_rule', icon: 'fa-diagram-project', changes: true},
+    {id: 'links', scope: 'node', group: 3, label: 'hubv2_cmd_links', icon: 'fa-link', changes: true},
+    {id: 'relate', scope: 'node', group: 3, label: 'hubv2_cmd_relate', icon: 'fa-share-nodes', changes: true},
+    {id: 'delete', scope: 'node', group: 4, label: 'hubv2_delete', icon: 'fa-trash', shortcut: {key: 'Delete'}, danger: true,
+        changes: true},
     {id: 'fwedit', scope: 'framework', group: 1, label: 'central_frameworks_edit', icon: 'fa-pen'},
     {id: 'fwscale', scope: 'framework', group: 1, label: 'central_frameworks_configurescale', icon: 'fa-scale-balanced'},
     {id: 'fwhide', scope: 'framework', group: 2, label: 'hubv2_fw_hide', icon: 'fa-eye-slash'},
@@ -130,21 +142,35 @@ export const ACTIONS: ActionSpec[] = [
     {id: 'fwduplicate', scope: 'framework', group: 2, label: 'central_frameworks_duplicate', icon: 'fa-copy'},
     {id: 'fwexport', scope: 'framework', group: 2, label: 'hubv2_fw_export', icon: 'fa-download'},
     {id: 'fwdelete', scope: 'framework', group: 3, label: 'hubv2_fw_delete', icon: 'fa-trash', danger: true},
-    {id: 'moveroot', scope: 'move', group: 1, label: 'hubv2_moveroot', icon: 'fa-turn-up'},
+    {id: 'moveroot', scope: 'move', group: 1, label: 'hubv2_moveroot', icon: 'fa-turn-up', changes: true},
     {id: 'movecancel', scope: 'move', group: 1, label: 'hubv2_movecancel', icon: 'fa-xmark'},
     {id: 'viewoutline', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewoutline', icon: 'fa-list'},
     {id: 'viewmap', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewmap', icon: 'fa-sitemap'},
     {id: 'viewboth', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewboth', icon: 'fa-table-columns'},
     {id: 'expandall', scope: 'workspace', group: 2, label: 'managecompetencies_expandall', icon: 'fa-angles-down'},
     {id: 'collapseall', scope: 'workspace', group: 2, label: 'managecompetencies_collapseall', icon: 'fa-angles-up'},
-    {id: 'addtop', scope: 'workspace', group: 3, label: 'managecompetencies_addcompetency', icon: 'fa-plus'},
+    {id: 'addtop', scope: 'workspace', group: 3, label: 'managecompetencies_addcompetency', icon: 'fa-plus', changes: true},
     {id: 'summary', scope: 'workspace', group: 3, label: 'hubv2_cmd_summary', icon: 'fa-chart-simple'},
+    {id: 'lensnone', scope: 'workspace', group: 4, label: 'hubv2_cmd_lensnone', icon: 'fa-eye-slash'},
+    {id: 'lensusage', scope: 'workspace', group: 4, label: 'hubv2_cmd_lensusage', icon: 'fa-chart-column'},
+    {id: 'lensrules', scope: 'workspace', group: 4, label: 'hubv2_cmd_lensrules', icon: 'fa-diagram-project'},
+    {id: 'lensrelations', scope: 'workspace', group: 4, label: 'hubv2_cmd_lensrelations', icon: 'fa-share-nodes'},
+    {id: 'check', scope: 'workspace', group: 5, label: 'hubv2_cmd_check', icon: 'fa-list-check'},
+    {id: 'nextfinding', scope: 'workspace', group: 5, label: 'hubv2_cmd_nextfinding', icon: 'fa-arrow-down',
+        shortcut: {key: 'F8'}},
+    {id: 'prevfinding', scope: 'workspace', group: 5, label: 'hubv2_cmd_prevfinding', icon: 'fa-arrow-up',
+        shortcut: {key: 'F8', shift: true}},
     {id: 'fwnew', scope: 'structures', group: 1, label: 'central_frameworks_new', icon: 'fa-plus'},
     {id: 'fwimport', scope: 'structures', group: 1, label: 'central_frameworks_import_title', icon: 'fa-upload'},
 ];
 
 /** The views the palette switches to, by action. */
 export const VIEW_ACTIONS: Partial<Record<ActionId, Layout>> = {viewoutline: 'outline', viewmap: 'map', viewboth: 'both'};
+
+/** The lenses the palette switches to, by action. */
+export const LENS_ACTIONS: Partial<Record<ActionId, Lens>> = {
+    lensnone: 'none', lensusage: 'usage', lensrules: 'rules', lensrelations: 'relations',
+};
 
 /**
  * An action's specification.
@@ -187,8 +213,23 @@ const nodeState = (spec: ActionSpec, context: ActionContext): ActionState => {
 };
 
 /**
- * Whether an action of the workspace is offered: a view other than the current one, the tree's own
- * commands when there is a tree, adding at the top level for a manager outside the move mode.
+ * Whether switching to a lens is offered: not to the one shown, nor to usage when the viewer is told none.
+ *
+ * @param {string} lens The lens.
+ * @param {object} context What the decision reads.
+ * @returns {string} The state.
+ */
+const lensState = (lens: Lens, context: ActionContext): ActionState => {
+    if (lens === (context.lens ?? 'none') || (lens === 'usage' && context.usagelevel === 'none')) {
+        return 'hidden';
+    }
+    return 'enabled';
+};
+
+/**
+ * Whether an action of the workspace is offered: a view other than the current one, a lens other than the
+ * current one (usage only when the viewer is told usage), the tree's own commands when there is a tree, adding
+ * at the top level for a manager outside the move mode, walking the findings unless there are none.
  *
  * @param {object} spec The action.
  * @param {object} context What the decision reads.
@@ -198,6 +239,10 @@ const workspaceState = (spec: ActionSpec, context: ActionContext): ActionState =
     const view = VIEW_ACTIONS[spec.id];
     if (view) {
         return view === context.layout ? 'hidden' : 'enabled';
+    }
+    const lens = LENS_ACTIONS[spec.id];
+    if (lens) {
+        return lensState(lens, context);
     }
     switch (spec.id) {
         case 'expandall':
@@ -209,6 +254,10 @@ const workspaceState = (spec: ActionSpec, context: ActionContext): ActionState =
             return context.empty ? 'hidden' : 'enabled';
         case 'addtop':
             return context.frameworkcanmanage && !context.moving ? 'enabled' : 'hidden';
+        case 'nextfinding':
+        case 'prevfinding':
+            // Before the insights are read the walk reads them first; with none found there is nowhere to go.
+            return context.findings === 0 ? 'hidden' : 'enabled';
         default:
             return 'enabled';
     }
@@ -300,8 +349,23 @@ const withMod = (key: KeyPress): boolean => !!(key.ctrlKey || key.metaKey);
 const bare = (key: KeyPress): boolean => !key.altKey && !key.ctrlKey && !key.metaKey && !key.shiftKey;
 
 /**
+ * The checker's walk: F8 to the next finding, Shift+F8 to the previous one; with Ctrl, Cmd or Alt the key is the
+ * browser's.
+ *
+ * @param {object} key The key and its modifiers.
+ * @returns {string|null} The command.
+ */
+const findingCommand = (key: KeyPress): KeyCommand | null => {
+    if (key.key !== 'F8' || key.altKey || withMod(key)) {
+        return null;
+    }
+    return key.shiftKey ? 'prevfinding' : 'nextfinding';
+};
+
+/**
  * The commands both panes share: the menu (Shift+F10, the context-menu key), the palette (Ctrl+K,
- * Cmd+K), reordering (Alt+Up, Alt+Down, as core's reorder lists do) and Delete, which still confirms.
+ * Cmd+K), reordering (Alt+Up, Alt+Down, as core's reorder lists do), Delete, which still confirms, and the
+ * checker's walk (F8 and Shift+F8, the workspace root's, wherever the focus is in it).
  *
  * @param {object} key The key and its modifiers.
  * @returns {string|null} The command.
@@ -312,6 +376,10 @@ const sharedCommand = (key: KeyPress): KeyCommand | null => {
     }
     if (withMod(key) && !key.altKey && !key.shiftKey && key.key.toLowerCase() === 'k') {
         return 'palette';
+    }
+    const finding = findingCommand(key);
+    if (finding) {
+        return finding;
     }
     const arrows: Record<string, ActionId> = {ArrowUp: 'moveup', ArrowDown: 'movedown'};
     if (key.altKey && !withMod(key) && !key.shiftKey && arrows[key.key]) {

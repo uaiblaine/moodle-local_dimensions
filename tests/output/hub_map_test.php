@@ -139,6 +139,81 @@ final class hub_map_test extends advanced_testcase {
     }
 
     /**
+     * The lens is the pane's when it names a lens, else the saved one when that is a lens, else none: each value is
+     * only a word, matched exactly against the allowlist.
+     *
+     * @return void
+     */
+    public function test_resolve_lens_orders_the_pane_the_saved_lens_and_none(): void {
+        $this->assertSame(['none', 'usage', 'rules', 'relations'], hub_map::LENSES);
+        $this->assertSame('none', hub_map::DEFAULT_LENS);
+        foreach (hub_map::LENSES as $lens) {
+            $this->assertSame($lens, hub_map::resolve_lens($lens, 'relations'));
+            $this->assertSame($lens, hub_map::resolve_lens('', $lens));
+            $this->assertSame($lens, hub_map::resolve_lens('garbage', $lens));
+        }
+        $this->assertSame('none', hub_map::resolve_lens('', ''));
+        foreach (['Usage', 'RULES', ' usage', 'usage ', 'checker', '<b>rules</b>', '0'] as $unknown) {
+            $this->assertSame('none', hub_map::resolve_lens($unknown, ''), "Pane value {$unknown}");
+            $this->assertSame('none', hub_map::resolve_lens('', $unknown), "Saved value {$unknown}");
+            // The control: a known saved lens still answers past the unknown pane value.
+            $this->assertSame('rules', hub_map::resolve_lens($unknown, 'rules'));
+        }
+    }
+
+    /**
+     * A client write of the display preference keeps the stored lens unless it carries a lens of its own, so a page
+     * left open writes its other choices without taking back a lens chosen since; the stored mode is kept as before.
+     *
+     * Change that must make it fail: in hub_map::clean_display(), drop the branch that copies the stored lens.
+     *
+     * @return void
+     */
+    public function test_a_display_write_without_a_lens_keeps_the_stored_one(): void {
+        $this->resetAfterTest();
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+        $name = \local_dimensions\constants::PREF_CENTRAL_DISPLAY;
+        set_user_preference($name, json_encode(['classic' => true, 'structure' => ['lens' => 'rules', 'tax' => false]]));
+
+        // A stale page saves another choice: no lens in the write, the stored one stays, and so does the mode.
+        $write = json_encode(['structure' => ['tax' => true, 'view' => 'map']]);
+        $stale = json_decode(\core_user::clean_preference($write, $name), true);
+        $this->assertSame(['tax' => true, 'view' => 'map', 'lens' => 'rules'], $stale['structure']);
+        $this->assertTrue($stale['classic']);
+
+        // The control: the write that follows a choice carries the lens, and it is taken.
+        $chosen = json_decode(\core_user::clean_preference(json_encode(['structure' => ['lens' => 'usage']]), $name), true);
+        $this->assertSame('usage', $chosen['structure']['lens']);
+
+        // A lens that is not one is no choice: the stored lens stays.
+        $bogus = json_decode(\core_user::clean_preference(json_encode(['structure' => ['lens' => 'heatmap']]), $name), true);
+        $this->assertSame('rules', $bogus['structure']['lens']);
+
+        // With no lens stored, a write without one stores none.
+        set_user_preference($name, json_encode(['structure' => ['tax' => true]]));
+        $none = json_decode(\core_user::clean_preference(json_encode(['structure' => ['id' => true]]), $name), true);
+        $this->assertSame(['id' => true], $none['structure']);
+        $this->assertArrayNotHasKey('structure', json_decode(\core_user::clean_preference(json_encode([]), $name), true));
+    }
+
+    /**
+     * The props carry the lens only from the allowlist: anything else the caller passes is none.
+     *
+     * @return void
+     */
+    public function test_the_props_carry_a_known_lens_only(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $framework = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_framework();
+        $structures = ['contextid' => 1, 'cancreate' => false, 'canscalespage' => false];
+        $props = static fn(string $lens): array => hub_map::props($framework, 0, [], 0, false, null, 'both', $structures, $lens);
+        $this->assertSame('rules', $props('rules')['lens']);
+        $this->assertSame('none', $props('everything')['lens']);
+        $this->assertSame('none', hub_map::props($framework, 0, [], 0, false, null, 'both', $structures)['lens']);
+    }
+
+    /**
      * A kept link to hubv2.php lands on the hub's map view, carrying only what it gave.
      *
      * @return void

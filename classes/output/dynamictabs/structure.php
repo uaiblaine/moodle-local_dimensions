@@ -35,8 +35,8 @@ use local_dimensions\output\hub_map;
  * Structure tab: navigate frameworks and their competencies without reloading.
  *
  * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, frameworkid,
- * showhidden, view (one of VIEWS), competencyid (the workspace's deep link), classic (the hub's mode for the
- * visit, {@see \local_dimensions\local\hub_mode}).
+ * showhidden, view (one of VIEWS), competencyid (the workspace's deep link), lens (the workspace's lens,
+ * {@see hub_map::LENSES}), classic (the hub's mode for the visit, {@see \local_dimensions\local\hub_mode}).
  *
  * Every view shares everything this class resolves (the context, the framework list with its
  * unlisted-category filter, the selected framework, canmanage); only the body differs: the classic
@@ -294,7 +294,8 @@ class structure extends \core\output\dynamic_tabs\base {
                 $canmanage,
                 hub_map::reveal_target($selected, (int) ($data['competencyid'] ?? 0)),
                 $view,
-                $structures
+                $structures,
+                hub_map::resolve_lens((string) ($data['lens'] ?? ''), (string) $prefs['display']['structure']['lens'])
             );
             // Read back by core's React helper with JSON.parse; the hex flags keep the markup inert, and a
             // stray invalid byte in admin text must not empty the whole props, and the mount with them.

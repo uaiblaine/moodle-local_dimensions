@@ -57,10 +57,18 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode} from 'react';
 import {
-    PALETTE_SHORTCUT, VIEW_ACTIONS, actionState, actionsFor, ariaShortcut, isMac, shortcutAction, shortcutCaps, specOf,
+    LENS_ACTIONS, PALETTE_SHORTCUT, VIEW_ACTIONS, actionState, actionsFor, ariaShortcut, isMac, shortcutAction, shortcutCaps,
+    specOf,
 } from './commands';
-import type {ActionContext, ActionId, ActionView, KeyCommand, Shortcut} from './commands';
+import type {ActionContext, ActionId, ActionState, ActionView, KeyCommand, Shortcut} from './commands';
 import Editor from './Editor';
+import {codeTitle, findingCounts, orderFindings, stepFinding} from './findings';
+import {NO_IMPACT, deleteImpact, moveImpact, sameImpact} from './impact';
+import {IDLE, LENSES, indexInsights, insightFacts, latest, lensOf} from './insights';
+import type {InsightsIndex, InsightsState, Lens, Measure} from './insights';
+import {countsChild, drawnSet, lensMarks, pairsOnMap} from './lenses';
+import type {ItemMark} from './lenses';
+import {CheckButton, Checker, LensSection, LensSwitch} from './LensPanel';
 import {focusReturn} from './focusreturn';
 import type {LayerOrigin, Pane} from './focusreturn';
 import {suggestIdnumber} from './idnumber';
@@ -96,7 +104,7 @@ import type {Layout} from './selection';
 import Splitter from './Splitter';
 import {OUTLINE_WIDTH, clampWidth, storeWidth, storedWidth} from './outlinewidth';
 import type {CanvasEdge, CanvasNode} from './graph';
-import {rememberSelection} from './deeplink';
+import {rememberLens, rememberSelection} from './deeplink';
 import {blockedBody, confirmBody} from './deletion';
 import {escapeHtml} from './html';
 import {motionDuration} from './motion';
@@ -108,8 +116,8 @@ import Panel from './Panel';
 import type {PanelActions} from './Panel';
 import {track} from './pending';
 import {
-    allChildren, browse, countCompetencies, createCompetency, deleteCheck, deleteCompetency, getNode, moveOne, moveUpTimes,
-    renameCompetency, selectionData, setParent, updateRule,
+    allChildren, browse, countCompetencies, createCompetency, deleteCheck, deleteCompetency, getNode, getNodes,
+    insights as readInsights, moveOne, moveUpTimes, renameCompetency, selectionData, setParent, updateRule,
 } from './repository';
 import type {NodeAnswer} from './repository';
 import Search from './Search';
@@ -212,6 +220,18 @@ const LAYOUT_CLASSES: Record<Layout, string> = {
 /** The custom property through which the outline's width reaches the stylesheet in the Both layout. */
 const WIDTH_PROPERTY = '--local-dimensions-hubv2-outline-width';
 
+/** How long after the workspace mounts the insights are read, so the checker's count can show, in milliseconds. */
+const INSIGHTS_DELAY = 800;
+
+/** How many competencies' names one request asks for. */
+const NAME_BATCH = 50;
+
+/** No lens marks. */
+const NO_MARKS: Map<number, ItemMark> = new Map();
+
+/** No findings marked. */
+const NO_FINDINGS: Map<number, number> = new Map();
+
 /**
  * The workspace: the store, the search, the outline, the map and the panel, inside the provider
  * useReactFlow() needs.
@@ -290,6 +310,31 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         revealed.current?.();
         revealed.current = null;
     };
+    // The lens, its measure, the framework's insights (insights.ts) and the names the tree has not loaded.
+    const [lens, setLens] = useState<Lens>(() => lensOf(props.lens));
+    const lensRef = useRef<Lens>(lens);
+    lensRef.current = lens;
+    const [measure, setMeasure] = useState<Measure>('courses');
+    const [insightsState, setInsights] = useState<InsightsState>(IDLE);
+    const insightsStatus = useRef<InsightsState['status']>('idle');
+    const indexRef = useRef<InsightsIndex | null>(null);
+    const insightsAsk = useMemo(latest, []);
+    const [names, setNames] = useState<Record<number, string>>({});
+    const naming = useRef(new Set<number>());
+    const namedPaths = useRef<Record<number, number[]>>({});
+    // The checker's panel mode, the finding chosen last, and whether a reveal from it keeps it open.
+    const [checker, setChecker] = useState(false);
+    const [findingAt, setFindingAt] = useState<number | null>(null);
+    const findingAtRef = useRef<number | null>(null);
+    const holdChecker = useRef(false);
+    const checkButton = useRef<HTMLButtonElement>(null);
+    const checkerHeading = useRef<HTMLHeadingElement>(null);
+    // The competency whose related competencies' dialogue is open: its closing is the relation's change.
+    const relating = useRef<number | null>(null);
+    // The items a change being confirmed touches (impact.ts), and the competency "Move to" moves.
+    const [impact, setImpactState] = useState<Set<number>>(NO_IMPACT);
+    const moveDialogRef = useRef<number | null>(null);
+    moveDialogRef.current = moveDialog;
 
     /**
      * Change the tree; the ref is what asynchronous work reads between renders.
@@ -402,7 +447,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }, []);
 
     /**
-     * Select a competency, or the framework with null, and keep it in the address.
+     * Select a competency, or the framework with null, and keep it in the address. A selection closes the
+     * checker, unless the checker made it (holdChecker).
      *
      * @param {number|null} id The competency.
      * @returns {void}
@@ -410,6 +456,10 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const choose = useCallback((id: number | null): void => {
         selectedRef.current = id;
         setSelected(id);
+        // Selecting something closes the checker, unless the checker is what revealed it.
+        if (!holdChecker.current) {
+            setChecker(false);
+        }
         rememberSelection(id);
         setUsage(null);
         setRelated([]);
@@ -604,6 +654,107 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }, [labels]);
 
     /**
+     * Read the framework's insights; only the newest request's answer is kept (insights.latest). The last answer
+     * stays shown while a newer one loads, and a failure keeps it too, beside the message and its retry.
+     *
+     * @returns {Promise} Resolves once answered or failed, never rejects.
+     */
+    const loadInsights = useCallback((): Promise<void> => {
+        const ticket = insightsAsk.begin();
+        insightsStatus.current = 'loading';
+        setInsights((current) => ({status: 'loading', index: current.index}));
+        return track('insights', readInsights(framework.id)).then((answer) => {
+            if (!insightsAsk.current(ticket)) {
+                return undefined;
+            }
+            const index = indexInsights(answer);
+            indexRef.current = index;
+            insightsStatus.current = 'ready';
+            setInsights({status: 'ready', index});
+            // The positions of the findings changed with the answer.
+            findingAtRef.current = null;
+            setFindingAt(null);
+            return undefined;
+        }, () => {
+            if (insightsAsk.current(ticket)) {
+                insightsStatus.current = 'failed';
+                setInsights((current) => ({status: 'failed', index: current.index}));
+            }
+            return undefined;
+        });
+    }, [framework.id, insightsAsk]);
+
+    /**
+     * Read the insights unless they are read or on their way: a lens or the checker asked for them.
+     *
+     * @returns {Promise} Resolves once there is an answer (or a failure).
+     */
+    const ensureInsights = useCallback((): Promise<void> => {
+        const status = insightsStatus.current;
+        return status === 'idle' || status === 'failed' ? loadInsights() : Promise.resolve();
+    }, [loadInsights]);
+
+    /**
+     * An action of the registry is done: read the insights again when the registry says it can change them
+     * (commands.ts `changes`) and they have been read at all.
+     *
+     * @param {string} id The action.
+     * @returns {void}
+     */
+    const settled = useCallback((id: ActionId): void => {
+        if (specOf(id).changes && insightsStatus.current !== 'idle') {
+            loadInsights().catch(notifyError);
+        }
+    }, [loadInsights]);
+
+    /**
+     * Ask for the names of competencies the panel's lists show and the tree has not loaded, a batch per request.
+     *
+     * @param {Array} ids The competencies shown.
+     * @returns {void}
+     */
+    const need = useCallback((ids: number[]): void => {
+        const missing = ids.filter((id) => id > 0 && !treeRef.current.nodes[id] && !naming.current.has(id)
+            && namedPaths.current[id] === undefined);
+        for (let start = 0; start < missing.length; start += NAME_BATCH) {
+            const batch = missing.slice(start, start + NAME_BATCH);
+            batch.forEach((id) => naming.current.add(id));
+            track('names', getNodes(batch)).then((answers) => {
+                const found: Record<number, string> = {};
+                answers.forEach((answer, position) => {
+                    const id = batch[position];
+                    // A competency gone meanwhile is named by a dash until the insights are read again.
+                    found[id] = answer.found && answer.node ? answer.node.shortname : '-';
+                    namedPaths.current[id] = answer.pathids ?? [];
+                });
+                setNames((current) => ({...current, ...found}));
+                return null;
+            }).finally(() => batch.forEach((id) => naming.current.delete(id))).catch(notifyError);
+        }
+    }, []);
+
+    /**
+     * Mark the items a change being confirmed touches, unless the same are marked already.
+     *
+     * @param {Set} next The items, NO_IMPACT for none.
+     * @returns {void}
+     */
+    const setImpact = useCallback((next: Set<number>): void => {
+        setImpactState((current) => (sameImpact(current, next) ? current : next));
+    }, []);
+
+    /**
+     * Mark the parents "Move to" would change while one is chosen in it; stable, as the dialogue's effect needs.
+     *
+     * @param {number|null} target The parent chosen, ROOT for the top level, null for none yet.
+     * @returns {void}
+     */
+    const onMoveTarget = useCallback((target: number | null): void => {
+        const source = moveDialogRef.current !== null ? treeRef.current.nodes[moveDialogRef.current] : undefined;
+        setImpact(source && target !== null ? moveImpact(source.parentid, target) : NO_IMPACT);
+    }, [setImpact]);
+
+    /**
      * Pan the map, unless a node is already wholly visible and clear of the overview map and the
      * controls (keynav.panTarget); without animation when the viewer asks for reduced motion.
      *
@@ -760,9 +911,11 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 const known = target === ROOT ? null : {shortname: treeRef.current.nodes[target]?.shortname ?? '', ruletype: null};
                 const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
                 const notification = await load('core/notification');
+                setImpact(moveImpact(source.parentid, target));
                 const confirmed = await notification
                     .saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move)
-                    .then(() => true, () => false);
+                    .then(() => true, () => false)
+                    .finally(() => setImpact(NO_IMPACT));
                 if (!confirmed) {
                     return;
                 }
@@ -775,6 +928,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                     await relocate(source.id, source.parentid, answer);
                 }
                 announce(fill(labels.hubv2_moved, source.shortname));
+                settled('moveto');
             })());
         })().catch(notifyError);
     };
@@ -872,7 +1026,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             const form = new ModalForm({formClass: FORM_CLASS, args, modalConfig: {title}});
             form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
                 if (node) {
-                    track('refresh', refreshNode(node.id)).catch(notifyError);
+                    track('refresh', refreshNode(node.id)).then(() => settled('edit')).catch(notifyError);
                     return;
                 }
                 const newid = Number((event as CustomEvent).detail?.competencyid) || 0;
@@ -887,6 +1041,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                     if (answer.found) {
                         await reveal(newid, answer.pathids ?? []);
                     }
+                    settled('addchild');
                 })()).catch(notifyError);
             });
             await form.show();
@@ -902,7 +1057,11 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      */
     const storeRule = (node: StructureNode, config: RuleConfig): Promise<void> =>
         track('refresh', updateRule(node.id, config).then(() => refreshNode(node.id)))
-            .then(() => announce(labels['core:changessaved']));
+            .then(() => {
+                announce(labels['core:changessaved']);
+                settled('rule');
+                return undefined;
+            });
 
     /**
      * Open the hub's rule dialogue over the competency's children, then store what it returns.
@@ -940,7 +1099,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
          * @returns {void}
          */
         const onClose = (): void => {
-            track('refresh', refreshNode(node.id)).catch(notifyError);
+            track('refresh', refreshNode(node.id)).then(() => settled('links')).catch(notifyError);
         };
         load('local_dimensions/central/competency_links')
             .then((module) => module.open({
@@ -961,6 +1120,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      * @returns {void}
      */
     const openRelated = (node: StructureNode): void => {
+        relating.current = node.id;
         load('local_dimensions/central/related_competencies')
             .then((module) => module.open({competencyid: node.id, competencyname: node.shortname, frameworkid: framework.id}))
             .catch(notifyError);
@@ -1036,9 +1196,11 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 await showBlocked(check);
                 return;
             }
+            setImpact(deleteImpact(treeRef.current, node.id));
             const confirmed = await notification
                 .deleteCancelPromise(labels.hubv2_delete, confirmBody(labels, node.shortname, check))
-                .then(() => true, () => false);
+                .then(() => true, () => false)
+                .finally(() => setImpact(NO_IMPACT));
             if (!confirmed) {
                 removing.current = null;
                 return;
@@ -1067,6 +1229,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 await reloadBranch(node.parentid);
                 await refreshParent(node.parentid);
                 setCount(await countCompetencies(framework.id));
+                settled('delete');
             })());
         })().catch(notifyError);
     };
@@ -1079,6 +1242,175 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      */
     const revealItem = (item: PathItem): void => {
         track('reveal', reveal(item.id, item.pathids)).catch(notifyError);
+    };
+
+    /**
+     * Reveal, select and centre a competency named by id only (a lens's list, a finding): its path is the tree's
+     * when it is loaded, the one its name came with, or asked of the server; the framework is selected for ROOT.
+     *
+     * @param {number} id The competency, ROOT for the framework.
+     * @returns {Promise} Resolves once revealed (or found gone).
+     */
+    const revealId = (id: number): Promise<void> => {
+        if (id === ROOT) {
+            choose(null);
+            focusItem(FRAMEWORK_ID);
+            return Promise.resolve();
+        }
+        let path: Promise<number[] | null>;
+        if (treeRef.current.nodes[id]) {
+            path = Promise.resolve(ancestors(treeRef.current, id));
+        } else if (namedPaths.current[id] !== undefined) {
+            path = Promise.resolve(namedPaths.current[id]);
+        } else {
+            path = getNode(id).then((answer) => (answer.found ? answer.pathids ?? [] : null));
+        }
+        return track('reveal', path.then((pathids) => (pathids === null ? undefined : reveal(id, pathids))));
+    };
+
+    /**
+     * Reveal a competency from a lens's list.
+     *
+     * @param {number} id The competency.
+     * @returns {void}
+     */
+    const revealListed = (id: number): void => {
+        revealId(id).catch(notifyError);
+    };
+
+    /**
+     * Choose a finding: mark it in the list, reveal and select its item in both panes with the checker kept open,
+     * and say which it is ("Finding 2 of 6: No description, Domain A").
+     *
+     * @param {number} position The finding's place in the list.
+     * @param {Array} ordered The findings, in the list's order.
+     * @returns {Promise} Resolves once revealed.
+     */
+    const revealFinding = async(position: number, ordered: ReturnType<typeof orderFindings>): Promise<void> => {
+        const check = ordered[position];
+        if (!check) {
+            return;
+        }
+        findingAtRef.current = position;
+        setFindingAt(position);
+        holdChecker.current = true;
+        try {
+            await revealId(check.competencyid);
+        } finally {
+            holdChecker.current = false;
+        }
+        const name = check.competencyid === ROOT
+            ? framework.shortname
+            : treeRef.current.nodes[check.competencyid]?.shortname ?? '';
+        announce(fillObject(labels.hubv2_checker_position, {
+            position: String(position + 1),
+            total: String(ordered.length),
+            title: codeTitle(labels, check.code),
+            name,
+        }));
+    };
+
+    /**
+     * Open the checker in the panel, reading the insights when they are not read yet, its heading focused.
+     *
+     * @returns {void}
+     */
+    const openChecker = (): void => {
+        setMenu(null);
+        setChecker(true);
+        ensureInsights().catch(notifyError);
+        window.requestAnimationFrame(() => checkerHeading.current?.focus());
+    };
+
+    /**
+     * Close the checker, the focus back on its button.
+     *
+     * @returns {void}
+     */
+    const closeChecker = (): void => {
+        setChecker(false);
+        checkButton.current?.focus();
+    };
+
+    /**
+     * Go to the next finding, or the previous one, wrapping at both ends (F8, Shift+F8, the palette): the
+     * checker opens, the insights are read first when they are not.
+     *
+     * @param {boolean} forward Forward when true.
+     * @returns {void}
+     */
+    const stepToFinding = (forward: boolean): void => {
+        track('finding', (async() => {
+            setMenu(null);
+            setChecker(true);
+            if (!indexRef.current) {
+                await ensureInsights();
+            }
+            const index = indexRef.current;
+            if (!index) {
+                return;
+            }
+            const ordered = orderFindings(index.answer.checks);
+            const next = stepFinding(ordered.length, findingAtRef.current, forward);
+            if (next === null) {
+                announce(labels.hubv2_checker_none);
+                return;
+            }
+            await revealFinding(next, ordered);
+        })()).catch(notifyError);
+    };
+
+    /**
+     * Show a lens, and keep it where the next visit reads it: the address (lens=), the pane's data (a reload of
+     * the pane, after a framework action, opens with it) and the saved preference.
+     *
+     * @param {string} next The lens.
+     * @returns {void}
+     */
+    const changeLens = (next: Lens): void => {
+        setLens(next);
+        lensRef.current = next;
+        rememberLens(next);
+        const pane = rootRef.current?.closest<HTMLElement>('[data-tab-content]');
+        if (pane) {
+            pane.dataset.lens = next;
+        }
+        load('local_dimensions/central/preferences')
+            .then((preferences) => {
+                preferences.saveDisplay({structure: {lens: next}});
+                return null;
+            })
+            .catch(notifyError);
+        if (next !== 'none') {
+            ensureInsights().catch(notifyError);
+        }
+    };
+
+    /**
+     * Run an action of the registry on a competency named by a list (a rule block, a finding), revealing it first
+     * when the tree has not loaded it: the registry decides on the loaded competency.
+     *
+     * @param {string} action The action.
+     * @param {number} id The competency.
+     * @returns {void}
+     */
+    const runOn = (action: ActionId, id: number): void => {
+        /**
+         * Run the action, once the competency is in the tree.
+         *
+         * @returns {void}
+         */
+        const run = (): void => {
+            runAction(action, id);
+        };
+        if (treeRef.current.nodes[id]) {
+            run();
+            return;
+        }
+        holdChecker.current = true;
+        revealId(id).then(run).finally(() => {
+            holdChecker.current = false;
+        }).catch(notifyError);
     };
 
     /**
@@ -1190,6 +1522,9 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             expanding: expandingRef.current,
             frameworkvisible: framework.visible,
             cancreate: props.structures.cancreate,
+            lens: lensRef.current,
+            usagelevel: indexRef.current ? indexRef.current.answer.usagelevel : null,
+            findings: indexRef.current ? indexRef.current.answer.checks.length : null,
         };
     };
 
@@ -1307,6 +1642,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 commit((current) => setExpanded(current, parent, true));
                 setCount(await countCompetencies(framework.id));
                 announce(fill(labels.hubv2_editor_created, name));
+                settled('quicksibling');
                 return id;
             })());
             editorSerial.current++;
@@ -1494,7 +1830,19 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             switchLayout(view);
             return;
         }
+        const chosen = LENS_ACTIONS[id];
+        if (chosen) {
+            changeLens(chosen);
+            return;
+        }
         switch (id) {
+            case 'check':
+                openChecker();
+                break;
+            case 'nextfinding':
+            case 'prevfinding':
+                stepToFinding(id === 'nextfinding');
+                break;
             case 'moveroot':
                 pickParent(ROOT);
                 break;
@@ -1698,13 +2046,25 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
 
     /**
      * Ctrl+K (Cmd+K on a Mac) opens the palette while the focus is anywhere inside the workspace; outside
-     * it the browser keeps its own shortcut.
+     * it the browser keeps its own shortcut. F8 and Shift+F8 go to the next and the previous finding, from
+     * anywhere inside it too, unless a layer (a menu, the palette, a dialogue) has the keys.
      *
      * @param {object} event The key event.
      * @returns {void}
      */
     const onRootKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
-        if (shortcutAction(event, 'map') !== 'palette' || palette || moveDialog !== null) {
+        const command = shortcutAction(event, 'map');
+        if (palette || moveDialog !== null) {
+            return;
+        }
+        if (command === 'nextfinding' || command === 'prevfinding') {
+            if (menu === null) {
+                event.preventDefault();
+                stepToFinding(command === 'nextfinding');
+            }
+            return;
+        }
+        if (command !== 'palette') {
             return;
         }
         event.preventDefault();
@@ -1763,7 +2123,11 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             return;
         }
         const command = shortcutAction(event, from);
-        if (command !== null && command !== 'palette') {
+        // The palette's key and the checker's walk are the workspace root's (onRootKeyDown).
+        if (command === 'palette' || command === 'nextfinding' || command === 'prevfinding') {
+            return;
+        }
+        if (command !== null) {
             if (keyCommand(command, stop.activeRef.current, element, from)) {
                 event.preventDefault();
             }
@@ -1876,6 +2240,11 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                     if (selectedRef.current !== null && selectedRef.current !== removing.current) {
                         loadSelection(selectedRef.current);
                     }
+                    // The related competencies' dialogue writes as it goes: its closing ends the change.
+                    if (relating.current !== null) {
+                        relating.current = null;
+                        settled('relate');
+                    }
                 };
                 $(document).on(MODAL_HIDDEN, onHidden);
                 /**
@@ -1890,7 +2259,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             })
             .catch(notifyError);
         return () => off();
-    }, [loadSelection]);
+    }, [loadSelection, settled]);
 
     /**
      * The name of a "load more" node.
@@ -1918,6 +2287,75 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const frameworkName = useCallback((total: number): string =>
         `${framework.shortname}, ${fillCount(labels, 'hubv2_competencies', total)}`, [framework.shortname, labels]);
 
+    // Read the insights once shortly after mounting, so the checker's count shows; at once when a lens is shown.
+    useEffect(() => {
+        if (lensRef.current !== 'none') {
+            ensureInsights().catch(notifyError);
+            return undefined;
+        }
+        const timer = window.setTimeout(() => {
+            ensureInsights().catch(notifyError);
+        }, INSIGHTS_DELAY);
+        return () => window.clearTimeout(timer);
+    }, [ensureInsights]);
+
+    // A later framework never takes an answer asked for this one.
+    useEffect(() => () => insightsAsk.drop(), [insightsAsk]);
+
+    const index = insightsState.index;
+    const drawn = useMemo(() => drawnSet(tree), [tree]);
+    const mappairs = useMemo(
+        () => (index && lens === 'relations' ? pairsOnMap(index.answer.pairs, drawn) : null),
+        [index, lens, drawn]
+    );
+    /**
+     * A competency's name, from the tree or from the names read for the panel's lists.
+     *
+     * @param {number} id The competency, ROOT for the framework.
+     * @returns {string|null} The name, or null while it is not known.
+     */
+    const nameById = (id: number): string | null => {
+        if (id === ROOT) {
+            return framework.shortname;
+        }
+        return tree.nodes[id]?.shortname ?? names[id] ?? null;
+    };
+    const marks = useMemo(() => (index ? lensMarks(lens, [...drawn], {
+        labels,
+        index,
+        measure,
+        elsewhere: mappairs ? mappairs.elsewhere : new Map(),
+        /**
+         * The name of the parent a child's points belong to.
+         *
+         * @param {number} id The parent.
+         * @returns {string} Its name, empty while unknown.
+         */
+        nameOf: (id) => tree.nodes[id]?.shortname ?? names[id] ?? '',
+    }) : NO_MARKS), [index, lens, drawn, labels, measure, mappairs, tree, names]);
+    const findingsmarked = useMemo(
+        () => (checker && index ? findingCounts(index.answer.checks) : NO_FINDINGS),
+        [checker, index]
+    );
+    const findingwords = useCallback((total: number): string => fillCount(labels, 'hubv2_findings', total), [labels]);
+    const decor = useMemo(() => ({
+        marks,
+        findings: findingsmarked,
+        findingwords,
+        impact,
+        counts: lens === 'rules' && index
+            /**
+             * Whether the parent's rule counts the child.
+             *
+             * @param {number} parent The parent.
+             * @param {number} child The child.
+             * @returns {boolean} Whether it does.
+             */
+            ? (parent: number, child: number): boolean => countsChild(index, parent, child)
+            : undefined,
+        pairs: mappairs ? mappairs.edges : undefined,
+    }), [marks, findingsmarked, findingwords, impact, lens, index, mappairs]);
+
     const relatedids = useMemo(() => related.map((item) => item.id), [related]);
     const graph = useMemo(() => buildGraph({
         tree,
@@ -1927,7 +2365,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         moving,
         labels: {roledescription: labels.hubv2_noderole, more: moreLabel, name: nameOf, framework: frameworkName},
         rtl,
-    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl]);
+        decor,
+    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl, decor]);
     const graphRef = useRef(graph);
     graphRef.current = graph;
 
@@ -2193,7 +2632,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
-     * The keys the outline's foot names: the authoring keys for a manager, the palette for everyone.
+     * The keys the outline's foot names: the authoring keys for a manager, the palette for everyone, F8 once the
+     * checker has findings.
      *
      * @returns {Array} The hints.
      */
@@ -2210,6 +2650,10 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             keys.forEach(([shortcut, label]) => hints.push({shortcut, label}));
         }
         hints.push({shortcut: PALETTE_SHORTCUT, label: labels.hubv2_commands});
+        // The checker's walk, once there is something to walk.
+        if (insightsState.index && insightsState.index.answer.checks.length > 0) {
+            hints.push({shortcut: {key: 'F8'}, label: labels.hubv2_cmd_nextfinding});
+        }
         return hints;
     };
 
@@ -2391,14 +2835,20 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                         freshParent={freshParent}
                         onPick={() => {
                             setMoveDialog(null);
+                            setImpact(NO_IMPACT);
                             startMove(movingnode);
                         }}
                         onCommit={(target) => {
                             setMoveDialog(null);
+                            setImpact(NO_IMPACT);
                             moveUnder(movingnode, target, false);
                         }}
-                        onClose={() => setMoveDialog(null)}
+                        onClose={() => {
+                            setMoveDialog(null);
+                            setImpact(NO_IMPACT);
+                        }}
                         onLostFocus={restoreFocus}
+                        onTarget={onMoveTarget}
                     />
                 ) : null}
             </>
@@ -2406,6 +2856,47 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
+
+    // Usage is offered unless the viewer is told none; while it is the lens shown, its cell stays, pressed.
+    const offeredlenses = LENSES.filter((value) => value !== 'usage' || lens === 'usage' || index?.answer.usagelevel !== 'none');
+    const facts = insightFacts(index);
+    const orderedfindings = orderFindings(facts.checks);
+    const loadedids = Object.keys(tree.nodes).map(Number);
+    /**
+     * The registry's decision for a competency the tree has not loaded: a manager of the framework is offered the
+     * action, which runs once the competency is revealed, the registry deciding then (runOn).
+     *
+     * @returns {string} The state.
+     */
+    const fallbackState = (): ActionState => (framework.canmanage && moving === null ? 'enabled' : 'hidden');
+
+    /**
+     * The checker's panel mode while it is open.
+     *
+     * @returns {object|null} The checker, or null while it is closed.
+     */
+    const checkerPanel = (): ReactNode => (checker ? (
+        <Checker
+            labels={labels}
+            state={insightsState}
+            findings={orderedfindings}
+            current={findingAt}
+            frameworkname={framework.shortname}
+            canmanage={framework.canmanage}
+            nameOf={nameById}
+            need={need}
+            actionFor={(action, id) => (tree.nodes[id] ? actionState(action, contextFor(id)) : fallbackState())}
+            onReveal={(position) => {
+                revealFinding(position, orderedfindings).catch(notifyError);
+            }}
+            onFix={runOn}
+            onAgain={() => {
+                loadInsights().catch(notifyError);
+            }}
+            onClose={closeChecker}
+            headingRef={checkerHeading}
+        />
+    ) : null);
 
     const relatedcount = node && usage !== null ? related.length : null;
     const widthstyle = {[WIDTH_PROPERTY]: `${outlineWidth}px`} as CSSProperties;
@@ -2418,12 +2909,15 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         <div className={rootclasses.join(' ')} style={widthstyle} ref={rootRef} onKeyDown={onRootKeyDown}>
             <div className="local-dimensions-hubv2-main">
                 <div className="local-dimensions-hubv2-bar">
+                    <LensSwitch labels={labels} lens={lens} offered={offeredlenses} onChange={changeLens} />
                     <Search labels={labels} frameworkid={framework.id} onChoose={actions.reveal} />
                     {panes.map ? (
                         <span className="local-dimensions-hubv2-hint">
                             <i className="fa fa-search-plus me-1" aria-hidden="true" />{labels.hubv2_zoomhint}
                         </span>
                     ) : null}
+                    <CheckButton labels={labels} findings={facts.findings} open={checker}
+                        buttonRef={checkButton} onToggle={() => (checker ? closeChecker() : openChecker())} />
                     <button
                         type="button"
                         className="btn btn-sm btn-outline-secondary local-dimensions-hubv2-cmdbtn"
@@ -2464,6 +2958,10 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             editor={outlineEditor()}
                             hints={outlineHints()}
                             mac={mac}
+                            marks={marks}
+                            findings={findingsmarked}
+                            findingwords={findingwords}
+                            impact={impact}
                         />
                     ) : null}
                     {layout === 'both' ? (
@@ -2559,9 +3057,28 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 moveactions={actionsFor(['move'], selectedcontext)}
                 topactions={actionsFor(['workspace'], selectedcontext).filter((view) => view.spec.id === 'addtop')}
                 frameworkactions={frameworkactions}
-                summary={summaryLines(labels, summaryFacts(tree, count))}
+                summary={summaryLines(labels, summaryFacts(tree, count), facts.summary)}
                 summaryRef={summaryRef}
                 actions={actions}
+                lens={(
+                    <LensSection
+                        labels={labels}
+                        lens={lens}
+                        state={insightsState}
+                        measure={measure}
+                        loaded={loadedids}
+                        nameOf={nameById}
+                        need={need}
+                        reveal={revealListed}
+                        ruleState={(id) => (tree.nodes[id] ? actionState('rule', contextFor(id)) : fallbackState())}
+                        runOn={runOn}
+                        onMeasure={setMeasure}
+                        onRetry={() => {
+                            loadInsights().catch(notifyError);
+                        }}
+                    />
+                )}
+                checker={checkerPanel()}
             />
             <div className="visually-hidden" aria-live="polite">{announcement}</div>
             {overlays()}

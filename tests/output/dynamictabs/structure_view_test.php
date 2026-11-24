@@ -265,9 +265,10 @@ final class structure_view_test extends advanced_testcase {
         $props = $data['decoded'];
         $this->assertSame(
             ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal', 'layout',
-                'structures'],
+                'structures', 'lens'],
             array_keys($props)
         );
+        $this->assertSame('none', $props['lens']);
         $this->assertSame(
             ['id', 'shortname', 'idnumber', 'competencycount', 'canmanage', 'visible', 'contextname', 'scale', 'taxonomies',
                 'taxonomyfallback', 'deletable'],
@@ -301,6 +302,35 @@ final class structure_view_test extends advanced_testcase {
         // The framework select beside it lists the same frameworks the list view does.
         $this->assertSame(['Alpha', 'Beta'], array_column($data['frameworks'], 'name'));
         $this->assertSame([false, true], array_column($data['frameworks'], 'selected'));
+    }
+
+    /**
+     * The workspace opens with the pane's lens (the address's), else the viewer's saved one, else none; any value that
+     * is not a lens counts as none named, in the pane as in the preference.
+     *
+     * @return void
+     */
+    public function test_the_workspace_opens_with_the_pane_lens_then_the_saved_one_then_none(): void {
+        $this->resetAfterTest();
+        $frameworkid = (int) $this->one_framework()->get('id');
+        $lens = fn(array $pane): string =>
+            $this->export(['frameworkid' => $frameworkid, 'view' => 'both'] + $pane)['decoded']['lens'];
+
+        $this->assertSame('none', $lens([]));
+        foreach (hub_map::LENSES as $value) {
+            $this->assertSame($value, $lens(['lens' => $value]));
+        }
+        $this->assertSame('none', $lens(['lens' => 'heatmap']));
+
+        set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['lens' => 'rules']]));
+        $this->assertSame('rules', $lens([]));
+        $this->assertSame('rules', $lens(['lens' => 'RULES']));
+        $this->assertSame('usage', $lens(['lens' => 'usage']));
+        $this->assertSame('none', $lens(['lens' => 'none']));
+
+        set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['lens' => '<b>usage</b>']]));
+        $this->assertSame('none', $lens([]));
+        $this->assertSame('relations', $lens(['lens' => 'relations']));
     }
 
     /**

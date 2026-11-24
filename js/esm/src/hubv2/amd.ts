@@ -97,11 +97,12 @@ export type JQueryModule = (target: Document) => {
 
 /**
  * Local_dimensions/central/preferences: the hub's saved display choices, which the classic list's
- * "Display options" and the outline's share (structure.id, structure.tax).
+ * "Display options" and the outline's share (structure.id, structure.tax), and the workspace's lens
+ * (structure.lens).
  */
 export type PreferencesModule = {
     getDisplay: () => {structure: Record<string, unknown>},
-    saveDisplay: (partial: {structure: Record<string, boolean>}) => void,
+    saveDisplay: (partial: {structure: Record<string, boolean | string>}) => void,
 };
 
 /**

@@ -6,6 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Lenses and the structure check in the workspace
+
+Version `2026100539`. Stage S5 of the hub v2 record (ideas I19, I20, I22, I26 to I28): the workspace reads a
+framework's usage, rules, relations and findings from `local_dimensions_get_framework_insights`, one answer
+per framework, and shows them in three lenses and a checker. No write path is added: every fix a finding
+offers is an existing action of the registry.
+
+- **Lens switch** in the workspace's bar (None, Usage, Rules, Relations; `aria-pressed` cells in a labelled
+  group), also in the palette ("No lens", "Lens: usage", ...). The lens is saved as `structure.lens` in
+  `local_dimensions_central_display` (sanitised by `helper::get_central_prefs()` and `preferences.js`),
+  kept in the address as `lens=` without a history entry and in the tab's pane data, and handed to the
+  workspace in its props, resolved like the view (`hub_map::resolve_lens()`: the address, the saved one,
+  none).
+- **Usage**: each card's ground steps through the brand's tint, edge and fill by the chosen measure (0; 1
+  to 2; 3 to 5; 6 or more), each under an ink that clears 4.5:1 in light and dark; an unused competency
+  has a dashed edge; the count in words under the name, as the outline's quiet counter, and in the names.
+  The panel holds the measure switch (courses, activities, plan templates, learning plans), the legend
+  with its counts and the unused competencies. Under presence counts only used and unused are shown and
+  the panel says why; with no usage the lens is not offered and the panel says why.
+- **Rules**: a ruled parent carries "6 of 8 points" (or its rule's label) and its children their points
+  and "required"; only the children a points rule counts take the rule edge; a rule that can never fire
+  is a dashed warning with a triangle and words; the rest is quieter. The panel lists the legend and one
+  block per rule with **Set the rule…** for a manager.
+- **Relations**: every related pair with both ends drawn is a dotted edge, one end alone shows "+N
+  elsewhere"; the panel lists the pairs, each end a button that reveals it.
+- **Check**: a button with the findings' count opens the checker in the panel (its own mode, closed by its
+  close button or by a selection): the codes present with their counts, **Check again**, each finding with
+  its words, **Reveal** and the action that fixes it, and the codes found nowhere. F8 and Shift+F8 walk
+  the findings, wrapping, and announce "Finding 2 of 6: ...". While the checker is open, an item with
+  findings carries a warning mark with their count, in its name too.
+- **Impact preview**: while a delete's confirmation or "Move to" is open, the competencies it touches are
+  outlined on the map and in the outline.
+- The framework's summary takes the service's numbers once read: levels, competencies with a rule,
+  related pairs and findings.
+- The insights are read shortly after the workspace mounts, when a lens or the checker is first asked
+  for, after any action of the registry marked as changing them, and on "Check again"; a stale answer is
+  dropped. Names of competencies the tree has not loaded are read in batches as the panel lists them.
+
 ### The framework on the root: the workspace replaces the Structures tab and the classic list
 
 Version `2026100538`. Owner's decisions H2 and H3 of the hub v2 record: on 5.3 the workspace is the

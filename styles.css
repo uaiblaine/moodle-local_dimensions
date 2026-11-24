@@ -8975,6 +8975,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-hubv2-bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
@@ -10433,6 +10434,393 @@ a.local-dimensions-central-links-badge-warn:focus {
     padding: 0 0.25rem;
     font-size: 0.75rem;
     pointer-events: auto;
+}
+
+/*
+ * The lenses and the checker (LensPanel.tsx, lenses.ts, findings.ts). A lens never speaks by colour alone: each
+ * mark has a shape (a dashed edge, an icon, a thicker edge) and words on the card, in its name and in the panel.
+ * The usage ramp is one hue, the brand's, from the token block (brand-tint, brand-edge, brand-fill), each ground
+ * under an ink that clears 4.5:1 on the light and the dark page (colour_tokens_test PAIRS); the card's line takes
+ * that ink, never ink-muted, on a stepped ground. A selected card keeps its own edge and ring over any lens's.
+ */
+.local-dimensions-hubv2-lensswitch {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.local-dimensions-hubv2-lenslabel {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--local-dimensions-ink-muted);
+}
+
+/* The Design System's segmented control, as a view switch: aria-pressed cells on an inset platter. */
+.local-dimensions-hubv2-seg {
+    display: inline-flex;
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    border: 1px solid transparent;
+    border-radius: var(--local-dimensions-radius-lg);
+    background-color: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-seg.local-dimensions-hubv2-seg-wrap {
+    flex-wrap: wrap;
+    align-self: flex-start;
+}
+
+.local-dimensions-hubv2-seg .local-dimensions-hubv2-seg-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: transparent;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.local-dimensions-hubv2-seg .local-dimensions-hubv2-seg-cell[aria-pressed="true"] {
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-hubv2-seg .local-dimensions-hubv2-seg-cell:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+    .local-dimensions-hubv2-seg .local-dimensions-hubv2-seg-cell {
+        height: 2.25rem;
+    }
+}
+
+/*
+ * The "Check" button and its loud counter, the Design System's one round shape on a bar. It sits just before
+ * "Commands", which stays the bar's last control (the map's Tab stop follows it), and takes over the push to the
+ * bar's end.
+ */
+.local-dimensions-hubv2-checkbtn {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    margin-inline-start: auto;
+}
+
+.local-dimensions-hubv2-bar .local-dimensions-hubv2-hint + .local-dimensions-hubv2-checkbtn,
+.local-dimensions-hubv2-bar .local-dimensions-hubv2-checkbtn + .local-dimensions-hubv2-cmdbtn {
+    margin-inline-start: 0;
+}
+
+.local-dimensions-hubv2-badge {
+    position: absolute;
+    top: -0.25rem;
+    inset-inline-end: -0.25rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.25rem;
+    border-radius: 50rem;
+    background-color: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The usage lens's ramp: unused is a dashed edge; 1 to 2, 3 to 5 and 6 or more step through the brand's hue. */
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-low,
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-used,
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-low,
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-used {
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-ink-strong);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-mid,
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-mid {
+    background-color: var(--local-dimensions-brand-edge);
+    color: var(--local-dimensions-ink-strong);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-high,
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-high {
+    background-color: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+}
+
+.local-dimensions-hubv2-lens-low .local-dimensions-hubv2-card-sub,
+.local-dimensions-hubv2-lens-used .local-dimensions-hubv2-card-sub,
+.local-dimensions-hubv2-lens-mid .local-dimensions-hubv2-card-sub,
+.local-dimensions-hubv2-lens-high .local-dimensions-hubv2-card-sub,
+.local-dimensions-hubv2-lens-cannotfire .local-dimensions-hubv2-card-sub {
+    color: inherit;
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-unused:not(.local-dimensions-hubv2-selected),
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-unused {
+    border: 2px dashed var(--local-dimensions-ink-muted);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+}
+
+/* What a lens does not speak of is quieter, never hidden: the canvas's own ground, no shadow. */
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-quiet:not(.local-dimensions-hubv2-selected),
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-quiet {
+    background-color: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+    box-shadow: none;
+}
+
+/* The rules lens: a ruled parent's edge is the rule edges' colour, a rule that cannot fire a dashed warning. */
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-ruled:not(.local-dimensions-hubv2-selected),
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-ruled {
+    border: 2px solid var(--local-dimensions-warning-edge);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-cannotfire,
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-cannotfire {
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-cannotfire:not(.local-dimensions-hubv2-selected),
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-cannotfire {
+    border: 2px dashed var(--local-dimensions-warning-ink);
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-counted:not(.local-dimensions-hubv2-selected) {
+    border-color: var(--local-dimensions-warning-edge);
+}
+
+/* The relations lens: a related competency's edge is the dotted relation edges' colour. */
+.local-dimensions-hubv2-card.local-dimensions-hubv2-lens-related:not(.local-dimensions-hubv2-selected),
+.local-dimensions-hubv2-swatchbox.local-dimensions-hubv2-lens-related {
+    border: 2px solid var(--local-dimensions-info-edge);
+}
+
+.local-dimensions-hubv2-elsewhere {
+    flex: none;
+    padding: 0 0.25rem;
+    border: 1px dashed var(--local-dimensions-info-ink);
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* A finding's mark on a card and a row while the checker is open: a triangle and the count. */
+.local-dimensions-hubv2-findmark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.25rem;
+    border: 1px solid var(--local-dimensions-warning-edge);
+    border-radius: var(--local-dimensions-radius-sm);
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* The impact preview: what a change being confirmed touches, a dashed outline and a mark of its own. */
+.local-dimensions-hubv2-card.local-dimensions-hubv2-impact {
+    position: relative;
+    outline: 2px dashed var(--local-dimensions-danger-ink);
+    outline-offset: 3px;
+}
+
+.local-dimensions-hubv2-orow.local-dimensions-hubv2-impact {
+    outline: 2px dashed var(--local-dimensions-danger-ink);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-impactmark {
+    position: absolute;
+    top: -0.5rem;
+    inset-inline-end: -0.5rem;
+    display: grid;
+    place-items: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid var(--local-dimensions-danger-edge);
+    border-radius: var(--local-dimensions-radius-sm);
+    background-color: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
+    font-size: 0.75rem;
+}
+
+/* The outline's lens meta: a count, an icon, or the dashed box of an unused competency. */
+.local-dimensions-hubv2-ometa.local-dimensions-hubv2-olens {
+    gap: 0.25rem;
+}
+
+.local-dimensions-hubv2-ometa-unused {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px dashed var(--local-dimensions-ink-muted);
+    border-radius: var(--local-dimensions-radius-xs);
+}
+
+/* The panel's lens section and the checker. */
+.local-dimensions-hubv2-subtitle {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-hubv2-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-legend li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.local-dimensions-hubv2-legend-label {
+    flex: 1 1 auto;
+}
+
+.local-dimensions-hubv2-legend-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--local-dimensions-ink-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.local-dimensions-hubv2-count {
+    font-variant-numeric: tabular-nums;
+}
+
+.local-dimensions-hubv2-swatchbox {
+    display: inline-block;
+    flex: none;
+    box-sizing: border-box;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: var(--local-dimensions-surface);
+}
+
+.local-dimensions-hubv2-lenslist {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.local-dimensions-hubv2-lens-notice {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--local-dimensions-info-edge);
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-ruleblock {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-status--warning {
+    border-color: var(--local-dimensions-warning-edge);
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+}
+
+.local-dimensions-hubv2-pairsep {
+    color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-sk-name {
+    display: inline-block;
+    width: 8rem;
+    height: 0.75rem;
+    border-radius: var(--local-dimensions-radius-xs);
+    vertical-align: middle;
+}
+
+.local-dimensions-hubv2-insights-failed {
+    padding: 0.75rem;
+    border: 1px solid var(--local-dimensions-danger-edge);
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-checker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.local-dimensions-hubv2-codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.local-dimensions-hubv2-findings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.local-dimensions-hubv2-finding {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+}
+
+/* The chosen finding: a thicker edge and the brand's tint; its Reveal button is pressed. */
+.local-dimensions-hubv2-finding.local-dimensions-hubv2-finding--chosen {
+    border: 2px solid var(--local-dimensions-brand-edge);
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-ink-strong);
+}
+
+.local-dimensions-hubv2-finding-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-finding-name {
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-empty--compact {
+    color: var(--local-dimensions-ink-muted);
 }
 
 /* The Competencies tab's Structures menu: core's dropdown, each item with its icon, the check box of a choice. */

@@ -2635,6 +2635,11 @@ class helper {
                 'view' => in_array($structsrc['view'] ?? null, \local_dimensions\output\dynamictabs\structure::VIEWS, true)
                     ? (string) $structsrc['view']
                     : '',
+                // The workspace's lens; anything but a known one is none saved (''), and the workspace opens
+                // without a lens unless the address names one (hub_map::resolve_lens()).
+                'lens' => in_array($structsrc['lens'] ?? null, \local_dimensions\output\hub_map::LENSES, true)
+                    ? (string) $structsrc['lens']
+                    : '',
             ],
             'planslist' => [
                 'id' => $dispbool($listsrc, 'id', false),

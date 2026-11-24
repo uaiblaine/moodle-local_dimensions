@@ -121,9 +121,10 @@ function local_dimensions_user_preferences(): array {
     ];
     return [
         \local_dimensions\constants::PREF_CENTRAL_NAV => $definition,
-        // Its `classic` member is written by the hub's context-bar link only: a client write keeps the stored one.
+        // Its `classic` member is written by the hub's context-bar link only, and its lens only by a write that
+        // carries one: a client write keeps the stored value of either (hub_map::clean_display()).
         \local_dimensions\constants::PREF_CENTRAL_DISPLAY => $definition + [
-            'cleancallback' => [\local_dimensions\local\hub_mode::class, 'clean_display'],
+            'cleancallback' => [\local_dimensions\output\hub_map::class, 'clean_display'],
         ],
         \local_dimensions\constants::PREF_LEARNER_VIEW => $definition,
         \local_dimensions\constants::PREF_LEARNER_FAV => $definition,

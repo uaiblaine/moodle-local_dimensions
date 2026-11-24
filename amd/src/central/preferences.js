@@ -37,6 +37,11 @@ const PREF_DISPLAY = 'local_dimensions_central_display';
  * the server's to apply (structure::resolve_view()): an unknown saved view is kept as none ('').
  */
 const STRUCTURE_VIEWS = ['list', 'outline', 'map', 'both'];
+/**
+ * @type {String[]} The workspace's lenses (hub_map::LENSES). As with the view, the server resolves the lens: an
+ * unknown saved lens is kept as none saved ('').
+ */
+const STRUCTURE_LENSES = ['none', 'usage', 'rules', 'relations'];
 /** @type {Number} Debounce (ms) before a change is written to the server. */
 const SAVE_DELAY = 400;
 
@@ -46,7 +51,7 @@ const NAV_DEFAULTS = {
 };
 /** @type {Object} Default display state. */
 const DISPLAY_DEFAULTS = {
-    structure: {tax: false, id: false, rule: true, showhidden: false, view: ''},
+    structure: {tax: false, id: false, rule: true, showhidden: false, view: '', lens: ''},
     planslist: {id: false, duedate: false},
     plansdetail: {tax: false, path: false, id: false},
     panels: {structure: true, planslist: true, plansdetail: true},
@@ -87,8 +92,28 @@ let pinnedcontext = null;
 const scheduleSave = (name, value) => {
     window.clearTimeout(timers[name]);
     timers[name] = window.setTimeout(() => {
-        setUserPreference(name, JSON.stringify(value)).catch(notifyError);
+        const payload = typeof value === 'function' ? value() : value;
+        setUserPreference(name, JSON.stringify(payload)).catch(notifyError);
     }, SAVE_DELAY);
+};
+
+/** @type {Boolean} Whether the lens was chosen since the last write: only then does a write carry it. */
+let lenschosen = false;
+
+/**
+ * The display state as one write sends it: the lens only when it was chosen since the last write, so a page left
+ * open never writes the lens it loaded with over one chosen since in another (hub_map::clean_display() keeps the
+ * stored lens of a write without one).
+ *
+ * @return {Object}
+ */
+const displayPayload = () => {
+    const payload = clone(display);
+    if (!lenschosen) {
+        delete payload.structure.lens;
+    }
+    lenschosen = false;
+    return payload;
 };
 
 /**
@@ -108,9 +133,12 @@ export const init = (state) => {
     }
     const incoming = seed.display || {};
     const structure = {...DISPLAY_DEFAULTS.structure, ...(incoming.structure || {})};
-    // As helper::get_central_prefs() reads it: anything but a known view is none saved.
+    // As helper::get_central_prefs() reads them: anything but a known view or lens is none saved.
     if (!STRUCTURE_VIEWS.includes(structure.view)) {
         structure.view = '';
+    }
+    if (!STRUCTURE_LENSES.includes(structure.lens)) {
+        structure.lens = '';
     }
     display = {
         structure,
@@ -151,11 +179,15 @@ export const saveNav = (partial) => {
  * Merge a partial display change (one level deep for the nested sections) and persist it.
  *
  * The store never holds the hub's mode (`classic`), so it never writes it: the server keeps the stored one on
- * every client write (hub_mode::clean_display()), and only the context bar's link changes it.
+ * every client write (hub_mode::clean_display()), and only the context bar's link changes it. The lens is written
+ * only by the write that follows its choice (displayPayload()); every other write leaves the stored one.
  *
  * @param {Object} partial e.g. {structure: {tax: true}} or {plansshowdisabled: true}.
  */
 export const saveDisplay = (partial) => {
+    if (partial.structure && typeof partial.structure === 'object' && 'lens' in partial.structure) {
+        lenschosen = true;
+    }
     Object.keys(partial).forEach((key) => {
         const value = partial[key];
         if (value && typeof value === 'object' && display[key] && typeof display[key] === 'object') {
@@ -164,5 +196,5 @@ export const saveDisplay = (partial) => {
             display[key] = value;
         }
     });
-    scheduleSave(PREF_DISPLAY, display);
+    scheduleSave(PREF_DISPLAY, displayPayload);
 };

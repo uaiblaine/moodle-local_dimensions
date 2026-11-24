@@ -20,7 +20,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {PARAM, rememberSelection, withCompetency} from '../../src/hubv2/deeplink';
+import {LENS_PARAM, PARAM, rememberLens, rememberSelection, withCompetency, withLens} from '../../src/hubv2/deeplink';
 
 const HUB = 'https://example.com/local/dimensions/central.php?pagecontextid=12&tab=structure&view=map#structure';
 
@@ -77,5 +77,30 @@ describe('rememberSelection', () => {
         rememberSelection(null);
         expect(spy).not.toHaveBeenCalled();
         spy.mockRestore();
+    });
+});
+
+describe('withLens', () => {
+    it('names a lens and keeps the rest of the address, the competency and the tab fragment', () => {
+        const url = new URL(withLens(withCompetency(HUB, 42), 'rules'));
+        expect(url.searchParams.get(LENS_PARAM)).toBe('rules');
+        expect(url.searchParams.get(PARAM)).toBe('42');
+        expect(url.searchParams.get('view')).toBe('map');
+        expect(url.hash).toBe('#structure');
+    });
+
+    it('names no lens for "None", the default, and replaces one already named', () => {
+        expect(new URL(withLens(withLens(HUB, 'usage'), 'none')).searchParams.has(LENS_PARAM)).toBe(false);
+        expect(new URL(withLens(withLens(HUB, 'usage'), 'relations')).searchParams.getAll(LENS_PARAM)).toEqual(['relations']);
+    });
+
+    it('rewrites the current address in place, without a history entry', () => {
+        window.history.replaceState(null, '', '/local/dimensions/central.php?view=both');
+        const length = window.history.length;
+        rememberLens('usage');
+        expect(new URL(window.location.href).searchParams.get(LENS_PARAM)).toBe('usage');
+        expect(window.history.length).toBe(length);
+        rememberLens('none');
+        expect(new URL(window.location.href).searchParams.has(LENS_PARAM)).toBe(false);
     });
 });

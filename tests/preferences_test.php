@@ -77,6 +77,7 @@ final class preferences_test extends advanced_testcase {
         $this->assertFalse($prefs['display']['modalexpanded']);
         $this->assertFalse($prefs['display']['classic']);
         $this->assertSame('', $prefs['display']['structure']['view']);
+        $this->assertSame('', $prefs['display']['structure']['lens']);
         $this->assertTrue($prefs['display']['panels']['structure']);
         $this->assertTrue($prefs['display']['panels']['planslist']);
         $this->assertTrue($prefs['display']['panels']['plansdetail']);
@@ -182,6 +183,37 @@ final class preferences_test extends advanced_testcase {
         $this->assertSame('map', $structure['view']);
         $this->assertTrue($structure['tax']);
         $this->assertTrue($structure['rule']);
+    }
+
+    /**
+     * The workspace's saved lens is none ('') by default, any of the four lenses when stored, and none for anything
+     * else stored, whatever its type; the toggles beside it are read untouched.
+     *
+     * @return void
+     */
+    public function test_get_central_prefs_sanitises_the_saved_lens(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $stored = static function ($lens) use ($USER): string {
+            set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['lens' => $lens]]), $USER->id);
+            return helper::get_central_prefs()['display']['structure']['lens'];
+        };
+        foreach (['none', 'usage', 'rules', 'relations'] as $lens) {
+            $this->assertSame($lens, $stored($lens));
+        }
+        foreach (['Usage', 'heatmap', '', '<b>usage</b>', 1, true, null, ['rules'], 'usage '] as $value) {
+            $this->assertSame('', $stored($value), 'Stored ' . json_encode($value));
+        }
+        set_user_preference(
+            constants::PREF_CENTRAL_DISPLAY,
+            json_encode(['structure' => ['lens' => 'rules', 'view' => 'map', 'tax' => true]]),
+            $USER->id
+        );
+        $structure = helper::get_central_prefs()['display']['structure'];
+        $this->assertSame('rules', $structure['lens']);
+        $this->assertSame('map', $structure['view']);
+        $this->assertTrue($structure['tax']);
     }
 
     /**
