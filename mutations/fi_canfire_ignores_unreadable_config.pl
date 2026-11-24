@@ -1,0 +1,1 @@
+s#'canfire' => \$wellformed && #'canfire' => #;
