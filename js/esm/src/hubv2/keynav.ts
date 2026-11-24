@@ -281,13 +281,16 @@ export type NameInfo = {
     lens?: string,
     // Its findings while the checker is open, in words ("2 findings"); '' or absent for none.
     findings?: string,
+    // The word saying it is picked for the bulk dock, when it is; '' or absent otherwise.
+    picked?: string,
 };
 
 /**
  * A competency node's accessible name on the map: what the Tree View pattern's states would say, in
  * words, because a node of React Flow's application is a group, which carries none of them.
  *
- * "Domain 1, level 2, 1 of 8, collapsed, rule: All", "Leaf, level 3, 3 of 3, related to Domain 2"; then what
+ * "Domain 1, level 2, 1 of 8, collapsed, rule: All", "Leaf, level 3, 3 of 3, related to Domain 2"; then
+ * "selected" when it is picked for the bulk dock (the panel's competency is aria-current, never this word), what
  * the lens says of it ("4 courses") and its findings while the checker is open ("2 findings").
  *
  * @param {object} labels The labels.
@@ -312,7 +315,7 @@ export const nodeName = (labels: Labels, info: NameInfo): string => {
     if (info.relatedto) {
         parts.push(fill(labels.hubv2_a11y_related, info.relatedto));
     }
-    parts.push(info.lens ?? '', info.findings ?? '');
+    parts.push(info.picked ?? '', info.lens ?? '', info.findings ?? '');
     return parts.filter((part) => part !== '').join(', ');
 };
 

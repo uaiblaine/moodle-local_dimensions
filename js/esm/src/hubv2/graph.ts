@@ -70,6 +70,8 @@ export type CompetencyData = {
     findings: number,
     // Whether the change a dialogue is confirming touches it.
     impact: boolean,
+    // Whether it is picked for the bulk dock.
+    picked: boolean,
 };
 
 /** Data of a "load more" node. */
@@ -161,11 +163,15 @@ export type GraphInput = {
         name?: (info: NameInfo) => string,
         // The framework node's accessible name, from its competency count; its short name without one.
         framework?: (count: number) => string,
+        // The word a picked competency's name carries ("selected").
+        picked?: string,
     },
     /** Whether the tree grows right to left (the page's language is written so). */
     rtl?: boolean,
     /** What the lenses, the checker and an impact preview put on the map; nothing when absent. */
     decor?: Decor,
+    /** The competencies picked for the bulk dock; none when absent. */
+    picked?: Set<number>,
 };
 
 /**
@@ -334,6 +340,10 @@ export const buildGraph = (input: GraphInput): Graph => {
         };
         const decorated = cardDecor(decor, item.id);
         addWords(info, decorated.mark ? decorated.mark.said : '', said(decorated.findings));
+        const picked = !!input.picked?.has(item.id);
+        if (picked && labels.picked) {
+            info.picked = labels.picked;
+        }
         nodes.push({
             id: key,
             type: 'competency',
@@ -346,6 +356,7 @@ export const buildGraph = (input: GraphInput): Graph => {
                 depth: item.depth,
                 moving: moving === item.id,
                 ...decorated,
+                picked,
             },
             ...CARD,
             selected: selected === item.id,

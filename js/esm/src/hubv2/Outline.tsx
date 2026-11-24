@@ -25,6 +25,13 @@
  * (a count, a mark) and its words to the description; while the checker is open a row with findings carries a
  * warning mark and their count, said in the description too.
  *
+ * For a manager the tree is multi-select (aria-multiselectable), the APG way: each competency row starts with a real
+ * check box named "Select <name>", out of the Tab order (the row is the stop; Space on it toggles the box), and the
+ * row's aria-selected follows the box, true or false on every competency row. The competency the panel shows is then
+ * the row's aria-current, and Enter keeps choosing it. For a reader the variant is absent: no box, and the tree stays
+ * single-select, aria-selected on the panel's competency alone. The framework and "load more" rows are never picked;
+ * they keep an empty place of the box's width so the names stay aligned.
+ *
  * @module     local_dimensions/hubv2/Outline
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -75,6 +82,8 @@ export type OutlineActions = {
     openMenu: (id: number, anchor: HTMLElement) => void,
     // A display option of the header's menu, toggled.
     toggleDisplay: (option: 'idnumber' | 'taxonomy') => void,
+    // A competency's box pressed: pick it for the bulk dock, or release it.
+    pick: (id: number) => void,
 };
 
 /** What the rows show besides the name: the classic list's display options, shared with it. */
@@ -122,6 +131,9 @@ export type OutlineProps = {
     findingwords: (count: number) => string,
     // The competencies a change being confirmed touches, ROOT for the framework.
     impact: Set<number>,
+    // Whether the viewer may pick competencies for the bulk dock (a manager), and those picked.
+    multiselect: boolean,
+    picked: Set<number>,
 };
 
 /**
@@ -232,15 +244,19 @@ const RowMenuButton = (props: {labels: Labels, row: OutlineRow, open: boolean, a
 };
 
 /**
- * A competency row's classes: selected, being moved, touched by a change being confirmed.
+ * A competency row's classes: selected, being moved, touched by a change being confirmed, picked.
  *
  * @param {boolean} selected Whether it is selected.
  * @param {boolean} moving Whether it is being moved.
  * @param {boolean} impact Whether a change being confirmed touches it.
+ * @param {boolean} picked Whether it is picked for the bulk dock.
  * @returns {Array} The classes.
  */
-const rowClasses = (selected: boolean, moving: boolean, impact: boolean): string[] => {
+const rowClasses = (selected: boolean, moving: boolean, impact: boolean, picked: boolean): string[] => {
     const classes = ['local-dimensions-hubv2-orow'];
+    if (picked) {
+        classes.push('local-dimensions-hubv2-orow-picked');
+    }
     if (selected) {
         classes.push('local-dimensions-hubv2-orow-selected');
     }
@@ -281,6 +297,59 @@ const LensMeta = ({mark, findings}: {mark: ItemMark | null, findings: number}): 
 };
 
 /**
+ * A row's selection states. With the multi-selection (a manager), aria-selected follows the bulk dock's box on every
+ * competency row (APG multi-select tree; the framework is never picked) and the panel's competency is aria-current;
+ * without it (a reader), aria-selected marks the panel's competency alone (APG single-select tree).
+ *
+ * @param {boolean} multiselect Whether the tree is multi-select.
+ * @param {object} row The row.
+ * @param {boolean} picked Whether its competency is picked.
+ * @param {boolean} selected Whether the panel shows it.
+ * @returns {object} The aria-selected and aria-current values, undefined where the attribute is absent.
+ */
+const selectionStates = (multiselect: boolean, row: OutlineRow, picked: boolean, selected: boolean):
+    {'aria-selected'?: boolean, 'aria-current'?: 'true'} => {
+    if (!multiselect) {
+        return selected ? {'aria-selected': true} : {};
+    }
+    const states: {'aria-selected'?: boolean, 'aria-current'?: 'true'} = {};
+    if (row.kind === 'competency') {
+        states['aria-selected'] = picked;
+    }
+    if (selected) {
+        states['aria-current'] = 'true';
+    }
+    return states;
+};
+
+/**
+ * The bulk dock's box at a row's start: a real check box named "Select <name>" on a competency row, out of the Tab
+ * order (Space on the row toggles it); an empty place of its width on the framework's and a "load more" row; nothing
+ * for a reader.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The box, its empty place, or nothing.
+ */
+const PickBox = (props: {multiselect: boolean, row: OutlineRow, picked: boolean, labels: Labels, actions: OutlineActions}):
+    ReactNode => {
+    const {multiselect, row, picked, labels, actions} = props;
+    if (!multiselect) {
+        return null;
+    }
+    if (row.kind !== 'competency') {
+        return <span className="local-dimensions-hubv2-pickwrap" aria-hidden="true" />;
+    }
+    return (
+        // The label stops its click from also choosing the row; the box's change picks it.
+        <label className="local-dimensions-hubv2-pickwrap" onClick={(event: MouseEvent) => event.stopPropagation()}>
+            <input type="checkbox" className="local-dimensions-hubv2-pickbox" tabIndex={-1} checked={picked}
+                onChange={() => actions.pick(row.id)} />
+            <span className="visually-hidden">{fill(labels.hubv2_bulk_select, row.name)}</span>
+        </label>
+    );
+};
+
+/**
  * One row.
  *
  * @param {object} props The props.
@@ -306,9 +375,12 @@ const Row = (props: {
     findings: number,
     findingwords: (count: number) => string,
     impact: boolean,
+    multiselect: boolean,
+    picked: boolean,
 }): ReactNode => {
     const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions, display, menu, menuopen, term, mark,
-        findings, findingwords, impact} = props;
+        findings, findingwords, impact, multiselect, picked} = props;
+    const box = <PickBox multiselect={multiselect} row={row} picked={picked} labels={labels} actions={actions} />;
     // The level's indent, written on the start side, so a right-to-left page indents from the right.
     const indent = {paddingInlineStart: `${0.25 + (row.level - 1) * 1.25}rem`};
     const common = {
@@ -328,6 +400,7 @@ const Row = (props: {
         return (
             <li {...common} className="local-dimensions-hubv2-orow local-dimensions-hubv2-orow-more"
                 aria-label={`${label}, ${remaining}`} onClick={() => actions.loadMore(row.id)}>
+                {box}
                 <span className="local-dimensions-hubv2-otoggle" aria-hidden="true" />
                 <button type="button" className="local-dimensions-hubv2-omore" tabIndex={-1} aria-hidden="true"
                     onClick={(event: MouseEvent) => {
@@ -354,7 +427,7 @@ const Row = (props: {
             ? 'local-dimensions-hubv2-mark'
             : `local-dimensions-hubv2-mark ${DEPTH_MARKS[Math.min(row.level - 1, DEPTH_MARKS.length) - 1]}`;
     }
-    const classes = rowClasses(selected, moving, impact);
+    const classes = rowClasses(selected, moving, impact, picked);
     /**
      * Open or close the row, without selecting it.
      *
@@ -370,12 +443,12 @@ const Row = (props: {
             {...common}
             className={classes.join(' ')}
             aria-expanded={row.expandable ? row.expanded : undefined}
-            // APG single-select tree: aria-selected on the selected item only.
-            aria-selected={selected ? true : undefined}
+            {...selectionStates(multiselect, row, picked, selected)}
             aria-labelledby={`${ID}-${row.key}-name`}
             aria-describedby={said ? `${ID}-${row.key}-desc` : undefined}
             onClick={() => actions.activate(row)}
         >
+            {box}
             {row.expandable && row.kind === 'competency' ? (
                 <span className="local-dimensions-hubv2-otoggle local-dimensions-hubv2-otoggle-on" aria-hidden="true"
                     onClick={onChevron}>
@@ -427,7 +500,8 @@ const SkeletonRows = ({level, parent}: {level: number, parent: string}): ReactNo
  */
 const Outline = (props: OutlineProps): ReactNode => {
     const {labels, framework, count, rows, selected, moving, relatedcount, active, loading, expanding, notice, rtl, pagesize,
-        listRef, actions, display, menuFor, menuOpen, editor, hints, mac, marks, findings, findingwords, impact} = props;
+        listRef, actions, display, menuFor, menuOpen, editor, hints, mac, marks, findings, findingwords, impact, multiselect,
+        picked} = props;
     const scrolled = useRef<string | null>(null);
     const optionsButton = useRef<HTMLButtonElement>(null);
     const [options, setOptions] = useState(false);
@@ -481,6 +555,8 @@ const Outline = (props: OutlineProps): ReactNode => {
                 findings={row.kind === 'more' ? 0 : findings.get(row.id) ?? 0}
                 findingwords={findingwords}
                 impact={row.kind !== 'more' && impact.has(row.id)}
+                multiselect={multiselect}
+                picked={row.kind === 'competency' && picked.has(row.id)}
             />
         );
         if (row.kind === 'competency' && !row.expanded && loading.includes(row.id)) {
@@ -564,6 +640,7 @@ const Outline = (props: OutlineProps): ReactNode => {
                 className="local-dimensions-hubv2-tree"
                 role="tree"
                 aria-label={framework.shortname}
+                aria-multiselectable={multiselect ? true : undefined}
                 aria-busy={loading.length > 0 || expanding ? true : undefined}
                 onKeyDown={actions.onKeyDown}
                 onFocus={actions.onFocus}

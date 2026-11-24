@@ -8963,7 +8963,9 @@ a.local-dimensions-central-links-badge-warn:focus {
     border-radius: var(--local-dimensions-radius-lg);
     background-color: var(--local-dimensions-surface);
     color: var(--local-dimensions-ink);
-    overflow: hidden;
+    /* Clip, not hidden: hidden would make the workspace the bulk dock's scroll container, and the dock would never
+       stick to the viewport's bottom. */
+    overflow: clip;
 }
 
 .local-dimensions-hubv2-main {
@@ -10821,6 +10823,198 @@ a.local-dimensions-central-links-badge-warn:focus {
 
 .local-dimensions-hubv2-empty--compact {
     color: var(--local-dimensions-ink-muted);
+}
+
+/* The bulk dock's selection: a real check box at the start of each competency row and card (Design System D129 to
+   D132). On the map the box shows on hover, on focus and while anything is picked. */
+.local-dimensions-hubv2-pickwrap {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    width: 1rem;
+    margin: 0;
+}
+
+/* The box's own class: the move dialogue's rows already own local-dimensions-hubv2-pick. */
+.local-dimensions-hubv2-pickbox {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--local-dimensions-brand-fill);
+}
+
+.local-dimensions-hubv2-orow.local-dimensions-hubv2-orow-picked {
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-hubv2-cardpick {
+    position: absolute;
+    top: -0.5rem;
+    inset-inline-start: -0.5rem;
+    z-index: 2;
+    display: inline-flex;
+    margin: 0;
+    padding: 0.125rem;
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: var(--local-dimensions-surface);
+    opacity: 0;
+    transition: opacity var(--local-dimensions-motion-fast) var(--local-dimensions-motion-ease);
+}
+
+.local-dimensions-hubv2-canvas .react-flow__node:hover .local-dimensions-hubv2-cardpick,
+.local-dimensions-hubv2-canvas .react-flow__node:focus .local-dimensions-hubv2-cardpick,
+.local-dimensions-hubv2-haspicks .local-dimensions-hubv2-cardpick {
+    opacity: 1;
+}
+
+.local-dimensions-hubv2-card.local-dimensions-hubv2-card-picked {
+    border-color: var(--local-dimensions-brand-edge);
+    background-color: var(--local-dimensions-brand-tint);
+    color: var(--local-dimensions-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .local-dimensions-hubv2-cardpick {
+        transition: none;
+    }
+}
+
+/* The bulk dock: after the panes, sticky 12px above the viewport's bottom while they scroll, never fixed (D133);
+   its count first, then the actions, the destructive one last (D134). */
+.local-dimensions-hubv2-main .local-dimensions-hubv2-dock {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-lg);
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    box-shadow: 0 3px 10px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-hubv2-dockcount {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.local-dimensions-hubv2-dockactions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* The bulk dock's dialogues: the names acted on, one block per field, the preview chip and its contrast. */
+.local-dimensions-hubv2-bulkdialog {
+    max-width: 34rem;
+    overflow-y: auto;
+}
+
+.local-dimensions-hubv2-bulknames {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-bulkfield {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+}
+
+.local-dimensions-hubv2-bulkfield-label {
+    flex: 1 1 10rem;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-bulkfield .form-select {
+    flex: 1 1 12rem;
+    width: auto;
+}
+
+.local-dimensions-hubv2-bulkcolour {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+}
+
+.local-dimensions-hubv2-bulkcolour .form-control {
+    flex: 0 1 8rem;
+}
+
+.local-dimensions-hubv2-swatch {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-bulkfield-help {
+    flex: 1 1 100%;
+    margin: 0;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.8125rem;
+}
+
+.local-dimensions-hubv2-bulkfield-help.local-dimensions-hubv2-bulkfield-error {
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-hubv2-bulkpreview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+}
+
+.local-dimensions-hubv2-bulkchip {
+    display: inline-flex;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--local-dimensions-line);
+    border-radius: var(--local-dimensions-radius-sm);
+    background-color: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-bulkcontrast {
+    margin: 0;
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.local-dimensions-hubv2-bulkcontrast.local-dimensions-hubv2-bulkcontrast--low {
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-hubv2-bulkrefused {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-bulkrefused-name {
+    font-weight: 600;
 }
 
 /* The Competencies tab's Structures menu: core's dropdown, each item with its icon, the check box of a choice. */

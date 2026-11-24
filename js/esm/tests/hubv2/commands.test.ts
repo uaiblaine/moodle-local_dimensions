@@ -307,10 +307,10 @@ describe('the lenses and the checker in the registry', () => {
         expect(shortcutAction({key: 'F8', altKey: true}, 'map')).toBeNull();
     });
 
-    it('mark as changing the insights exactly the actions that write a competency, a rule, a link or a relation', () => {
+    it('mark as changing the insights exactly the actions that write a competency, a rule, a link, a relation, or in bulk', () => {
         expect(ACTIONS.filter((spec) => spec.changes).map((spec) => spec.id)).toEqual([
             'edit', 'addchild', 'quicksibling', 'quickchild', 'moveto', 'movepick', 'rule', 'links', 'relate', 'delete',
-            'moveroot', 'addtop',
+            'moveroot', 'addtop', 'bulkappearance', 'bulkmove', 'bulkdelete',
         ]);
         // The control: a rename and a reorder change nothing the insights say.
         expect(ACTIONS.find((spec) => spec.id === 'rename')?.changes).toBeUndefined();

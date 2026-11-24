@@ -3460,12 +3460,20 @@ class helper {
      * @param \core_customfield\handler $handler The area's handler.
      * @param array $data Submitted data, carrying the instance id under 'id' (0 on create).
      * @param array $files Submitted files.
+     * @param array|null $editable The handler's editable fields for the instance, when the caller has just read them
+     *     (keyed by field id); null reads them here.
      * @return array Errors keyed by form element name.
      */
-    public static function validate_present_customfields(\core_customfield\handler $handler, array $data, array $files): array {
+    public static function validate_present_customfields(
+        \core_customfield\handler $handler,
+        array $data,
+        array $files,
+        ?array $editable = null
+    ): array {
         $instanceid = (int) ($data['id'] ?? 0);
+        $editable = $editable ?? $handler->get_editable_fields($instanceid);
         $errors = [];
-        foreach ($handler->get_instance_fields_data($handler->get_editable_fields($instanceid), $instanceid) as $field) {
+        foreach ($handler->get_instance_fields_data($editable, $instanceid) as $field) {
             $name = $field->get_form_element_name();
             if (!array_key_exists($name, $data) && !array_key_exists($name . '_editor', $data)) {
                 continue;

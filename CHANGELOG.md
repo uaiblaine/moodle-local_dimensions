@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Acting on several competencies at once in the workspace
+
+Version `2026100540`. Stage S6 of the hub v2 record (idea I16, job J7): a manager picks several
+competencies in the outline or on the map and acts on them from a bulk dock, the fleet Design System's data
+report "Selection variant" and "Bulk dock" (D129 to D135). A reader gets none of it.
+
+- **Picking**: Space on an item, Shift+Up and Shift+Down from the anchor, Ctrl+A (Cmd+A) for the item's level,
+  a real check box at the start of each competency row ("Select <name>", out of the Tab order) and on a card's
+  corner (shown on hover, on focus and while anything is picked), Ctrl+click (Cmd+click) on a card, Escape to
+  release. For a manager the outline is a multi-select tree: `aria-selected` follows the box on every
+  competency row and the competency the panel shows is `aria-current`; a map node says "selected" in its name.
+  The picks survive opening and closing branches and lose the competencies that leave the tree.
+- **Dock**: after the panes, sticky 12 px above the viewport's bottom (the workspace now clips its overflow
+  instead of hiding it, so the dock can stick); the count in a polite live region, **Set appearance…**,
+  **Move under…**, **Clear selection** and **Delete…**, last and outlined. Each action opens a dialogue
+  titled with the action and the count, naming the first five competencies.
+- **Set appearance…** (background colour, text colour, tag 1, tag 2, competency label; each left as it is
+  by default) calls the new write service `local_dimensions_set_competencies_appearance`: at most 200
+  competencies of one framework, `moodle/competency:competencymanage` in the framework's own context, every
+  id the framework's (a foreign or missing id refuses the whole call before any write), the field
+  controllers' own validation and the select's own options, writes through the competency handler (so
+  `can_edit()` and the `competency_customfields_updated` event behave as a form save does), one transaction,
+  and the competency metadata cache invalidated after it. The dialogue previews the two colours and says
+  their contrast ratio, warning under 4.5:1.
+- **Move under…** is "Move to" with every topmost pick: a target inside a picked competency is refused,
+  competencies already under the target are skipped and said so, the others move one core call each in the
+  tree's order, the first refusal stops the run.
+- **Delete…** asks `local_dimensions_competency_delete_check` for every topmost pick, then one confirmation
+  says how many core will delete, what goes with them and which it will refuse and why; only those are
+  deleted.
+- After each action the touched branches and the insights are read again; what failed stays picked and the
+  outcome is said in the workspace's polite region.
+- "Export selection" is left out: the plugin's CSV exports neutralise spreadsheet formulas on the server
+  (`local\csv_formula`) and match the framework import's columns, which a copy built in the browser would not.
+
 ### Lenses and the structure check in the workspace
 
 Version `2026100539`. Stage S5 of the hub v2 record (ideas I19, I20, I22, I26 to I28): the workspace reads a

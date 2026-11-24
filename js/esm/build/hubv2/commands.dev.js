@@ -123,7 +123,10 @@ const ACTIONS = [
     shortcut: { key: "F8", shift: true }
   },
   { id: "fwnew", scope: "structures", group: 1, label: "central_frameworks_new", icon: "fa-plus" },
-  { id: "fwimport", scope: "structures", group: 1, label: "central_frameworks_import_title", icon: "fa-upload" }
+  { id: "fwimport", scope: "structures", group: 1, label: "central_frameworks_import_title", icon: "fa-upload" },
+  { id: "bulkappearance", scope: "bulk", group: 1, label: "hubv2_bulk_appearance", icon: "fa-palette", changes: true },
+  { id: "bulkmove", scope: "bulk", group: 1, label: "hubv2_bulk_move", icon: "fa-folder-tree", changes: true },
+  { id: "bulkdelete", scope: "bulk", group: 2, label: "hubv2_bulk_delete", icon: "fa-trash", danger: true, changes: true }
 ];
 const VIEW_ACTIONS = { viewoutline: "outline", viewmap: "map", viewboth: "both" };
 const LENS_ACTIONS = {
@@ -207,6 +210,9 @@ const actionState = /* @__PURE__ */ __name((id, context) => {
   }
   if (spec.scope === "structures") {
     return context.cancreate && !context.moving ? "enabled" : "hidden";
+  }
+  if (spec.scope === "bulk") {
+    return context.frameworkcanmanage && (context.picked ?? 0) > 0 && !context.moving ? "enabled" : "hidden";
   }
   if (spec.scope === "move") {
     if (!context.moving) {

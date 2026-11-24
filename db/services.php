@@ -353,6 +353,14 @@ $functions = [
         'capabilities' => 'moodle/competency:competencymanage',
         'ajax' => true,
     ],
+    'local_dimensions_set_competencies_appearance' => [
+        'classname' => 'local_dimensions\external\set_competencies_appearance',
+        'methodname' => 'execute',
+        'description' => 'Set or clear the appearance custom fields of several competencies of one framework at once.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+    ],
     'local_dimensions_export_framework' => [
         'classname' => 'local_dimensions\external\export_framework',
         'methodname' => 'execute',

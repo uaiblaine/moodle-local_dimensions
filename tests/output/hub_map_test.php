@@ -214,6 +214,27 @@ final class hub_map_test extends advanced_testcase {
     }
 
     /**
+     * The bulk dock's appearance choices reach a manager only, each select's options in its own order and plain, so
+     * position + 1 is what the bulk service takes; a reader, who has no dock, gets none.
+     *
+     * @return void
+     */
+    public function test_the_props_carry_the_appearance_options_to_a_manager_only(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        \local_dimensions\helper::ensure_custom_fields_exist(\local_dimensions\helper::AREA_COMPETENCY);
+        \local_dimensions\customfield\competency_handler::create()->reset_configuration_cache();
+        $framework = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_framework();
+        $structures = ['contextid' => 1, 'cancreate' => false, 'canscalespage' => false];
+
+        $this->assertNull(hub_map::props($framework, 0, [], 0, false, null, 'both', $structures)['appearance']);
+        $options = hub_map::props($framework, 0, [], 0, true, null, 'both', $structures)['appearance'];
+        $this->assertSame(['tag1', 'tag2', 'type'], array_keys($options));
+        $this->assertSame(['Edit me 1', 'Edit me 2', 'Edit me 3'], $options['tag1']);
+        $this->assertSame('Activities', $options['type'][0]);
+    }
+
+    /**
      * A kept link to hubv2.php lands on the hub's map view, carrying only what it gave.
      *
      * @return void

@@ -148,7 +148,7 @@ const nodeName = /* @__PURE__ */ __name((labels, info) => {
   if (info.relatedto) {
     parts.push(fill(labels.hubv2_a11y_related, info.relatedto));
   }
-  parts.push(info.lens ?? "", info.findings ?? "");
+  parts.push(info.picked ?? "", info.lens ?? "", info.findings ?? "");
   return parts.filter((part) => part !== "").join(", ");
 }, "nodeName");
 const overlaps = /* @__PURE__ */ __name((a, b) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height, "overlaps");

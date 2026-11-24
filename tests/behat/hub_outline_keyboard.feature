@@ -57,7 +57,7 @@ Feature: Walk the Competency hub's outline and map with the keyboard
     # Enter selects: the panel shows that competency, the row is the selected one, and so is its node on the map.
     And I press the enter key
     And I should see "Leaf A2" in the "aside.local-dimensions-hubv2-panel h3" "css_element"
-    And the "aria-selected" attribute of "//li[@role='treeitem'][.//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Leaf A2']]" "xpath_element" should contain "true"
+    And the "aria-current" attribute of "//li[@role='treeitem'][.//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Leaf A2']]" "xpath_element" should contain "true"
     And the "aria-current" attribute of "//div[contains(concat(' ', @class, ' '), ' react-flow__node ')][starts-with(@aria-label, 'Leaf A2,')]" "xpath_element" should contain "true"
     # The focus stays in the outline after the selection; a letter jumps to the next name it starts.
     And the focused element is "//li[@role='treeitem'][.//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Leaf A2']]" "xpath_element"

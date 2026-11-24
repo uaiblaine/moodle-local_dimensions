@@ -7,6 +7,10 @@
     "eject": "risky",
     "wrap": "risky"
   },
+  "hubv2/Dock": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
   "hubv2/Editor": {
     "eject": "risky",
     "wrap": "risky"

@@ -70,6 +70,8 @@ final class hub_map {
         'central_related_button',
         'central_related_empty',
         'central_rule_nochildren',
+        'custombgcolor',
+        'customtextcolor',
         'hubv2_a11y_collapsed',
         'hubv2_a11y_controls',
         'hubv2_a11y_expanded',
@@ -83,6 +85,65 @@ final class hub_map {
         'hubv2_actionsof',
         'hubv2_appearance',
         'hubv2_assessment',
+        'hubv2_bulk_appearance',
+        'hubv2_bulk_appearance_commit',
+        'hubv2_bulk_appearance_commit_one',
+        'hubv2_bulk_appearance_done',
+        'hubv2_bulk_appearance_done_one',
+        'hubv2_bulk_appearance_intro',
+        'hubv2_bulk_appearance_none',
+        'hubv2_bulk_appearance_title',
+        'hubv2_bulk_appearance_title_one',
+        'hubv2_bulk_clear',
+        'hubv2_bulk_cleared',
+        'hubv2_bulk_clearvalue',
+        'hubv2_bulk_colour_help',
+        'hubv2_bulk_colour_invalid',
+        'hubv2_bulk_contrast',
+        'hubv2_bulk_contrast_low',
+        'hubv2_bulk_delete',
+        'hubv2_bulk_delete_can',
+        'hubv2_bulk_delete_can_one',
+        'hubv2_bulk_delete_checking',
+        'hubv2_bulk_delete_commit',
+        'hubv2_bulk_delete_commit_one',
+        'hubv2_bulk_delete_done',
+        'hubv2_bulk_delete_done_one',
+        'hubv2_bulk_delete_kept',
+        'hubv2_bulk_delete_none',
+        'hubv2_bulk_delete_refused',
+        'hubv2_bulk_delete_refused_one',
+        'hubv2_bulk_delete_title',
+        'hubv2_bulk_delete_title_one',
+        'hubv2_bulk_delete_with',
+        'hubv2_bulk_delete_with_one',
+        'hubv2_bulk_dock',
+        'hubv2_bulk_keep',
+        'hubv2_bulk_more',
+        'hubv2_bulk_move',
+        'hubv2_bulk_move_commit',
+        'hubv2_bulk_move_commitroot',
+        'hubv2_bulk_move_commitroot_one',
+        'hubv2_bulk_move_done',
+        'hubv2_bulk_move_done_one',
+        'hubv2_bulk_move_left',
+        'hubv2_bulk_move_left_one',
+        'hubv2_bulk_move_progress',
+        'hubv2_bulk_move_refused',
+        'hubv2_bulk_move_skipped',
+        'hubv2_bulk_move_skipped_one',
+        'hubv2_bulk_move_title',
+        'hubv2_bulk_move_title_one',
+        'hubv2_bulk_moveto_picked',
+        'hubv2_bulk_notshown',
+        'hubv2_bulk_notshown_one',
+        'hubv2_bulk_picked',
+        'hubv2_bulk_preview',
+        'hubv2_bulk_select',
+        'hubv2_bulk_selected',
+        'hubv2_bulk_selected_one',
+        'hubv2_bulk_setcolour',
+        'hubv2_bulk_toomany',
         'hubv2_canvas',
         'hubv2_check_colour_contrast',
         'hubv2_check_colour_contrast_desc',
@@ -331,6 +392,9 @@ final class hub_map {
         'managecompetencies_showids',
         'managecompetencies_showtaxonomy',
         'nocompetencies',
+        'tag1',
+        'tag2',
+        'type',
     ];
 
     /**
@@ -471,7 +535,7 @@ final class hub_map {
      * @param array $structures The commands not about one framework (structure::structures_commands()).
      * @param string $lens The lens to open with ({@see resolve_lens()}); anything else is none.
      * @return array Keys: framework, roots, pagesize, rulesmodules, courseoutcomes, moduleoutcomes, rtl, reveal,
-     *     layout, structures, lens.
+     *     layout, structures, lens, appearance (null for a reader).
      */
     public static function props(
         competency_framework $framework,
@@ -507,7 +571,32 @@ final class hub_map {
             ],
             // The workspace's first lens; it then keeps the address, the pane and the preference in step itself.
             'lens' => in_array($lens, self::LENSES, true) ? $lens : self::DEFAULT_LENS,
+            // The bulk dock's "Set appearance" choices; a reader has no dock, so none.
+            'appearance' => $canmanage ? self::appearance_options() : null,
         ];
+    }
+
+    /**
+     * The options of the appearance fields that are selects, for the bulk dock's "Set appearance" dialogue.
+     *
+     * Each list is the field's option labels in its own order, plain text, so position + 1 is what
+     * local_dimensions_set_competencies_appearance takes as the value (helper::select_raw_options()); a field
+     * that is not provisioned has none.
+     *
+     * @return array Keys: tag1, tag2, type; each a list of strings.
+     */
+    public static function appearance_options(): array {
+        $plain = ['context' => \context_system::instance(), 'escape' => false];
+        $options = [];
+        foreach (['tag1', 'tag2', 'type'] as $name) {
+            $field = helper::find_field_by_shortname(
+                \local_dimensions\external\set_competencies_appearance::FIELDS[$name],
+                helper::AREA_COMPETENCY
+            );
+            $labels = $field ? helper::select_raw_options($field) : [];
+            $options[$name] = array_map(static fn(string $label): string => format_string($label, true, $plain), $labels);
+        }
+        return $options;
     }
 
     /**
