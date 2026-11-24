@@ -32,6 +32,11 @@
  * A lens shown puts its section first (its sentence, legend and list, LensPanel.tsx), above whatever is selected;
  * the checker, while open, is the panel's whole content until its close button or a selection closes it.
  *
+ * Under a selected competency's own content come the sections other plugins add (sections.ts), one block each
+ * in the order received: a heading, a definition list of plain rows (a tone drawn as a status label around its
+ * text, never colour alone), a muted note and one link to a page of this site in the same tab. No section draws
+ * nothing at all; a failed read says so in one muted line and leaves the rest of the panel as it is.
+ *
  * @module     local_dimensions/hubv2/Panel
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -41,9 +46,11 @@ import type {ReactNode, RefObject} from 'react';
 import type {ActionId, ActionView} from './commands';
 import {isHexColour} from './html';
 import type {SummaryLine} from './summary';
+import {headingId, toneClass} from './sections';
+import type {SectionsState} from './sections';
 import {fill, fillCount} from './strings';
 import type {Labels} from './strings';
-import type {Framework, PathItem, StructureNode, Usage} from './types';
+import type {Framework, PanelSection, PathItem, StructureNode, Usage} from './types';
 
 /** What the panel's buttons do: run an action of the registry, open the node's menu, reveal a relation. */
 export type PanelActions = {
@@ -84,6 +91,8 @@ export type PanelProps = {
     lens?: ReactNode,
     // The checker (LensPanel.tsx Checker): while it is open it is the panel's whole content.
     checker?: ReactNode,
+    // The selected competency's companion sections (sections.ts); absent or idle draws nothing.
+    sections?: SectionsState,
 };
 
 /**
@@ -288,6 +297,52 @@ const MoveSection = ({labels, moving, views, run}: {
 );
 
 /**
+ * One section another plugin adds: its heading, its rows, its note and its link, every text plain.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The section.
+ */
+const CompanionSection = ({section}: {section: PanelSection}): ReactNode => (
+    <section className="local-dimensions-hubv2-sec" data-region="companion-section" data-key={section.key}
+        aria-labelledby={headingId(section.key)}>
+        <h4 id={headingId(section.key)} className="local-dimensions-hubv2-sectitle">{section.title}</h4>
+        {section.rows.length > 0 ? (
+            <dl className="local-dimensions-hubv2-kv mb-0">
+                {section.rows.map((row, index) => (
+                    <Pair key={index} label={row.label}>
+                        {row.tone ? <span className={toneClass(row.tone)}>{row.value}</span> : row.value}
+                    </Pair>
+                ))}
+            </dl>
+        ) : null}
+        {section.note ? <p className="text-muted small mb-0">{section.note}</p> : null}
+        {section.linkurl ? (
+            <a className="btn btn-link btn-sm p-0 text-start" href={section.linkurl}>{section.linklabel}</a>
+        ) : null}
+    </section>
+);
+
+/**
+ * The companion sections of the selection, in the order received; a failed read is one muted line.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The sections, the line, or nothing.
+ */
+export const CompanionSections = ({labels, state}: {labels: Labels, state?: SectionsState}): ReactNode => {
+    if (!state) {
+        return null;
+    }
+    if (state.status === 'failed') {
+        return (
+            <p className="local-dimensions-hubv2-sec text-muted small mb-0" data-region="companion-sections-failed">
+                {labels.hubv2_sections_failed}
+            </p>
+        );
+    }
+    return <>{state.sections.map((section) => <CompanionSection key={section.key} section={section} />)}</>;
+};
+
+/**
  * The panel.
  *
  * @param {object} props The props.
@@ -295,7 +350,7 @@ const MoveSection = ({labels, moving, views, run}: {
  */
 const Panel = (props: PanelProps): ReactNode => {
     const {labels, framework, count, node, path, usage, related, moving, nodeactions, menuopen, moveactions, topactions,
-        frameworkactions, summary, summaryRef, actions, lens, checker} = props;
+        frameworkactions, summary, summaryRef, actions, lens, checker, sections} = props;
     const movesection = moving ? <MoveSection labels={labels} moving={moving} views={moveactions} run={actions.run} /> : null;
 
     if (checker) {
@@ -443,6 +498,8 @@ const Panel = (props: PanelProps): ReactNode => {
                     </div>
                 </section>
             ) : null}
+
+            <CompanionSections labels={labels} state={sections} />
         </aside>
     );
 };

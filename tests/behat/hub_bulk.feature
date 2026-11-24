@@ -60,6 +60,20 @@ Feature: Act on several competencies at once from the Competency hub's bulk dock
     When I click on "//li[@role='treeitem']//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Domain C']" "xpath_element"
     Then I should not see "Edit me 2" in the "aside.local-dimensions-hubv2-panel" "css_element"
 
+  Scenario: Cancelling "Move under…" hands the focus back to the dock's button
+    Given I am on the "ENG" "local_dimensions > Competency hub" page logged in as "admin"
+    And I click on "Competencies" "link" in the "#dynamictabs-tabs" "css_element"
+    And I click on "Outline" "button" in the ".local-dimensions-central-viewswitch" "css_element"
+    And I should see "Domain A" in the ".local-dimensions-hubv2-tree" "css_element"
+    When I click on "Select Domain A" "checkbox"
+    And I click on "Select Domain C" "checkbox"
+    And I click on "Move under…" "button" in the "[data-region='bulk-dock']" "css_element"
+    Then I should see "Move 2 competencies" in the ".local-dimensions-hubv2-movedialog[role='dialog']" "css_element"
+    When I click on "Cancel" "button" in the ".local-dimensions-hubv2-movedialog[role='dialog']" "css_element"
+    Then "[role='dialog'].local-dimensions-hubv2-movedialog" "css_element" should not exist
+    And I should see "2 selected" in the "[data-region='bulk-dock']" "css_element"
+    And the focused element is "Move under…" "button" in the "[data-region='bulk-dock']" "css_element"
+
   Scenario: Deleting two competencies deletes the one core allows and names the one it refuses
     Given I am on the "ENG" "local_dimensions > Competency hub" page logged in as "admin"
     And I click on "Competencies" "link" in the "#dynamictabs-tabs" "css_element"

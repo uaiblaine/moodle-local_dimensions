@@ -359,6 +359,7 @@ final class hub_map {
         'hubv2_searchnone',
         'hubv2_searchresults',
         'hubv2_searchresults_one',
+        'hubv2_sections_failed',
         'hubv2_seeusage',
         'hubv2_showmore',
         'hubv2_summary_findings',
@@ -535,7 +536,7 @@ final class hub_map {
      * @param array $structures The commands not about one framework (structure::structures_commands()).
      * @param string $lens The lens to open with ({@see resolve_lens()}); anything else is none.
      * @return array Keys: framework, roots, pagesize, rulesmodules, courseoutcomes, moduleoutcomes, rtl, reveal,
-     *     layout, structures, lens, appearance (null for a reader).
+     *     layout, structures, lens, appearance (null for a reader), sections (whether a plugin adds panel sections).
      */
     public static function props(
         competency_framework $framework,
@@ -573,7 +574,28 @@ final class hub_map {
             'lens' => in_array($lens, self::LENSES, true) ? $lens : self::DEFAULT_LENS,
             // The bulk dock's "Set appearance" choices; a reader has no dock, so none.
             'appearance' => $canmanage ? self::appearance_options() : null,
+            // Whether any plugin listens for the panel's companion sections: without one the panel never asks.
+            'sections' => self::has_panel_sections(),
         ];
+    }
+
+    /**
+     * Whether a plugin listens for {@see \local_dimensions\hook\competency_panel_sections}, so the panel's reader
+     * asks for the sections of each selection; a site without one sends no request for them.
+     *
+     * Read from the hook manager's list of callbacks, which costs no statement.
+     *
+     * @return bool
+     */
+    public static function has_panel_sections(): bool {
+        $callbacks = \core\di::get(\core\hook\manager::class)
+            ->get_callbacks_for_hook(\local_dimensions\hook\competency_panel_sections::class);
+        foreach ($callbacks as $definition) {
+            if (empty($definition['disabled'])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

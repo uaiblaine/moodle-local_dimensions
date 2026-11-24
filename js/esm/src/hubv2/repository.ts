@@ -144,6 +144,17 @@ export const selectionData = (competencyid: number): Promise<[Usage, PathItem[]]
     ]).then(([usage, related]) => [usage as Usage, (related as {items: PathItem[]}).items]);
 
 /**
+ * The sections other plugins add to the panel for one competency, as received: sections.ts readSections() reads
+ * them again before the panel draws them.
+ *
+ * @param {number} competencyid The competency.
+ * @returns {Promise} Resolves with the answer's sections.
+ */
+export const panelSections = (competencyid: number): Promise<unknown> =>
+    call<{competencyid: number, sections: unknown}>('local_dimensions_get_competency_panel_sections', {competencyid})
+        .then((answer) => answer.sections);
+
+/**
  * What deleting a competency would destroy, and whether core would refuse it, before anything is attempted.
  *
  * @param {number} competencyid The competency.

@@ -160,6 +160,23 @@ export type AppearanceAnswer = {
 /** The options of the appearance fields that are selects, plain labels; position + 1 is what the service takes. */
 export type AppearanceOptions = {tag1: string[], tag2: string[], type: string[]};
 
+/** One row of a companion section: a plain label and value, and a tone of the hook's or '' for none. */
+export type SectionRow = {label: string, value: string, tone: string};
+
+/**
+ * A section another plugin adds to the panel (local_dimensions_get_competency_panel_sections, field for field its
+ * execute_returns()). Every text is plain; linkurl is a page of this site, or '' with linklabel '' for no link.
+ */
+export type PanelSection = {
+    key: string,
+    component: string,
+    title: string,
+    rows: SectionRow[],
+    note: string,
+    linklabel: string,
+    linkurl: string,
+};
+
 /** A competency the canvas reveals at mount: the deep link, checked by the server against the framework shown. */
 export type RevealTarget = {id: number, pathids: number[]};
 
@@ -181,4 +198,6 @@ export type HubProps = {
     lens: 'none' | 'usage' | 'rules' | 'relations',
     /** The bulk dock's appearance choices (hub_map::appearance_options()); null for a reader, absent from an older page. */
     appearance?: AppearanceOptions | null,
+    /** Whether a plugin listens for the panel's companion sections (hub_map::has_panel_sections()); absent from an older page. */
+    sections?: boolean,
 };

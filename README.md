@@ -454,6 +454,68 @@ $callbacks = [
 ];
 ```
 
+### For developers: sections in the Competency hub's panel
+
+Another plugin can add sections of its own under the panel of the Competency hub's workspace, for the
+competency selected there, by listening to `\local_dimensions\hook\competency_panel_sections`
+(`local_evidencehub` adds a competency's validity policy this way). Neither plugin needs the other: when
+no plugin listens, the page says so and the panel never asks.
+
+- The hook is dispatched by the read web service `local_dimensions_get_competency_panel_sections`, once
+  per selection and after every change made in the workspace, only after the service has checked that
+  the viewer is logged in, not a guest, and may read the competency in its framework's context (as
+  core's `read_competency()` requires). It carries `get_competencyid()`, `get_frameworkid()`,
+  `get_context()` (the framework's, system or a course category) and `can_manage()` (whether the viewer
+  manages competencies there). A listener still decides by its own capabilities what the viewer may see.
+- `add_section(string $component, string $key, string $title, array $rows, string $note = '',
+  moodle_url|string|null $link = null, string $linklabel = '')`: `$component` is the listener's own
+  frankenstyle name, which prefixes the key (`local_evidencehub-policy`); `$key` is lower case letters,
+  digits and underscores, at most 30, once per component. Each row is `['label' => ..., 'value' => ...,
+  'tone' => ...]`, the tone one of the five of `competency_status_badges` or none.
+- Everything is plain text: entities are decoded and tags stripped until nothing changes, so a value
+  run through `format_string()` arrives the same whatever `formatstringstriptags` says. At most 6
+  sections a call, 12 rows a section; a title or label is cut at 100 characters, a value at 255, a note
+  at 500, a link label at 100.
+- The link is a page of this site only: a `moodle_url` or address under `$CFG->wwwroot`, or a
+  root-relative path. An external, `javascript:` or protocol-relative address is dropped, not repaired,
+  and a link without a label is dropped. It opens in the same tab.
+- There is no HTML on purpose: the panel belongs to this plugin, and plain text drawn as text keeps a
+  listener from injecting markup into a page it does not own. Zero-width and bidirectional control
+  characters are removed, and a text with nothing visible left is empty.
+- Nothing passed to `add_section()` throws, so one listener cannot blank the others' sections: a section
+  whose component is not one or whose key is malformed is dropped, a second section under a taken
+  `<component>-<key>` is dropped (the first wins), and an unknown tone is dropped from its row, each with
+  a developer `debugging()` message. The component is a claim the hook cannot bind to the listener. A
+  listener that throws by itself fails the read, and the panel shows its quiet line instead of the sections.
+- With no listener the service sends no statement beyond its checks. A failed read leaves the rest of
+  the panel as it is and says "Some details could not be loaded." in one muted line.
+
+```php
+// db/hooks.php
+$callbacks = [
+    [
+        'hook' => \local_dimensions\hook\competency_panel_sections::class,
+        'callback' => [\my_plugin\hook_callbacks::class, 'competency_panel_sections'],
+    ],
+];
+
+// classes/hook_callbacks.php
+public static function competency_panel_sections(\local_dimensions\hook\competency_panel_sections $hook): void {
+    if (!has_capability('my/plugin:view', $hook->get_context())) {
+        return;
+    }
+    $hook->add_section(
+        'my_plugin',
+        'summary',
+        get_string('summary', 'my_plugin'),
+        [['label' => get_string('state', 'my_plugin'), 'value' => get_string('ready', 'my_plugin'), 'tone' => 'success']],
+        '',
+        new \moodle_url('/my/plugin/view.php', ['competencyid' => $hook->get_competencyid()]),
+        get_string('open', 'my_plugin')
+    );
+}
+```
+
 ### Dark mode and the family theme
 
 ![The plan overview in Moodle's dark mode, the plan's own colours kept on the hero and the course cards](docs/screenshots/plan-dark.png)

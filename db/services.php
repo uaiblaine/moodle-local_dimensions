@@ -173,6 +173,16 @@ $functions = [
         'ajax' => true,
         'readonlysession' => true,
     ],
+    // Competency hub workspace: the sections other plugins add to the panel (hook competency_panel_sections).
+    'local_dimensions_get_competency_panel_sections' => [
+        'classname' => 'local_dimensions\external\get_competency_panel_sections',
+        'methodname' => 'execute',
+        'description' => 'List the sections other plugins add to the Competency hub panel for one competency.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+        'readonlysession' => true,
+    ],
 
     // Competency hub Plans tab — template cohort management + background plan sync.
     'local_dimensions_list_template_cohorts' => [
