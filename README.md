@@ -86,7 +86,7 @@ hub's Competencies tab, the accessible alternative to the canvas. The page keeps
 no table, no preference written, the layout recomputed on every visit.
 
 The canvas is a React component built into one file, `js/esm/build/bundle.js`, which inlines
-**React Flow** (`@xyflow/react` 12.12.1, MIT), vendored under `js/esm/vendor/xyflow` and declared in
+**React Flow** (`@xyflow/react` 13.0.3, MIT), vendored under `js/esm/vendor/xyflow` and declared in
 `thirdpartylibs.xml`; its README says how it was built. Nothing needs to be installed on the site.
 
 ### Structures
@@ -345,7 +345,7 @@ no branch.
 
 - Core competencies enabled (`core_competency`).
 - No required plugin: `version.php` declares no dependency.
-- Bundled, not installed: React Flow (`@xyflow/react` 12.12.1, MIT) for the Competency hub v2's
+- Bundled, not installed: React Flow (`@xyflow/react` 13.0.3, MIT) for the Competency hub v2's
   canvas, vendored under `js/esm/vendor/xyflow`.
 - Optional, each reached only through a runtime guard, so the plugin installs and behaves the same
   without them:
