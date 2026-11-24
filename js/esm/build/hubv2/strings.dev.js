@@ -16,6 +16,13 @@ import { getStrings } from "@moodle/lms/core/stringUtils";
 const COMPONENT = "local_dimensions";
 const KEYS = [
   "central_browseframeworks_framework",
+  "central_frameworks_configurescale",
+  "central_frameworks_duplicate",
+  "central_frameworks_edit",
+  "central_frameworks_import_title",
+  "central_frameworks_new",
+  "central_frameworks_scaledefault",
+  "central_frameworks_scaleproficient",
   "central_related_button",
   "central_related_empty",
   "central_rule_nochildren",
@@ -49,6 +56,8 @@ const KEYS = [
   "hubv2_cmd_viewoutline",
   "hubv2_collapse",
   "hubv2_colour",
+  "hubv2_column_edit",
+  "hubv2_columns",
   "hubv2_commands",
   "hubv2_competencies",
   "hubv2_competencies_one",
@@ -87,6 +96,14 @@ const KEYS = [
   "hubv2_expand",
   "hubv2_expandall_capped",
   "hubv2_fitview",
+  "hubv2_fw_context",
+  "hubv2_fw_delete",
+  "hubv2_fw_duplicated",
+  "hubv2_fw_export",
+  "hubv2_fw_hide",
+  "hubv2_fw_level",
+  "hubv2_fw_show",
+  "hubv2_fw_visibility",
   "hubv2_hint_actions",
   "hubv2_hint_reorder",
   "hubv2_loading",
@@ -186,7 +203,10 @@ const OTHER = [
   ["tool_lp", "addcompetency"],
   ["tool_lp", "competencycannotbedeleted"],
   ["tool_lp", "deletecompetency"],
-  ["tool_lp", "editcompetency"]
+  ["tool_lp", "editcompetency"],
+  ["tool_lp", "hidden"],
+  ["tool_lp", "taxonomies"],
+  ["tool_lp", "visible"]
 ];
 const loadLabels = /* @__PURE__ */ __name(() => {
   const requests = [

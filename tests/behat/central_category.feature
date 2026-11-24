@@ -24,6 +24,11 @@ Feature: Reach the Competency hub from a course category
     And the following "local_dimensions > templates" exist:
       | shortname            | category |
       | Engineering template | ENG      |
+    # The classic hub (the Structures tab and the classic list), kept one release behind the context bar's link;
+    # the default mode on the same entry is hub_framework_root.feature's.
+    And the following "user preferences" exist:
+      | user       | preference                       | value            |
+      | catmanager | local_dimensions_central_display | {"classic":true} |
 
   Scenario: A category manager opens the hub from the category page, locked to that category
     Given I am on the "ENG" "category" page logged in as "catmanager"

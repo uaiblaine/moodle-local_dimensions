@@ -10350,3 +10350,139 @@ a.local-dimensions-central-links-badge-warn:focus {
         transition: none;
     }
 }
+
+/* The root's panel: the framework's visibility and each scale value's marks, as the Design System's status label. */
+.local-dimensions-hubv2-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    border-radius: var(--local-dimensions-radius-sm);
+    background-color: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.local-dimensions-hubv2-status--success {
+    border-color: var(--local-dimensions-success-edge);
+    background-color: var(--local-dimensions-success-tint);
+    color: var(--local-dimensions-success-ink);
+}
+
+.local-dimensions-hubv2-status .fa {
+    font-size: 1em;
+}
+
+.local-dimensions-hubv2-scalevalues {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.local-dimensions-hubv2-scalevalues li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+/*
+ * The map's column headings (ColumnHeads.tsx): a strip inside the canvas's top edge, which the fitted view leaves
+ * free (FIT in Hub.tsx), under the canvas's controls. Hub.tsx writes each heading's left and width from the view.
+ * Presses go through the strip to the map, except on a manager's pencil.
+ */
+.local-dimensions-hubv2-colheads {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 5;
+    height: 2rem;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.local-dimensions-hubv2-colhead {
+    position: absolute;
+    top: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    height: 1.5rem;
+    min-width: 0;
+}
+
+.local-dimensions-hubv2-colhead-term {
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--local-dimensions-ink-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-colheads .local-dimensions-hubv2-colhead-edit {
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.25rem;
+    font-size: 0.75rem;
+    pointer-events: auto;
+}
+
+/* The Competencies tab's Structures menu: core's dropdown, each item with its icon, the check box of a choice. */
+.local-dimensions-central-structmenu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.local-dimensions-central-structmenu-item > .fa {
+    width: 1rem;
+    color: var(--local-dimensions-ink-muted);
+    text-align: center;
+}
+
+.local-dimensions-central-structmenu-box {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--local-dimensions-ink-muted);
+    border-radius: var(--local-dimensions-radius-xs);
+    font-size: 0.75rem;
+}
+
+.local-dimensions-central-structmenu-box .fa {
+    visibility: hidden;
+}
+
+.local-dimensions-central-structmenu-item[aria-checked="true"] > .local-dimensions-central-structmenu-box {
+    border-color: var(--local-dimensions-brand-fill);
+    background-color: var(--local-dimensions-brand-fill);
+    color: var(--local-dimensions-on-brand-fill);
+}
+
+.local-dimensions-central-structmenu-item[aria-checked="true"] > .local-dimensions-central-structmenu-box .fa {
+    visibility: visible;
+}
+
+/* The context bar's quiet link to the hub's other mode. */
+.local-dimensions-central-contextbar .local-dimensions-central-modelink {
+    font-size: 0.875rem;
+    color: var(--local-dimensions-ink-muted);
+    text-decoration: none;
+}
+
+.local-dimensions-central-contextbar .local-dimensions-central-modelink:hover,
+.local-dimensions-central-contextbar .local-dimensions-central-modelink:focus-visible {
+    color: var(--local-dimensions-ink);
+    text-decoration: underline;
+}

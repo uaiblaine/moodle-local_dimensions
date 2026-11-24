@@ -17,8 +17,9 @@
 /**
  * Competency hub — single-surface admin built on core dynamic tabs.
  *
- * The plugin's admin surface: Structure, Learning plans and Frameworks tabs,
- * each acting in place through core/modal and local_dimensions web services.
+ * The plugin's admin surface: the Competencies tab (the workspace, whose root node carries the framework's
+ * own actions) and the Learning plans tab, each acting in place through core/modal and local_dimensions web
+ * services; in classic mode the Structures tab and the classic list as well (local\hub_mode).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -30,6 +31,7 @@ require_once($CFG->libdir . '/adminlib.php');
 
 use core_competency\api;
 use local_dimensions\helper;
+use local_dimensions\local\hub_mode;
 use local_dimensions\output\central\contextbar;
 use local_dimensions\output\dynamictabs\frameworks;
 use local_dimensions\output\dynamictabs\plans;
@@ -72,6 +74,28 @@ if ($locked) {
 $PAGE->set_title(get_string('central', 'local_dimensions'));
 $PAGE->add_body_class('local-dimensions-central-page');
 
+// The hub's mode: the address's `classic` value for this visit, saved only when the request carries the
+// session key (the context bar's link); otherwise the saved choice, off by default. Display only: each tab
+// is still admitted by its own is_available() below.
+$classicparam = optional_param('classic', null, PARAM_INT);
+$sesskeyparam = optional_param('sesskey', '', PARAM_RAW);
+$classic = hub_mode::from_request($classicparam, $sesskeyparam);
+if ($classicparam !== null && $sesskeyparam !== '' && confirm_sesskey($sesskeyparam)) {
+    // Saved: the address needs neither the value nor the session key any more, so neither stays in the
+    // history, a bookmark or a link copied from the address bar. The page's own address (it is set by now,
+    // so qualified_me() would return it bare) takes back the place the link named: the tab, the context and
+    // the framework, each cleaned, so the visitor stays where the link was followed.
+    $clean = new moodle_url($PAGE->url);
+    $kept = ['tab' => PARAM_ALPHA, 'contexttype' => PARAM_ALPHA, 'categoryid' => PARAM_INT, 'frameworkid' => PARAM_INT];
+    foreach ($kept as $name => $type) {
+        $value = optional_param($name, null, $type);
+        if ($value !== null && $value !== '') {
+            $clean->param($name, $value);
+        }
+    }
+    redirect($clean);
+}
+
 // Restore the last-visited view (tab / context / selection) from the user's saved preference;
 // an explicit URL param always wins so deep-links keep working. A locked entry neither reads nor
 // writes the saved context: the category on the URL is the context, full stop.
@@ -86,10 +110,8 @@ if ($locked) {
 }
 $frameworkid = optional_param('frameworkid', $nav['frameworkid'], PARAM_INT);
 $templateid = optional_param('templateid', $nav['templateid'], PARAM_INT);
-$activetab = optional_param('tab', $nav['tab'], PARAM_ALPHA);
-if (!in_array($activetab, ['frameworks', 'structure', 'plans'], true)) {
-    $activetab = 'frameworks';
-}
+// Outside classic mode the strip has no Structures tab: a request for it lands on Competencies.
+$activetab = hub_mode::requested_tab(optional_param('tab', $nav['tab'], PARAM_ALPHA), $classic);
 // The Competencies tab's view, when the link names one; without it the tab opens the viewer's saved
 // view. The competency is the map's deep link: a key the tab checks against the framework it shows.
 $view = optional_param('view', '', PARAM_ALPHA);
@@ -105,7 +127,7 @@ $contexttype = $resolved['contexttype'];
 $categoryid = (int) $resolved['categoryid'];
 
 /*
- * Build the three tabs. core/dynamic_tabs ignores the server's active flag and opens the first
+ * Build the tabs the strip offers (local\hub_mode::tabs()). core/dynamic_tabs ignores the server's active flag and opens the first
  * enabled tab, unless the URL fragment names one; the tab_hash template below supplies that
  * fragment synchronously before core initialises, so core opens the tab the server marked active.
  * Only that tab is pre-rendered: it paints immediately while core's unconditional getContent
@@ -122,6 +144,7 @@ $tabinstances = [
         'frameworkid' => $frameworkid,
         'view' => $view,
         'competencyid' => $competencyid,
+        'classic' => (int) $classic,
     ]),
     'plans' => new plans([
         'contexttype' => $contexttype,
@@ -139,10 +162,7 @@ $tabinstances = [
  * require_access() and take the whole page down. Decide this before anything reads $activetab:
  * the preference seed, the fragment template and the pre-rendered pane all follow it.
  */
-$available = [];
-foreach ($tabinstances as $shortname => $tab) {
-    $available[$shortname] = $tab->is_available();
-}
+$available = hub_mode::strip($tabinstances, $classic);
 $activetab = helper::pick_available_tab($available, $activetab);
 if ($activetab === '') {
     throw new required_capability_exception($resolved['context'], 'moodle/competency:competencyview', 'nopermissions', '');
@@ -167,6 +187,12 @@ $PAGE->requires->js_call_amd('local_dimensions/central/preferences', 'init', [$p
 
 // The context selector is page-level (governs every tab); init it once on load.
 $contextbar = new contextbar($contexttype, $categoryid, (bool) $nav['showhiddencats'], $locked);
+// The quiet link to the other mode, on the Competencies tab of the same context and framework.
+$contextbar->set_mode_link(
+    hub_mode::switch_url($resolved['context'], $locked, $classic, $contexttype, $categoryid, (int) $frameworkid),
+    hub_mode::switch_label($classic),
+    $classic
+);
 $PAGE->requires->js_call_amd('local_dimensions/central/context', 'init');
 // The page-level sticky footer is shared by every tab; init its coordinator once.
 $PAGE->requires->js_call_amd('local_dimensions/central/action_footer', 'init');
@@ -190,7 +216,7 @@ $tabicons = [
 // initialise it inside admin_externalpage_setup(); the category entry does not.
 $output = $PAGE->get_renderer('core');
 $tabs = [];
-foreach (['frameworks', 'structure', 'plans'] as $shortname) {
+foreach (array_keys($available) as $shortname) {
     $isactive = ($shortname === $activetab);
     $tab = $tabinstances[$shortname];
     $content = '';
@@ -219,6 +245,7 @@ $tabsdata = [
         ['name' => 'templateid', 'value' => $templateid],
         ['name' => 'view', 'value' => $view],
         ['name' => 'competencyid', 'value' => $competencyid],
+        ['name' => 'classic', 'value' => (int) $classic],
     ],
     'tabs' => $tabs,
 ];
@@ -233,7 +260,7 @@ echo $OUTPUT->render_from_template('local_dimensions/central/contextbar', $conte
 echo $OUTPUT->render_from_template('local_dimensions/central/tab_hash', ['activetab' => $activetab]);
 echo $OUTPUT->render_from_template('core/dynamic_tabs', $tabsdata);
 
-// One page-level sticky footer shared by all three tabs; rendered disabled so it
+// One page-level sticky footer shared by every tab; rendered disabled so it
 // stays hidden until a tab enables it on selection.
 $stickyfooter = new \core\output\sticky_footer();
 $stickyfooter->set_auto_enable(false);

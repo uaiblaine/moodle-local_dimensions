@@ -50,6 +50,13 @@ final class hub_map {
      */
     public const array STRINGS = [
         'central_browseframeworks_framework',
+        'central_frameworks_configurescale',
+        'central_frameworks_duplicate',
+        'central_frameworks_edit',
+        'central_frameworks_import_title',
+        'central_frameworks_new',
+        'central_frameworks_scaledefault',
+        'central_frameworks_scaleproficient',
         'central_related_button',
         'central_related_empty',
         'central_rule_nochildren',
@@ -83,6 +90,8 @@ final class hub_map {
         'hubv2_cmd_viewoutline',
         'hubv2_collapse',
         'hubv2_colour',
+        'hubv2_column_edit',
+        'hubv2_columns',
         'hubv2_commands',
         'hubv2_competencies',
         'hubv2_competencies_one',
@@ -121,6 +130,14 @@ final class hub_map {
         'hubv2_expand',
         'hubv2_expandall_capped',
         'hubv2_fitview',
+        'hubv2_fw_context',
+        'hubv2_fw_delete',
+        'hubv2_fw_duplicated',
+        'hubv2_fw_export',
+        'hubv2_fw_hide',
+        'hubv2_fw_level',
+        'hubv2_fw_show',
+        'hubv2_fw_visibility',
         'hubv2_hint_actions',
         'hubv2_hint_reorder',
         'hubv2_loading',
@@ -219,7 +236,15 @@ final class hub_map {
      */
     public const array OTHER_STRINGS = [
         'core' => ['cancel', 'changessaved', 'closebuttontitle', 'idnumber', 'required', 'save'],
-        'tool_lp' => ['addcompetency', 'competencycannotbedeleted', 'deletecompetency', 'editcompetency'],
+        'tool_lp' => [
+            'addcompetency',
+            'competencycannotbedeleted',
+            'deletecompetency',
+            'editcompetency',
+            'hidden',
+            'taxonomies',
+            'visible',
+        ],
     ];
 
     /**
@@ -276,8 +301,9 @@ final class hub_map {
      * @param bool $canmanage Whether the viewer manages competencies in the framework's context.
      * @param array|null $reveal The deep link's target ({@see reveal_target()}), or null.
      * @param string $layout The view shown, one of structure::WORKSPACE_VIEWS; anything else is the map.
+     * @param array $structures The commands not about one framework (structure::structures_commands()).
      * @return array Keys: framework, roots, pagesize, rulesmodules, courseoutcomes, moduleoutcomes, rtl, reveal,
-     *     layout.
+     *     layout, structures.
      */
     public static function props(
         competency_framework $framework,
@@ -286,17 +312,11 @@ final class hub_map {
         int $roottotal,
         bool $canmanage,
         ?array $reveal,
-        string $layout
+        string $layout,
+        array $structures
     ): array {
-        $context = $framework->get_context();
         return [
-            'framework' => [
-                'id' => (int) $framework->get('id'),
-                'shortname' => format_string($framework->get('shortname'), true, ['context' => $context, 'escape' => false]),
-                'idnumber' => (string) $framework->get('idnumber'),
-                'competencycount' => $competencycount,
-                'canmanage' => $canmanage,
-            ],
+            'framework' => self::framework_facts($framework, $competencycount, $canmanage),
             'roots' => [
                 'items' => array_values($roots),
                 'total' => $roottotal,
@@ -310,6 +330,101 @@ final class hub_map {
             'reveal' => $reveal,
             // The workspace's first layout; the tab's switch tells it of every later one without a reload.
             'layout' => in_array($layout, \local_dimensions\output\dynamictabs\structure::WORKSPACE_VIEWS, true) ? $layout : 'map',
+            // Creating and importing a framework where the tab lists them, and the scales page; nothing for a reader.
+            'structures' => [
+                'contextid' => (int) ($structures['contextid'] ?? 0),
+                'cancreate' => !empty($structures['cancreate']),
+                'canscalespage' => !empty($structures['canscalespage']),
+            ],
+        ];
+    }
+
+    /**
+     * What the root node says of the framework: the facts the Structures tab and core's framework page show.
+     *
+     * Names are the plain spelling (the canvas writes text, never markup). The taxonomy terms are core's, level by
+     * level as competency_framework::get_taxonomy() reads them, localised with core's strings; a level past the
+     * ones the framework names is core's fallback, `taxonomyfallback`. The scale's values carry the framework's
+     * configuration (which value is the default, which are proficient), read from its scaleconfiguration.
+     *
+     * @param competency_framework $framework The framework.
+     * @param int $competencycount How many competencies it holds.
+     * @param bool $canmanage Whether the viewer manages competencies in the framework's context.
+     * @return array Keys: id, shortname, idnumber, competencycount, canmanage, visible, contextname, scale (name,
+     *     values: id, name, isdefault, proficient), taxonomies (string[], level 1 first), taxonomyfallback,
+     *     deletable.
+     */
+    public static function framework_facts(competency_framework $framework, int $competencycount, bool $canmanage): array {
+        $context = $framework->get_context();
+        $plain = ['context' => $context, 'escape' => false];
+
+        $terms = competency_framework::get_taxonomies_list();
+        // The persistent's getter for 'taxonomies' is competency_framework::get_taxonomies(): an array of the
+        // levels the framework names, keyed from 1, never the stored comma list. Each level is then read through
+        // get_taxonomy(), core's own fallback included.
+        $levels = count((array) $framework->get('taxonomies'));
+        $taxonomies = [];
+        for ($level = 1; $level <= $levels; $level++) {
+            $taxonomies[] = (string) $terms[$framework->get_taxonomy($level)];
+        }
+
+        return [
+            'id' => (int) $framework->get('id'),
+            'shortname' => format_string($framework->get('shortname'), true, $plain),
+            'idnumber' => (string) $framework->get('idnumber'),
+            'competencycount' => $competencycount,
+            'canmanage' => $canmanage,
+            'visible' => (bool) $framework->get('visible'),
+            'contextname' => $context->get_context_name(false, false, false),
+            'scale' => self::scale_facts($framework),
+            'taxonomies' => $taxonomies,
+            'taxonomyfallback' => (string) $terms[competency_framework::TAXONOMY_COMPETENCY],
+            // Whether core would delete it now; the delete action asks core again, which refuses when it no longer may.
+            'deletable' => $canmanage
+                && competency::can_all_be_deleted(competency::get_ids_by_frameworkid((int) $framework->get('id'))),
+        ];
+    }
+
+    /**
+     * The framework's scale: its name and values, each with the framework's default and proficiency marks.
+     *
+     * The value ids are 1-based positions, as core's get_scale_values service and the scaleconfiguration JSON
+     * number them.
+     *
+     * @param competency_framework $framework The framework.
+     * @return array Keys: name (string), values (array of id, name, isdefault, proficient); an empty name and no
+     *     values when the scale is gone.
+     */
+    private static function scale_facts(competency_framework $framework): array {
+        global $DB;
+        $scale = $DB->get_record('scale', ['id' => (int) $framework->get('scaleid')]);
+        if (!$scale) {
+            return ['name' => '', 'values' => []];
+        }
+        $system = \context_system::instance();
+        $marks = [];
+        $config = json_decode((string) $framework->get('scaleconfiguration'));
+        if (is_array($config)) {
+            foreach (array_slice($config, 1) as $value) {
+                if (is_object($value) && isset($value->id)) {
+                    $marks[(int) $value->id] = $value;
+                }
+            }
+        }
+        $values = [];
+        // Split as grade_scale::load_items() does, so the positions are core's.
+        foreach (explode(',', (string) $scale->scale) as $index => $name) {
+            $id = $index + 1;
+            $values[] = [
+                'id' => $id,
+                'name' => format_string(trim((string) $name), true, ['context' => $system, 'escape' => false]),
+                'isdefault' => !empty($marks[$id]->scaledefault),
+                'proficient' => !empty($marks[$id]->proficient),
+            ];
+        }
+        return [
+            'name' => format_string((string) $scale->name, true, ['context' => $system, 'escape' => false]),
+            'values' => $values,
         ];
     }
 

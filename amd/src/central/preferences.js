@@ -32,7 +32,10 @@ import {notifyError} from 'local_dimensions/central/errors';
 const PREF_NAV = 'local_dimensions_central_nav';
 /** @type {String} User preference name for the hub display-toggle state. */
 const PREF_DISPLAY = 'local_dimensions_central_display';
-/** @type {String[]} The Competencies tab's views (structure::VIEWS); the first is the default. */
+/**
+ * @type {String[]} The Competencies tab's views (structure::VIEWS). The default depends on the hub's mode and is
+ * the server's to apply (structure::resolve_view()): an unknown saved view is kept as none ('').
+ */
 const STRUCTURE_VIEWS = ['list', 'outline', 'map', 'both'];
 /** @type {Number} Debounce (ms) before a change is written to the server. */
 const SAVE_DELAY = 400;
@@ -43,7 +46,7 @@ const NAV_DEFAULTS = {
 };
 /** @type {Object} Default display state. */
 const DISPLAY_DEFAULTS = {
-    structure: {tax: false, id: false, rule: true, showhidden: false, view: 'list'},
+    structure: {tax: false, id: false, rule: true, showhidden: false, view: ''},
     planslist: {id: false, duedate: false},
     plansdetail: {tax: false, path: false, id: false},
     panels: {structure: true, planslist: true, plansdetail: true},
@@ -105,9 +108,9 @@ export const init = (state) => {
     }
     const incoming = seed.display || {};
     const structure = {...DISPLAY_DEFAULTS.structure, ...(incoming.structure || {})};
-    // As helper::get_central_prefs() reads it: anything but a known view is the list.
+    // As helper::get_central_prefs() reads it: anything but a known view is none saved.
     if (!STRUCTURE_VIEWS.includes(structure.view)) {
-        structure.view = STRUCTURE_VIEWS[0];
+        structure.view = '';
     }
     display = {
         structure,
@@ -146,6 +149,9 @@ export const saveNav = (partial) => {
 
 /**
  * Merge a partial display change (one level deep for the nested sections) and persist it.
+ *
+ * The store never holds the hub's mode (`classic`), so it never writes it: the server keeps the stored one on
+ * every client write (hub_mode::clean_display()), and only the context bar's link changes it.
  *
  * @param {Object} partial e.g. {structure: {tax: true}} or {plansshowdisabled: true}.
  */

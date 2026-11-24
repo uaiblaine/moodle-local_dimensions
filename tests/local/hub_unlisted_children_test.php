@@ -120,11 +120,12 @@ final class hub_unlisted_children_test extends advanced_testcase {
      * @param string $tabclass The tab class.
      * @param int $categoryid The category id.
      * @param string $listkey The export key holding the list.
+     * @param array $extra Further pane data (the hub's mode, `classic`).
      * @return array
      */
-    private function names(string $tabclass, int $categoryid, string $listkey): array {
+    private function names(string $tabclass, int $categoryid, string $listkey, array $extra = []): array {
         global $PAGE;
-        $tab = new $tabclass(['contexttype' => 'coursecat', 'categoryid' => $categoryid, 'locked' => 1]);
+        $tab = new $tabclass(['contexttype' => 'coursecat', 'categoryid' => $categoryid, 'locked' => 1] + $extra);
         $data = $tab->export_for_template($PAGE->get_renderer('core'));
         $names = array_map(static fn(array $row): string => (string) ($row['shortname'] ?? $row['name']), $data[$listkey]);
         sort($names);
@@ -187,6 +188,14 @@ final class hub_unlisted_children_test extends advanced_testcase {
         $this->setUser($f['user']);
         $this->assertSame(['Framework in parent'], $this->names(frameworks::class, $parentid, 'frameworks'));
         $this->assertSame(['Framework in parent'], $this->names(structure::class, $parentid, 'frameworks'));
+        // The hub's mode changes the views, not the list: the workspace and the classic list withhold alike.
+        foreach ([0, 1] as $classic) {
+            $this->assertSame(
+                ['Framework in parent'],
+                $this->names(structure::class, $parentid, 'frameworks', ['classic' => $classic]),
+                "classic={$classic}"
+            );
+        }
     }
 
     /**

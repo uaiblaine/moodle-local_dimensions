@@ -9,6 +9,11 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
  * decision is a courtesy: every write goes through a core competency service that checks
  * moodle/competency:competencymanage in the competency's own context, whatever the client offered.
  *
+ * The framework is the tree's root: its own actions (the Structures tab's, run by the same AMD functions) have
+ * the `framework` scope and are offered on the root alone; creating and importing a framework, which are not
+ * about the one shown, have the `structures` scope. Their forms and services check the capability again, in the
+ * framework's context or in the context the tab lists.
+ *
  * Pure: Jest pins the availability matrix and the key map without a DOM.
  *
  * @module     local_dimensions/hubv2/commands
@@ -68,6 +73,13 @@ const ACTIONS = [
   { id: "links", scope: "node", group: 3, label: "hubv2_cmd_links", icon: "fa-link" },
   { id: "relate", scope: "node", group: 3, label: "hubv2_cmd_relate", icon: "fa-share-nodes" },
   { id: "delete", scope: "node", group: 4, label: "hubv2_delete", icon: "fa-trash", shortcut: { key: "Delete" }, danger: true },
+  { id: "fwedit", scope: "framework", group: 1, label: "central_frameworks_edit", icon: "fa-pen" },
+  { id: "fwscale", scope: "framework", group: 1, label: "central_frameworks_configurescale", icon: "fa-scale-balanced" },
+  { id: "fwhide", scope: "framework", group: 2, label: "hubv2_fw_hide", icon: "fa-eye-slash" },
+  { id: "fwshow", scope: "framework", group: 2, label: "hubv2_fw_show", icon: "fa-eye" },
+  { id: "fwduplicate", scope: "framework", group: 2, label: "central_frameworks_duplicate", icon: "fa-copy" },
+  { id: "fwexport", scope: "framework", group: 2, label: "hubv2_fw_export", icon: "fa-download" },
+  { id: "fwdelete", scope: "framework", group: 3, label: "hubv2_fw_delete", icon: "fa-trash", danger: true },
   { id: "moveroot", scope: "move", group: 1, label: "hubv2_moveroot", icon: "fa-turn-up" },
   { id: "movecancel", scope: "move", group: 1, label: "hubv2_movecancel", icon: "fa-xmark" },
   { id: "viewoutline", scope: "workspace", group: 1, label: "hubv2_cmd_viewoutline", icon: "fa-list" },
@@ -76,7 +88,9 @@ const ACTIONS = [
   { id: "expandall", scope: "workspace", group: 2, label: "managecompetencies_expandall", icon: "fa-angles-down" },
   { id: "collapseall", scope: "workspace", group: 2, label: "managecompetencies_collapseall", icon: "fa-angles-up" },
   { id: "addtop", scope: "workspace", group: 3, label: "managecompetencies_addcompetency", icon: "fa-plus" },
-  { id: "summary", scope: "workspace", group: 3, label: "hubv2_cmd_summary", icon: "fa-chart-simple" }
+  { id: "summary", scope: "workspace", group: 3, label: "hubv2_cmd_summary", icon: "fa-chart-simple" },
+  { id: "fwnew", scope: "structures", group: 1, label: "central_frameworks_new", icon: "fa-plus" },
+  { id: "fwimport", scope: "structures", group: 1, label: "central_frameworks_import_title", icon: "fa-upload" }
 ];
 const VIEW_ACTIONS = { viewoutline: "outline", viewmap: "map", viewboth: "both" };
 const specOf = /* @__PURE__ */ __name((id) => ACTIONS.find((spec) => spec.id === id), "specOf");
@@ -118,10 +132,29 @@ const workspaceState = /* @__PURE__ */ __name((spec, context) => {
       return "enabled";
   }
 }, "workspaceState");
+const frameworkState = /* @__PURE__ */ __name((spec, context) => {
+  if (context.node || !context.frameworkcanmanage || context.moving) {
+    return "hidden";
+  }
+  const visible = context.frameworkvisible !== false;
+  if (spec.id === "fwhide") {
+    return visible ? "enabled" : "hidden";
+  }
+  if (spec.id === "fwshow") {
+    return visible ? "hidden" : "enabled";
+  }
+  return "enabled";
+}, "frameworkState");
 const actionState = /* @__PURE__ */ __name((id, context) => {
   const spec = specOf(id);
   if (spec.scope === "node") {
     return nodeState(spec, context);
+  }
+  if (spec.scope === "framework") {
+    return frameworkState(spec, context);
+  }
+  if (spec.scope === "structures") {
+    return context.cancreate && !context.moving ? "enabled" : "hidden";
   }
   if (spec.scope === "move") {
     if (!context.moving) {

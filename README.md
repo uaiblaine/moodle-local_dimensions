@@ -61,15 +61,28 @@ templates*, opens the hub for a manager holding `competencymanage` or `templatem
 category only. It is locked to the category: no switch, the category and its subcategories listed
 (as core's own category pages do), and nothing from that visit written into the remembered context.
 
-The hub has three tabs: **Structures** (frameworks), **Competencies** and **Learning plans**. The
-selected row's actions sit in a bar at the foot of the page.
+The hub has two tabs: **Competencies**, the workspace described below, and **Learning plans**. The
+framework's own management (edit, taxonomies, scale, visibility, duplicate, CSV export, delete) is on
+the workspace's root, and creating or importing a framework is in the **Structures** menu beside the
+framework select.
 
-### The Competencies tab's outline and map (preview)
+**The classic hub** is kept for one release behind the **Classic view** link at the end of the
+context bar: the **Structures** tab (the list of frameworks) comes back first in the strip, and the
+Competencies tab offers its **Classic** view (the tree and its detail pane, the default in that mode)
+beside the workspace's three. **Workspace view** in the same place goes back. The choice is saved in
+the viewer's `local_dimensions_central_display` preference; `classic=1` or `classic=0` on the hub's
+address applies to that visit only. It changes which tabs and views are offered, never who may open
+them: each tab still admits its viewers as before, and the category entry and the unlisted-category
+rules are the same in both modes. A link to `tab=frameworks` outside classic mode opens Competencies,
+and one to `view=list` the workspace. In the classic hub the selected row's actions sit in a bar at
+the foot of the page.
 
-The Competencies tab has four views, switched beside the framework select: **Classic** (the tree and
-its detail pane, the default), **Outline**, **Map** and **Both**. The last three are one workspace
-over one selection, with the panel described below at their side; switching among them keeps the
-opened branches and the selection, and does not reload the tab.
+### The Competencies tab's workspace
+
+The Competencies tab has three views, switched beside the framework select: **Outline**, **Map** and
+**Both** (the default). They are one workspace over one selection, with the panel described below at
+their side; switching among them keeps the opened branches and the selection, and does not reload
+the tab.
 
 - **Outline**: the framework as a real tree (an ARIA tree view) of 32 px rows (40 px on a touch
   screen), indented by level, each with an expand chevron, the competency's colour, its name and,
@@ -86,7 +99,9 @@ opened branches and the selection, and does not reload the tab.
   outline to the row. Below 992 px wide the outline, the map and the panel are stacked.
 
 The map draws the selected framework's tree as a canvas of nodes: the framework at the left (at the right in a language written right to
-left), a column per level, each card with its colour, name, taxonomy or rule and a count,
+left), a column per level, headed by the level's taxonomy term as the framework names it (core's own
+words; a manager's pencil on a heading opens the framework's form, where the terms are edited), each
+card with its colour, name, taxonomy or rule and a count,
 parent-child edges in the rule's colour under a competency with a rule, and dotted edges to the
 selected competency's related ones. The tree loads lazily (25 children at a time), pans and zooms,
 and has an overview map. The panel beside it shows the selected competency (path, where it is used,
@@ -105,6 +120,21 @@ sees which reasons apply); otherwise the confirmation says that the competency a
 descendant, their relations and their prior-learning links are deleted permanently; the list view
 deletes through the same check and dialogues.
 
+#### The framework on the root
+
+The framework is the root of the outline and of the map. Selected (as it is when nothing else is), the
+panel shows its name, ID number, context (the site or the category), visibility, scale with the
+values it counts as proficient and its default one, the taxonomy term of each level and its summary;
+then **Edit structure** and **More actions**, the root's menu: **Configure scale**, **Hide structure**
+or **Show structure**, **Duplicate**, **Export to CSV** and **Delete structure**. They are the
+Structures tab's own dialogues and services, offered to whoever manages competencies in the
+framework's context. After an edit, the scale, the visibility or a duplicate the tab shows the same
+framework again with the branches that were open and the selection; a duplicate's copy is listed in
+the framework select. After a delete the tab shows the next framework of the select, or says there is
+none. The **Structures** menu beside the framework select holds **New structure** and **Import from
+CSV** (each then shows the new framework), **Show hidden structures** and **Manage scales** (the
+scales page, for whoever may open it); the palette offers the first two as well.
+
 #### Commands and keys of the workspace
 
 Every action is in three places that run the same thing: the panel (**Edit**, **Add child**, and **More
@@ -114,7 +144,7 @@ do nothing; core checks the right again on every change.
 | Where | Key | What it does |
 |---|---|---|
 | Anywhere in the workspace | Ctrl+K (Cmd+K on a Mac), or **Commands** | The command palette: the actions on the selected competency, "Go to" a competency by name or ID number, and the views, Expand all, Collapse all, Add competency and the framework summary |
-| On an item of the outline or the map | Shift+F10 or the context-menu key | The item's menu (also the "more" button on the selected row or card) |
+| On an item of the outline or the map | Shift+F10 or the context-menu key | The item's menu (also the "more" button on the selected row or card); on the root, the framework's |
 | | Alt+Up, Alt+Down | Move the competency up or down among its siblings |
 | | Delete | Delete the competency, after the usual check and confirmation |
 | On a row of the outline | F2 | Rename the competency in place |
@@ -153,15 +183,15 @@ The workspace is a React component built into one file, `js/esm/build/bundle.js`
 **React Flow** (`@xyflow/react` 13.0.3, MIT), vendored under `js/esm/vendor/xyflow` and declared in
 `thirdpartylibs.xml`; its README says how it was built. Nothing needs to be installed on the site.
 
-### Structures
+### Structures (classic view)
 
-Frameworks are created and edited natively, with scale configuration, duplication, a visibility
-toggle, a delete that asks for a reason, and CSV import and export. Each row counts its
-competencies.
+The classic hub's Structures tab lists the frameworks: each is created and edited natively, with
+scale configuration, duplication, a visibility toggle, a delete that asks for a reason, and CSV
+import and export. Each row counts its competencies. The same actions are on the workspace's root.
 
 ### Competencies and their rules
 
-The Competencies tab shows one framework as a lazy tree with search-and-reveal and drag-and-drop
+The classic view of the Competencies tab shows one framework as a lazy tree with search-and-reveal and drag-and-drop
 to reorder and reparent. *Show competency rule* puts each parent's completion rule beside it as a
 chip ("All children are complete", "Points required are met"); *Show taxonomy* and *Show
 identifiers* add the rest. Selecting a competency opens its detail: its label, ID number,
@@ -587,8 +617,8 @@ Data stored
 The plugin has no database tables of its own (no `db/install.xml`). It keeps:
 
 - **Five user preferences**: `local_dimensions_central_nav` and `local_dimensions_central_display`
-  (the Competency hub's last tab, context, selection, display toggles and the Competencies tab's
-  view),
+  (the Competency hub's last tab, context, selection, display toggles, the Competencies tab's
+  view and whether the hub opens in its classic view),
   `local_dimensions_learner_view` (each learner view's scope, sort and layout),
   `local_dimensions_learner_fav` (the favourite competencies, per plan) and
   `local_dimensions_learner_hero` (which headers are folded). They are kept until the user changes

@@ -280,8 +280,10 @@ final class hub_plain_names_test extends \advanced_testcase {
         $this->resetAfterTest();
         $f = $this->create_fixture();
 
-        $tab = new structure(['contexttype' => 'system', 'frameworkid' => $f['frameworkid']]);
+        // The classic list (classic mode) carries the names in data attributes; the workspace's half is below.
+        $tab = new structure(['contexttype' => 'system', 'frameworkid' => $f['frameworkid'], 'classic' => 1]);
         $data = $tab->export_for_template($PAGE->get_renderer('core'));
+        $this->assertSame('list', $data['view']);
         $option = $this->item($data['frameworks'], 'id', $f['frameworkid']);
         $this->assertSame(self::NAME, $option['name']);
         $this->assertSame(self::NAME, $option['idnumber']);
@@ -295,6 +297,20 @@ final class hub_plain_names_test extends \advanced_testcase {
         $this->assert_escaped_once($html);
         $this->assertStringContainsString('data-name="' . self::NAME_HTML . '"', $html);
         $this->assertStringContainsString('data-scale="' . self::NAME_HTML . '"', $html);
+
+        // The default mode: the same select escaped once, and the workspace's props plain, the angle bracket and
+        // the ampersand hex-encoded in the attribute and the name whole once decoded (the canvas writes text).
+        $workspace = (new structure(['contexttype' => 'system', 'frameworkid' => $f['frameworkid'], 'classic' => 0]))
+            ->export_for_template($PAGE->get_renderer('core'));
+        $this->assertSame('both', $workspace['view']);
+        $html = $OUTPUT->render_from_template('local_dimensions/central/structure', $workspace);
+        $this->assert_escaped_once($html);
+        $this->assertStringContainsString('>' . self::NAME_HTML . ' · ' . self::NAME_HTML . '</option>', $html);
+        $this->assertStringNotContainsString('"shortname":"' . self::NAME . '"', $html);
+        $props = json_decode($workspace['mapprops'], true);
+        $this->assertSame(self::NAME, $props['framework']['shortname']);
+        $this->assertSame(self::NAME, $props['framework']['scale']['name']);
+        $this->assertSame(self::NAME, $this->item($props['roots']['items'], 'id', $f['parentid'])['shortname']);
     }
 
     /**
@@ -633,7 +649,9 @@ final class hub_plain_names_test extends \advanced_testcase {
                 '/getString\(\'deletetemplate\', \'tool_lp\', escapeHtml\(name\)\)/',
                 '/getString\(\'central_removecompetency_confirm\', \'local_dimensions\', escapeHtml\(name\)\)/',
             ],
-            'frameworks' => ['/\{name: escapeHtml\(row\.dataset\.name\), count: row\.dataset\.count\}/'],
+            // The delete's confirm is the one sink; both callers hand it the plain name (row data, the canvas's
+            // props), pinned below, so it is escaped exactly once.
+            'frameworks' => ['/\{name: escapeHtml\(name\), count: count\}/'],
             'cohort_manager' => ['/const name = escapeHtml\(row\.querySelector\(\'th\'\)\.textContent\);/'],
             'roles_manager' => ['/getString\(\'central_roles_remove_confirm\', \'local_dimensions\', escapeHtml\(rolename\)\)/'],
             'participants_users' => [
@@ -653,6 +671,14 @@ final class hub_plain_names_test extends \advanced_testcase {
                 $this->assertMatchesRegularExpression($pattern, $source, "$module: $pattern");
             }
         }
+
+        // The framework delete's callers pass the plain name, never one escaped already: the Structures tab its row's
+        // data attribute, the workspace's root the plain shortname of its props.
+        $frameworks = $this->js_source('frameworks');
+        $this->assertMatchesRegularExpression('/confirmDelete\(\{\s*id: [^,]+,\s*name: row\.dataset\.name,/', $frameworks);
+        $this->assertDoesNotMatchRegularExpression('/escapeHtml\(row\.dataset\.name\)/', $frameworks);
+        $hub = (string) file_get_contents(__DIR__ . '/../../js/esm/src/hubv2/Hub.tsx');
+        $this->assertMatchesRegularExpression('/confirmDelete\(\{\s*id: framework\.id,\s*name: framework\.shortname,/', $hub);
 
         // The shared helper escapes all five characters that change meaning in HTML.
         $escape = $this->js_source('escape');

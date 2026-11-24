@@ -83,6 +83,12 @@ final class hub_map_test extends advanced_testcase {
                 'managecompetencies_view_map',
                 'managecompetencies_view_both',
                 'hubv2_loading',
+                // The Structures menu and the context bar's link to the other mode.
+                'central_frameworks_tab',
+                'hubv2_structures_import',
+                'hubv2_structures_scales',
+                'central_view_classic',
+                'central_view_workspace',
             ];
             foreach ($tabkeys as $key) {
                 $this->assertArrayHasKey($key, $string, "lang/{$lang} lacks {$key}");

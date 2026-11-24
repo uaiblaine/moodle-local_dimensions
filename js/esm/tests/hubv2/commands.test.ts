@@ -65,7 +65,7 @@ const NODE_ACTIONS = ACTIONS.filter((spec) => spec.scope === 'node').map((spec) 
  * @param {object} given The context.
  * @returns {Array} The ids.
  */
-const offered = (scopes: ('node' | 'move' | 'workspace')[], given: ActionContext): ActionId[] =>
+const offered = (scopes: ('node' | 'move' | 'workspace' | 'framework' | 'structures')[], given: ActionContext): ActionId[] =>
     actionsFor(scopes, given).map((view) => view.spec.id);
 
 describe('a reader', () => {
@@ -225,5 +225,57 @@ describe('the shortcuts\' caps', () => {
         expect(shortcutCaps({key: 'Delete'}, false)).toEqual(['Del']);
         expect(ariaShortcut({key: 'K', mod: true}, true)).toBe('Meta+K');
         expect(ariaShortcut({key: 'ArrowDown', alt: true}, false)).toBe('Alt+ArrowDown');
+    });
+});
+
+describe('the framework on the root', () => {
+    const FRAMEWORK_ACTIONS: ActionId[] = ['fwedit', 'fwscale', 'fwhide', 'fwshow', 'fwduplicate', 'fwexport', 'fwdelete'];
+
+    it('offers a reader none of its actions, and nothing to create', () => {
+        const reader = context({node: null, frameworkcanmanage: false, frameworkvisible: true, cancreate: false});
+        expect(offered(['framework', 'structures'], reader)).toEqual([]);
+        FRAMEWORK_ACTIONS.forEach((id) => expect(actionState(id, reader)).toBe('hidden'));
+        expect(actionState('fwnew', reader)).toBe('hidden');
+        expect(actionState('fwimport', reader)).toBe('hidden');
+        // Control: a manager of the same framework is offered them, Hide for a visible one.
+        const manager = context({node: null, frameworkvisible: true, cancreate: true});
+        expect(offered(['framework'], manager)).toEqual(['fwedit', 'fwscale', 'fwhide', 'fwduplicate', 'fwexport', 'fwdelete']);
+        expect(offered(['structures'], manager)).toEqual(['fwnew', 'fwimport']);
+    });
+
+    it('offers Hide for a visible framework and Show for a hidden one, never both', () => {
+        const visible = context({node: null, frameworkvisible: true});
+        expect(actionState('fwhide', visible)).toBe('enabled');
+        expect(actionState('fwshow', visible)).toBe('hidden');
+        const hidden = context({node: null, frameworkvisible: false});
+        expect(actionState('fwhide', hidden)).toBe('hidden');
+        expect(actionState('fwshow', hidden)).toBe('enabled');
+        expect(offered(['framework'], hidden)).toEqual(['fwedit', 'fwscale', 'fwshow', 'fwduplicate', 'fwexport', 'fwdelete']);
+        // Not said: visible, as a framework is by default.
+        expect(actionState('fwhide', context({node: null}))).toBe('enabled');
+    });
+
+    it('is acted on from the root alone: a selected competency hides the framework\'s actions', () => {
+        expect(offered(['framework'], context())).toEqual([]);
+        expect(offered(['framework'], context({node: null}))).not.toEqual([]);
+    });
+
+    it('offers nothing on the framework, and nothing to create, while a move is being picked', () => {
+        const moving = context({node: null, moving: node({id: 9}), cancreate: true});
+        expect(offered(['framework', 'structures'], moving)).toEqual([]);
+    });
+
+    it('lets a manager of the tab\'s context create where the framework is not theirs to manage', () => {
+        const creator = context({node: null, frameworkcanmanage: false, cancreate: true});
+        expect(offered(['framework'], creator)).toEqual([]);
+        expect(offered(['structures'], creator)).toEqual(['fwnew', 'fwimport']);
+    });
+
+    it('draws the delete last, as the destructive one, after a separator group', () => {
+        const views = actionsFor(['framework'], context({node: null}));
+        const last = views[views.length - 1];
+        expect(last.spec.id).toBe('fwdelete');
+        expect(last.spec.danger).toBe(true);
+        expect(last.spec.group).toBeGreaterThan(views[views.length - 2].spec.group);
     });
 });

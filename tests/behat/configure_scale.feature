@@ -14,6 +14,10 @@ Feature: Configure a competency scale from the Competency hub edit modal
     And the following "core_competency > competencies" exist:
       | shortname        | idnumber | competencyframework |
       | Behat competency | BC1      | BF1                 |
+    # The classic hub (the Structures tab and the classic list), kept one release behind the context bar's link.
+    And the following "user preferences" exist:
+      | user       | preference                       | value            |
+      | admin      | local_dimensions_central_display | {"classic":true} |
     And I log in as "admin"
 
   Scenario: The Configure scale button opens the scale configuration dialogue inside the modal

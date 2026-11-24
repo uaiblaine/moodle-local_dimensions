@@ -31,6 +31,12 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  * editor, Editor.tsx) asked for it. A competency moves under a new parent by picking it in a pane or
  * through "Move to" (MoveDialog.tsx); both end in moveUnder.
  *
+ * The framework is the tree's root: selected (nothing else is), the panel shows it and its own actions, the
+ * Structures tab's, run by that tab's AMD functions (amd/src/central/frameworks.js, through amd.ts) from the
+ * root's panel, its menu and the palette. An action that changes the framework reloads the tab's pane, so
+ * everything the server says of it is fresh; the opened branches and the selection survive the reload
+ * (carry.ts). Above the map's columns, the taxonomy term of each level (ColumnHeads.tsx).
+ *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -54,6 +60,9 @@ import Menu from "./Menu";
 import MoveDialog from "./MoveDialog";
 import Palette from "./Palette";
 import { summaryFacts, summaryLines } from "./summary";
+import { carryOf, hold, take } from "./carry";
+import ColumnHeads from "./ColumnHeads";
+import { columnHeads, deepestLevel } from "./columns";
 import {
   Background,
   BackgroundVariant,
@@ -118,7 +127,14 @@ const MODAL_HIDDEN = "modal:hidden.localdimensionshubv2";
 const NODE_TYPES = { framework: FrameworkNode, competency: CompetencyNode, more: MoreNode };
 const ZOOM_KEYS = ["Control", "Meta"];
 const MINIMAP = { width: 140, height: 96 };
-const FIT = { padding: { top: "32px", right: "32px", bottom: "140px", left: "32px" }, maxZoom: 1 };
+const FIT = { padding: { top: "56px", right: "32px", bottom: "140px", left: "32px" }, maxZoom: 1 };
+const menuTarget = /* @__PURE__ */ __name((selected, nodeactions, frameworkactions) => {
+  if (selected !== null) {
+    return nodeactions.length > 0 ? selected : null;
+  }
+  return frameworkactions.length > 0 ? ROOT : null;
+}, "menuTarget");
+const COLUMNS_ID = "local-dimensions-hubv2-columns";
 const EDGE_TYPES = { rule: RuleEdge };
 const NODE_SELECTOR = ".react-flow__node";
 const ROW_SELECTOR = '[role="treeitem"]';
@@ -734,7 +750,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       last: !siblings || index < 0 || index === siblings.ids.length - 1 && siblings.ids.length >= siblings.total,
       layout: layoutRef.current,
       empty: countRef.current === 0,
-      expanding: expandingRef.current
+      expanding: expandingRef.current,
+      frameworkvisible: framework.visible,
+      cancreate: props.structures.cancreate
     };
   }, "contextFor");
   const switchLayout = /* @__PURE__ */ __name((next) => {
@@ -858,6 +876,76 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         break;
     }
   }, "runNodeAction");
+  const runFrameworkAction = /* @__PURE__ */ __name((id) => {
+    const pane = rootRef.current?.closest("[data-tab-content]") ?? null;
+    track("framework", (async () => {
+      const [frameworks, tab] = await Promise.all([
+        load("local_dimensions/central/frameworks"),
+        load("local_dimensions/central/structure")
+      ]);
+      const show = /* @__PURE__ */ __name((frameworkid, keep) => {
+        if (!pane) {
+          return;
+        }
+        if (keep) {
+          hold(carryOf(framework.id, treeRef.current, selectedRef.current));
+        }
+        tab.showFramework(pane, frameworkid).catch(notifyError);
+      }, "show");
+      const again = /* @__PURE__ */ __name(() => show(framework.id, true), "again");
+      const canscalespage = props.structures.canscalespage;
+      switch (id) {
+        case "fwedit":
+        case "fwscale":
+          await frameworks.editFramework(framework.id, { onSaved: again, canscalespage, scale: id === "fwscale" });
+          break;
+        case "fwhide":
+        case "fwshow":
+          await frameworks.setVisibility(framework.id, id === "fwshow");
+          again();
+          break;
+        case "fwduplicate": {
+          await frameworks.duplicate(framework.id);
+          const toast = await load("local_dimensions/central/toast");
+          toast.add(labels.hubv2_fw_duplicated, { type: "success" }).catch(notifyError);
+          again();
+          break;
+        }
+        case "fwexport":
+          await frameworks.exportFramework(framework.id);
+          break;
+        case "fwdelete": {
+          const deleted = await frameworks.confirmDelete({
+            id: framework.id,
+            name: framework.shortname,
+            count: countRef.current,
+            deletable: framework.deletable
+          });
+          if (deleted) {
+            show(tab.nextFramework(framework.id), false);
+          }
+          break;
+        }
+        case "fwnew":
+          await frameworks.createFramework(props.structures.contextid, {
+            /**
+             * Shows the framework that was just created.
+             *
+             * @param {number} newid The new framework's id.
+             * @returns {void}
+             */
+            onSaved: /* @__PURE__ */ __name((newid) => show(newid, false), "onSaved"),
+            canscalespage
+          });
+          break;
+        case "fwimport":
+          await frameworks.importFramework(props.structures.contextid, (newid) => show(newid, false));
+          break;
+        default:
+          break;
+      }
+    })()).catch(notifyError);
+  }, "runFrameworkAction");
   const runWorkspaceAction = /* @__PURE__ */ __name((id) => {
     const view = VIEW_ACTIONS[id];
     if (view) {
@@ -892,14 +980,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     if (actionState(id, context) !== "enabled") {
       return;
     }
-    if (specOf(id).scope === "node" && context.node) {
+    const scope = specOf(id).scope;
+    if (scope === "node" && context.node) {
       runNodeAction(id, context.node);
+    } else if (scope === "framework" || scope === "structures") {
+      runFrameworkAction(id);
     } else {
       runWorkspaceAction(id);
     }
   }, "runAction");
+  const menuActions = /* @__PURE__ */ __name((id) => id === ROOT ? actionsFor(["framework"], contextFor(null)) : actionsFor(["node"], contextFor(id)), "menuActions");
   const openMenu = /* @__PURE__ */ __name((id, anchor, origin) => {
-    if (actionsFor(["node"], contextFor(id)).length === 0) {
+    if (menuActions(id).length === 0) {
       return false;
     }
     setMenu((current) => current && current.id === id && current.anchor === anchor ? null : { id, anchor, origin });
@@ -922,7 +1014,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     }
     setMenu(null);
     const origin = current.origin === "panel" ? { kind: "control", connected: current.anchor.isConnected } : { kind: "item", pane: current.origin };
-    const back = /* @__PURE__ */ __name(() => giveFocusBack(origin, current.anchor, competencyKey(current.id)), "back");
+    const back = /* @__PURE__ */ __name(() => giveFocusBack(origin, current.anchor, current.id === ROOT ? FRAMEWORK_ID : competencyKey(current.id)), "back");
     if (!outside) {
       back();
       return;
@@ -936,14 +1028,24 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       }, 0);
     }, { once: true, capture: true });
   }, "closeMenu");
+  const rootCommand = /* @__PURE__ */ __name((command, element, from) => {
+    const allowed = framework.canmanage && movingRef.current === null && layoutRef.current !== "map";
+    if (command === "quickchild" && from === "outline" && allowed) {
+      startCreate(ROOT, null);
+      return true;
+    }
+    if (command === "menu" && menuActions(ROOT).length > 0) {
+      if (selectedRef.current !== null) {
+        choose(null);
+      }
+      setMenu({ id: ROOT, anchor: element, origin: from });
+      return true;
+    }
+    return false;
+  }, "rootCommand");
   const keyCommand = /* @__PURE__ */ __name((command, key, element, from) => {
     if (key === FRAMEWORK_ID) {
-      const allowed = framework.canmanage && movingRef.current === null && layoutRef.current !== "map";
-      if (command === "quickchild" && from === "outline" && allowed) {
-        startCreate(ROOT, null);
-        return true;
-      }
-      return false;
+      return rootCommand(command, element, from);
     }
     const id = competencyOf(key);
     if (id === null || command === "palette") {
@@ -1043,15 +1145,14 @@ const Workspace = /* @__PURE__ */ __name((props) => {
      */
     run: /* @__PURE__ */ __name((id) => runAction(id, selectedRef.current), "run"),
     /**
-     * Open the selected competency's menu under the panel's "More actions" button.
+     * Open the selected competency's menu, or the framework's on the root, under the panel's "More actions"
+     * button.
      *
      * @param {HTMLElement} anchor The button.
      * @returns {void}
      */
     menu: /* @__PURE__ */ __name((anchor) => {
-      if (selectedRef.current !== null) {
-        openMenu(selectedRef.current, anchor, "panel");
-      }
+      openMenu(selectedRef.current ?? ROOT, anchor, "panel");
     }, "menu"),
     reveal: revealItem
   };
@@ -1129,6 +1230,36 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       return void 0;
     })).catch(notifyError);
   }, [props.reveal, ensureVisible, choose]);
+  const carried = useRef(take(framework.id));
+  useEffect(() => {
+    const carry = carried.current;
+    carried.current = null;
+    if (!carry) {
+      return;
+    }
+    track("restore", (async () => {
+      const roots = treeRef.current.branches[ROOT]?.ids.length ?? 0;
+      if ((carry.loaded[ROOT] ?? 0) > roots) {
+        await reloadBranch(ROOT, carry.loaded[ROOT]);
+      }
+      for (const { id, pathids } of carry.expanded) {
+        await ensureVisible(id, pathids);
+        if (!treeRef.current.nodes[id]) {
+          continue;
+        }
+        await reloadBranch(id, carry.loaded[id] ?? 1);
+        commit((current) => setExpanded(current, id, true));
+      }
+      const picked = carry.selected;
+      if (picked) {
+        await ensureVisible(picked.id, picked.pathids);
+        if (treeRef.current.nodes[picked.id]) {
+          centreOn.current = competencyKey(picked.id);
+          choose(picked.id);
+        }
+      }
+    })()).catch(notifyError);
+  }, [choose, commit, ensureVisible, reloadBranch]);
   useEffect(() => {
     const key = centreOn.current;
     const position = key ? graph.positions[key] : void 0;
@@ -1189,13 +1320,30 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   }, [graph, flow, rtl]);
   const selectedcontext = contextFor(selected);
   const nodeactions = actionsFor(["node"], selectedcontext);
-  const menuFor = selected !== null && nodeactions.length > 0 ? selected : null;
+  const frameworkactions = actionsFor(["framework"], selectedcontext);
+  const menuFor = menuTarget(selected, nodeactions, frameworkactions);
   const menuOpen = menu ? menu.id : null;
   const openMenuRef = useRef(openMenu);
   openMenuRef.current = openMenu;
   const openMapMenu = useCallback((id, anchor) => {
     openMenuRef.current(id, anchor, "map");
   }, []);
+  const viewportListener = useRef(null);
+  const subscribeViewport = useCallback((listener) => {
+    viewportListener.current = listener;
+    return () => {
+      if (viewportListener.current === listener) {
+        viewportListener.current = null;
+      }
+    };
+  }, []);
+  const readViewport = useCallback(() => flow.getViewport(), [flow]);
+  const levels = useMemo(() => deepestLevel(tree), [tree]);
+  const heads = useMemo(
+    () => columnHeads(levels, framework.taxonomies, framework.taxonomyfallback, rtl),
+    [levels, framework.taxonomies, framework.taxonomyfallback, rtl]
+  );
+  const editLevels = /* @__PURE__ */ __name(() => runAction("fwedit", null), "editLevels");
   const canvasActions = useMemo(
     () => ({ labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu }),
     [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu]
@@ -1295,7 +1443,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2011,
+            lineNumber: 2228,
             columnNumber: 21
           }
         ) };
@@ -1324,7 +1472,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2026,
+            lineNumber: 2243,
             columnNumber: 21
           }
         ) };
@@ -1333,7 +1481,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     return null;
   }, "outlineEditor");
   const entryOf = /* @__PURE__ */ __name((view) => ({ id: view.spec.id, label: labels[view.spec.label], icon: view.spec.icon, shortcut: view.spec.shortcut }), "entryOf");
-  const menuItems = /* @__PURE__ */ __name((id) => actionsFor(["node"], contextFor(id)).map((view, index, all) => ({
+  const menuItems = /* @__PURE__ */ __name((id) => menuActions(id).map((view, index, all) => ({
     id: view.spec.id,
     label: labels[view.spec.label],
     icon: view.spec.icon,
@@ -1365,16 +1513,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     }
     return origin === "outline" ? listRef.current : canvasRef.current;
   }, "paneOf");
+  const nameOfItem = /* @__PURE__ */ __name((id) => id === ROOT ? framework.shortname : tree.nodes[id]?.shortname, "nameOfItem");
   const overlays = /* @__PURE__ */ __name(() => {
-    const menunode = menu ? tree.nodes[menu.id] : void 0;
+    const menuname = menu ? nameOfItem(menu.id) : void 0;
     const movingnode2 = moveDialog !== null ? tree.nodes[moveDialog] : void 0;
-    const offered = palette ? actionsFor(["node", "move", "workspace"], selectedcontext) : [];
+    const offered = palette ? actionsFor(["node", "framework", "move", "workspace", "structures"], selectedcontext) : [];
+    const onthis = /* @__PURE__ */ __name((view) => view.spec.scope === "node" || view.spec.scope === "framework", "onthis");
     const enabled = offered.filter((view) => view.state === "enabled");
     return /* @__PURE__ */ jsxDEV(Fragment, { children: [
-      menu && menunode ? /* @__PURE__ */ jsxDEV(
+      menu && menuname !== void 0 ? /* @__PURE__ */ jsxDEV(
         Menu,
         {
-          label: fill(labels.hubv2_actionsof, menunode.shortname),
+          label: fill(labels.hubv2_actionsof, menuname),
           items: menuItems(menu.id),
           anchor: menu.anchor,
           pane: paneOf(menu.origin),
@@ -1382,7 +1532,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           mac,
           onRun: (id) => {
             closeMenu();
-            runAction(id, menu.id);
+            runAction(id, menu.id === ROOT ? null : menu.id);
           },
           onClose: closeMenu
         },
@@ -1390,7 +1540,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2112,
+          lineNumber: 2346,
           columnNumber: 21
         }
       ) : null,
@@ -1400,9 +1550,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           labels,
           mac,
           frameworkid: framework.id,
-          actionstitle: node ? fill(labels.hubv2_palette_on, node.shortname) : labels.hubv2_actions,
-          actions: enabled.filter((view) => view.spec.scope === "node").map(entryOf),
-          commands: enabled.filter((view) => view.spec.scope !== "node").map(entryOf),
+          actionstitle: fill(labels.hubv2_palette_on, node ? node.shortname : framework.shortname),
+          actions: enabled.filter(onthis).map(entryOf),
+          commands: enabled.filter((view) => !onthis(view)).map(entryOf),
           onRun: (id, hit) => {
             setPalette(false);
             if (hit) {
@@ -1418,7 +1568,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2127,
+          lineNumber: 2361,
           columnNumber: 21
         }
       ) : null,
@@ -1450,13 +1600,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2147,
+          lineNumber: 2381,
           columnNumber: 21
         }
       ) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2110,
+      lineNumber: 2344,
       columnNumber: 13
     });
   }, "overlays");
@@ -1472,19 +1622,19 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2187,
+          lineNumber: 2421,
           columnNumber: 21
         }),
         panes.map ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2190,
+            lineNumber: 2424,
             columnNumber: 29
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2189,
+          lineNumber: 2423,
           columnNumber: 25
         }) : null,
         /* @__PURE__ */ jsxDEV(
@@ -1502,11 +1652,11 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               labels.hubv2_commands,
               /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-keys", "aria-hidden": "true", children: shortcutCaps(PALETTE_SHORTCUT, mac).map((cap) => /* @__PURE__ */ jsxDEV("kbd", { children: cap }, cap, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2205,
+                lineNumber: 2439,
                 columnNumber: 79
               })) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2204,
+                lineNumber: 2438,
                 columnNumber: 25
               })
             ]
@@ -1515,13 +1665,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2193,
+            lineNumber: 2427,
             columnNumber: 21
           }
         )
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2186,
+        lineNumber: 2420,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-panes", ref: panesBox, children: [
@@ -1554,7 +1704,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2211,
+            lineNumber: 2445,
             columnNumber: 25
           }
         ) : null,
@@ -1573,7 +1723,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2236,
+            lineNumber: 2470,
             columnNumber: 25
           }
         ) : null,
@@ -1583,6 +1733,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
             className: "local-dimensions-hubv2-canvas",
             role: "region",
             "aria-label": labels.hubv2_canvas,
+            "aria-describedby": heads.length > 0 ? COLUMNS_ID : void 0,
             ref: canvasRef,
             onKeyDown: (event) => walk(event, mapStop, NODE_SELECTOR, "map"),
             onFocus: (event) => {
@@ -1590,93 +1741,116 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               mapStop.onFocus(event);
             },
             onBlur: mapStop.onBlur,
-            children: /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
-              ReactFlow,
-              {
-                nodes,
-                edges: graph.edges,
-                nodeTypes: NODE_TYPES,
-                edgeTypes: EDGE_TYPES,
-                onNodesChange,
-                nodesFocusable: false,
-                nodesDraggable: false,
-                nodesConnectable: false,
-                edgesFocusable: false,
-                elevateEdgesOnSelect: false,
-                selectNodesOnDrag: false,
-                deleteKeyCode: null,
-                selectionKeyCode: null,
-                multiSelectionKeyCode: null,
-                zoomOnDoubleClick: false,
-                zoomOnScroll: false,
-                zoomOnPinch: true,
-                preventScrolling: false,
-                zoomActivationKeyCode: ZOOM_KEYS,
-                fitView: true,
-                fitViewOptions: FIT,
-                minZoom: 0.2,
-                maxZoom: 1.5,
-                ariaLabelConfig: aria,
-                "aria-label": framework.shortname,
-                proOptions: { hideAttribution: true },
-                children: [
-                  /* @__PURE__ */ jsxDEV(
-                    Background,
-                    {
-                      variant: BackgroundVariant.Dots,
-                      gap: 18,
-                      size: 1,
-                      className: "local-dimensions-hubv2-dots"
-                    },
-                    void 0,
-                    false,
-                    {
+            children: [
+              /* @__PURE__ */ jsxDEV(
+                ColumnHeads,
+                {
+                  labels,
+                  heads,
+                  cardwidth: CARD.width,
+                  read: readViewport,
+                  subscribe: subscribeViewport,
+                  describedby: COLUMNS_ID,
+                  canedit: actionState("fwedit", contextFor(null)) === "enabled",
+                  onEdit: editLevels
+                },
+                void 0,
+                false,
+                {
+                  fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                  lineNumber: 2494,
+                  columnNumber: 29
+                }
+              ),
+              /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
+                ReactFlow,
+                {
+                  nodes,
+                  edges: graph.edges,
+                  nodeTypes: NODE_TYPES,
+                  edgeTypes: EDGE_TYPES,
+                  onNodesChange,
+                  onMove: (event, viewport) => viewportListener.current?.(viewport),
+                  nodesFocusable: false,
+                  nodesDraggable: false,
+                  nodesConnectable: false,
+                  edgesFocusable: false,
+                  elevateEdgesOnSelect: false,
+                  selectNodesOnDrag: false,
+                  deleteKeyCode: null,
+                  selectionKeyCode: null,
+                  multiSelectionKeyCode: null,
+                  zoomOnDoubleClick: false,
+                  zoomOnScroll: false,
+                  zoomOnPinch: true,
+                  preventScrolling: false,
+                  zoomActivationKeyCode: ZOOM_KEYS,
+                  fitView: true,
+                  fitViewOptions: FIT,
+                  minZoom: 0.2,
+                  maxZoom: 1.5,
+                  ariaLabelConfig: aria,
+                  "aria-label": framework.shortname,
+                  proOptions: { hideAttribution: true },
+                  children: [
+                    /* @__PURE__ */ jsxDEV(
+                      Background,
+                      {
+                        variant: BackgroundVariant.Dots,
+                        gap: 18,
+                        size: 1,
+                        className: "local-dimensions-hubv2-dots"
+                      },
+                      void 0,
+                      false,
+                      {
+                        fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                        lineNumber: 2538,
+                        columnNumber: 37
+                      }
+                    ),
+                    /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 2292,
+                      lineNumber: 2540,
                       columnNumber: 37
-                    }
-                  ),
-                  /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
-                    fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                    lineNumber: 2294,
-                    columnNumber: 37
-                  }),
-                  /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
-                    fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                    lineNumber: 2295,
-                    columnNumber: 37
-                  })
-                ]
-              },
-              void 0,
-              true,
-              {
+                    }),
+                    /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
+                      fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                      lineNumber: 2541,
+                      columnNumber: 37
+                    })
+                  ]
+                },
+                void 0,
+                true,
+                {
+                  fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                  lineNumber: 2505,
+                  columnNumber: 33
+                }
+              ) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2260,
-                columnNumber: 33
-              }
-            ) }, void 0, false, {
-              fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 2259,
-              columnNumber: 29
-            })
+                lineNumber: 2504,
+                columnNumber: 29
+              })
+            ]
           },
           void 0,
-          false,
+          true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2247,
+            lineNumber: 2481,
             columnNumber: 25
           }
         ) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2209,
+        lineNumber: 2443,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2185,
+      lineNumber: 2419,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -1694,6 +1868,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         menuopen: menu !== null && menu.origin === "panel",
         moveactions: actionsFor(["move"], selectedcontext),
         topactions: actionsFor(["workspace"], selectedcontext).filter((view) => view.spec.id === "addtop"),
+        frameworkactions,
         summary: summaryLines(labels, summaryFacts(tree, count)),
         summaryRef,
         actions
@@ -1702,19 +1877,19 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2302,
+        lineNumber: 2548,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2319,
+      lineNumber: 2566,
       columnNumber: 13
     }),
     overlays()
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2184,
+    lineNumber: 2418,
     columnNumber: 9
   });
 }, "Workspace");
@@ -1726,21 +1901,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2337,
+      lineNumber: 2584,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Workspace, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2342,
+    lineNumber: 2589,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2341,
+    lineNumber: 2588,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2340,
+    lineNumber: 2587,
     columnNumber: 9
   });
 }, "Hub");

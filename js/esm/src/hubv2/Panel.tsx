@@ -22,9 +22,12 @@
  *
  * Its buttons are the action registry's (commands.ts), the same list and the same decision the node's
  * menu and the command palette draw from: "Edit" and "Add child", then "More actions", which opens the
- * node's own menu under itself (the destructive action lives there, last). With nothing selected it shows
- * the framework's summary (summary.ts), which the palette's command brings into view, and "Add competency".
- * During a move it shows what the move needs.
+ * node's own menu under itself (the destructive action lives there, last). With nothing selected the root is
+ * selected, and the panel shows the framework: its name, ID number, context, visibility (a status label), scale
+ * with the values the framework counts as proficient, the taxonomy term of each level, the competencies' total
+ * and the summary (summary.ts), which the palette's command brings into view; then the framework's own actions
+ * ("Edit structure", then "More actions", the root's menu) and "Add competency". During a move it shows what the
+ * move needs.
  *
  * @module     local_dimensions/hubv2/Panel
  * @copyright  2026 Anderson Blaine
@@ -49,6 +52,9 @@ export type PanelActions = {
 /** The actions the panel draws as buttons; every other one is in "More actions". */
 const PANEL_BUTTONS: ActionId[] = ['edit', 'addchild'];
 
+/** The framework's action the root's panel draws as its button; the rest are in "More actions". */
+const FRAMEWORK_BUTTONS: ActionId[] = ['fwedit'];
+
 /** The panel's props. */
 export type PanelProps = {
     labels: Labels,
@@ -65,6 +71,8 @@ export type PanelProps = {
     menuopen: boolean,
     moveactions: ActionView[],
     topactions: ActionView[],
+    // The registry's actions on the framework, offered on the root.
+    frameworkactions: ActionView[],
     summary: SummaryLine[],
     // The summary's heading, which the palette's "Framework summary" focuses.
     summaryRef: RefObject<HTMLHeadingElement | null>,
@@ -147,18 +155,103 @@ const buttonClass = (view: ActionView, first: boolean): string => {
 };
 
 /**
+ * The "More actions" button, which opens the selection's menu under itself.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The button.
+ */
+const MoreButton = ({labels, open, menu}: {labels: Labels, open: boolean, menu: (anchor: HTMLElement) => void}): ReactNode => (
+    <button
+        type="button"
+        className="btn btn-sm btn-outline-secondary"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={(event) => menu(event.currentTarget)}
+    >
+        {labels.hubv2_moreactions}<i className="fa fa-chevron-down ms-1" aria-hidden="true" />
+    </button>
+);
+
+/**
+ * The classes of the framework's visibility label: the success tone while visible, the neutral one while hidden.
+ *
+ * @param {boolean} visible Whether the framework is visible.
+ * @returns {string} The classes.
+ */
+const visibilityClass = (visible: boolean): string => (visible
+    ? 'local-dimensions-hubv2-status local-dimensions-hubv2-status--success'
+    : 'local-dimensions-hubv2-status');
+
+/**
+ * The framework's facts on the root's panel: its context, visibility, scale (each value with its marks) and the
+ * taxonomy term of each level it names.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The section.
+ */
+const FrameworkFacts = ({labels, framework}: {labels: Labels, framework: Framework}): ReactNode => (
+    <>
+        <section className="local-dimensions-hubv2-sec">
+            <dl className="local-dimensions-hubv2-kv mb-0">
+                <Pair label={labels.hubv2_fw_context}>{framework.contextname}</Pair>
+                <Pair label={labels.hubv2_fw_visibility}>
+                    <span data-region="framework-visibility" className={visibilityClass(framework.visible)}>
+                        <i className={`fa ${framework.visible ? 'fa-eye' : 'fa-eye-slash'}`} aria-hidden="true" />
+                        {labels[framework.visible ? 'tool_lp:visible' : 'tool_lp:hidden']}
+                    </span>
+                </Pair>
+                <Pair label={labels.hubv2_scale}>{framework.scale.name || '-'}</Pair>
+            </dl>
+            {framework.scale.values.length > 0 ? (
+                <ul className="local-dimensions-hubv2-scalevalues list-unstyled mb-0">
+                    {framework.scale.values.map((value) => (
+                        <li key={value.id}>
+                            <span className="local-dimensions-hubv2-scalevalue">{value.name}</span>
+                            {value.proficient ? (
+                                <span className="local-dimensions-hubv2-status local-dimensions-hubv2-status--success">
+                                    {labels.central_frameworks_scaleproficient}
+                                </span>
+                            ) : null}
+                            {value.isdefault ? (
+                                <span className="local-dimensions-hubv2-status">{labels.central_frameworks_scaledefault}</span>
+                            ) : null}
+                        </li>
+                    ))}
+                </ul>
+            ) : null}
+        </section>
+        {framework.taxonomies.length > 0 ? (
+            <section className="local-dimensions-hubv2-sec">
+                <h4 className="local-dimensions-hubv2-sectitle">{labels['tool_lp:taxonomies']}</h4>
+                <dl className="local-dimensions-hubv2-kv mb-0">
+                    {framework.taxonomies.map((term, index) => (
+                        <Pair key={index} label={fill(labels.hubv2_fw_level, String(index + 1))}>{term}</Pair>
+                    ))}
+                </dl>
+            </section>
+        ) : null}
+    </>
+);
+
+/**
  * The buttons of a list of actions, each with its icon; a disabled one says why when it can.
  *
  * @param {object} props The props.
  * @returns {ReactNode} The buttons.
  */
-const ActionButtons = ({labels, views, run}: {labels: Labels, views: ActionView[], run: (id: ActionId) => void}): ReactNode => (
+const ActionButtons = ({labels, views, run, secondary = false}: {
+    labels: Labels,
+    views: ActionView[],
+    run: (id: ActionId) => void,
+    // Whether the surface's primary action is elsewhere, so none of these takes the solid fill.
+    secondary?: boolean,
+}): ReactNode => (
     <div className="local-dimensions-hubv2-actions d-flex flex-wrap gap-2">
         {views.map((view, index) => (
             <button
                 key={view.spec.id}
                 type="button"
-                className={buttonClass(view, index === 0)}
+                className={buttonClass(view, index === 0 && !secondary)}
                 disabled={view.state === 'disabled'}
                 title={view.state === 'disabled' && view.spec.id === 'rule' ? labels.central_rule_nochildren : undefined}
                 onClick={() => run(view.spec.id)}
@@ -195,7 +288,7 @@ const MoveSection = ({labels, moving, views, run}: {
  */
 const Panel = (props: PanelProps): ReactNode => {
     const {labels, framework, count, node, path, usage, related, moving, nodeactions, menuopen, moveactions, topactions,
-        summary, summaryRef, actions} = props;
+        frameworkactions, summary, summaryRef, actions} = props;
     const movesection = moving ? <MoveSection labels={labels} moving={moving} views={moveactions} run={actions.run} /> : null;
 
     if (!node) {
@@ -210,6 +303,7 @@ const Panel = (props: PanelProps): ReactNode => {
                     <h3 className="h5 mb-1">{framework.shortname}</h3>
                     <p className="text-muted mb-0">{fillCount(labels, 'hubv2_competencies', count)}</p>
                 </section>
+                <FrameworkFacts labels={labels} framework={framework} />
                 <section className="local-dimensions-hubv2-sec">
                     <h4 ref={summaryRef} tabIndex={-1} className="local-dimensions-hubv2-sectitle">{labels.hubv2_summary_title}</h4>
                     <dl className="local-dimensions-hubv2-kv mb-0">
@@ -217,9 +311,21 @@ const Panel = (props: PanelProps): ReactNode => {
                     </dl>
                     <p className="text-muted small mb-0">{labels.hubv2_noselection}</p>
                 </section>
+                {frameworkactions.length > 0 ? (
+                    <section className="local-dimensions-hubv2-sec">
+                        <h4 className="local-dimensions-hubv2-sectitle">{labels.hubv2_actions}</h4>
+                        <div className="local-dimensions-hubv2-actions d-flex flex-wrap gap-2">
+                            <ActionButtons labels={labels}
+                                views={frameworkactions.filter((view) => FRAMEWORK_BUTTONS.includes(view.spec.id))}
+                                run={actions.run} />
+                            <MoreButton labels={labels} open={menuopen} menu={actions.menu} />
+                        </div>
+                    </section>
+                ) : null}
                 {topactions.length > 0 ? (
                     <section className="local-dimensions-hubv2-sec">
-                        <ActionButtons labels={labels} views={topactions} run={actions.run} />
+                        <ActionButtons labels={labels} views={topactions} run={actions.run}
+                            secondary={frameworkactions.length > 0} />
                     </section>
                 ) : null}
             </aside>
@@ -315,15 +421,7 @@ const Panel = (props: PanelProps): ReactNode => {
                     <div className="local-dimensions-hubv2-actions d-flex flex-wrap gap-2">
                         <ActionButtons labels={labels} views={nodeactions.filter((view) => PANEL_BUTTONS.includes(view.spec.id))}
                             run={actions.run} />
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            aria-haspopup="menu"
-                            aria-expanded={menuopen}
-                            onClick={(event) => actions.menu(event.currentTarget)}
-                        >
-                            {labels.hubv2_moreactions}<i className="fa fa-chevron-down ms-1" aria-hidden="true" />
-                        </button>
+                        <MoreButton labels={labels} open={menuopen} menu={actions.menu} />
                     </div>
                 </section>
             ) : null}

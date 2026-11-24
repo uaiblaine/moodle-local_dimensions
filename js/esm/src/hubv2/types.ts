@@ -58,8 +58,31 @@ export type NodePage = {items: StructureNode[], total: number};
 /** A competency named by id with its ancestors (search_structure, list_related_competencies). */
 export type PathItem = {id: number, shortname: string, idnumber: string, path: string, pathids: number[]};
 
-/** The framework the canvas shows. */
-export type Framework = {id: number, shortname: string, idnumber: string, competencycount: number, canmanage: boolean};
+/** One value of the framework's scale, with the framework's marks on it (hub_map::framework_facts()). */
+export type ScaleValue = {id: number, name: string, isdefault: boolean, proficient: boolean};
+
+/**
+ * The framework the canvas shows, and what its root node says of it (hub_map::framework_facts()). Names are the
+ * plain spelling. `taxonomies` holds the term of each level the framework names, level 1 first; a deeper level
+ * is `taxonomyfallback`, as core's competency_framework::get_taxonomy() reads it.
+ */
+export type Framework = {
+    id: number,
+    shortname: string,
+    idnumber: string,
+    competencycount: number,
+    canmanage: boolean,
+    visible: boolean,
+    contextname: string,
+    scale: {name: string, values: ScaleValue[]},
+    taxonomies: string[],
+    taxonomyfallback: string,
+    // Whether core would delete it when the page was built; the delete asks core again.
+    deletable: boolean,
+};
+
+/** The commands not about one framework: creating or importing one in the tab's context, and the scales page. */
+export type Structures = {contextid: number, cancreate: boolean, canscalespage: boolean};
 
 /** Where a competency is used (local_dimensions_competency_usage). */
 export type Usage = {
@@ -99,4 +122,5 @@ export type HubProps = {
     reveal: RevealTarget | null,
     /** The workspace's layout when it mounts: the tab's view (structure::VIEWS), the classic list aside. */
     layout: 'outline' | 'map' | 'both',
+    structures: Structures,
 };
