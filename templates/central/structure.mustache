@@ -17,8 +17,9 @@
 {{!
     @template local_dimensions/central/structure
 
-    Structure tab: a framework sub-header (structure picker, item count, the List / Map view switch
-    and, in the list, a level-sensitive "Add competency") over one of two bodies.
+    Structure tab: a framework sub-header (structure picker, item count, the view switch: Classic,
+    Outline, Map, Both; and, in the classic list, a level-sensitive "Add competency") over one of two
+    bodies.
 
     The list: a master/detail body. The left panel holds the tree toolbar, display toggles, search
     and the lazy competency tree; a resizable divider separates it from the sticky detail panel
@@ -26,11 +27,13 @@
     selected node's data attributes. The node actions live in the page's sticky footer
     (local_dimensions/central/structure_footer_actions).
 
-    The map: one React mount of the canvas (the bundle built from js/esm/src/hubv2/Hub.tsx) with
-    the props local_dimensions\output\hub_map builds. Core mounts it wherever the markup lands,
-    a pane re-rendered over AJAX included. The canvas's panel carries its own "Add competency",
-    which knows the selection, so the sub-header's is left out there. The mount's inner content
-    shows until React commits, and stays when the client cannot load.
+    The workspace (Outline, Map and Both): one React mount (the bundle built from
+    js/esm/src/hubv2/Hub.tsx) with the props local_dimensions\output\hub_map builds, the view as its
+    first layout. Core mounts it wherever the markup lands, a pane re-rendered over AJAX included. The
+    switch moves among the three layouts without a reload, telling the mount by an event; only a move
+    to or from the classic list reloads the pane. The workspace's panel carries its own "Add
+    competency", which knows the selection, so the sub-header's is left out there. The mount's inner
+    content shows until React commits, and stays when the client cannot load.
 
     The System / Course category context selector is rendered once at page level
     (local_dimensions/central/contextbar); this tab receives the resolved context via its
@@ -38,8 +41,8 @@
 
     Context variables required:
     * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
-    * view (string: list or map) · islistview (bool) · ismapview (bool) · the view switch's state
-    * ismap (bool) · mapprops (string json) · whether the canvas is drawn, and its props
+    * view (string: list, outline, map or both) · views (array) {value, label, icon, pressed} · the view switch
+    * isworkspace (bool) · mapprops (string json) · whether the workspace is drawn, and its props
     * hashiddenframeworks (bool)
     * showhiddentoggle (object|null) {id, label, action, checked} · standalone "show hidden" pill
     * rulesmodulesjson (string json) · courseoutcomesjson (string json) · moduleoutcomesjson (string json)
@@ -56,9 +59,13 @@
     {
         "contexttype": "system",
         "view": "list",
-        "islistview": true,
-        "ismapview": false,
-        "ismap": false,
+        "views": [
+            {"value": "list", "label": "Classic", "icon": "fa-list", "pressed": true},
+            {"value": "outline", "label": "Outline", "icon": "fa-folder-tree", "pressed": false},
+            {"value": "map", "label": "Map", "icon": "fa-sitemap", "pressed": false},
+            {"value": "both", "label": "Both", "icon": "fa-table-columns", "pressed": false}
+        ],
+        "isworkspace": false,
         "mapprops": "",
         "detailconfig": {"linksclickable": true, "showrelated": true},
         "selectedcategoryid": 0,
@@ -134,18 +141,16 @@
                 {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
             </span>
             <div class="local-dimensions-central-viewswitch" role="group" aria-label="{{#str}}managecompetencies_view, local_dimensions{{/str}}">
-                <button type="button" class="local-dimensions-central-viewswitch-cell" data-action="switch-view" data-view="list"
-                        aria-pressed="{{#islistview}}true{{/islistview}}{{^islistview}}false{{/islistview}}">
-                    <i class="fa fa-list" aria-hidden="true"></i>{{#str}}managecompetencies_view_list, local_dimensions{{/str}}
+                {{#views}}
+                <button type="button" class="local-dimensions-central-viewswitch-cell" data-action="switch-view" data-view="{{value}}"
+                        aria-pressed="{{#pressed}}true{{/pressed}}{{^pressed}}false{{/pressed}}">
+                    <i class="fa {{icon}}" aria-hidden="true"></i>{{label}}
                 </button>
-                <button type="button" class="local-dimensions-central-viewswitch-cell" data-action="switch-view" data-view="map"
-                        aria-pressed="{{#ismapview}}true{{/ismapview}}{{^ismapview}}false{{/ismapview}}">
-                    <i class="fa fa-sitemap" aria-hidden="true"></i>{{#str}}managecompetencies_view_map, local_dimensions{{/str}}
-                </button>
+                {{/views}}
             </div>
         </div>
         {{#canmanage}}
-        {{^ismap}}
+        {{^isworkspace}}
         <div class="local-dimensions-central-structure-subheader-actions">
             <button type="button" class="local-dimensions-central-plans-new" data-action="add">
                 <i class="fa fa-plus" aria-hidden="true"></i>{{#str}}managecompetencies_addcompetency, local_dimensions{{/str}}
@@ -154,11 +159,11 @@
                 {{#str}}managecompetencies_addhint_root, local_dimensions{{/str}}
             </span>
         </div>
-        {{/ismap}}
+        {{/isworkspace}}
         {{/canmanage}}
     </div>
 
-    {{#ismap}}
+    {{#isworkspace}}
     <div class="local-dimensions-hubv2" data-region="hubv2">
         {{#react}}
         {
@@ -168,9 +173,9 @@
         <p class="local-dimensions-hubv2-fallback text-muted">{{#str}}hubv2_loading, local_dimensions{{/str}}</p>
         {{/react}}
     </div>
-    {{/ismap}}
+    {{/isworkspace}}
 
-    {{^ismap}}
+    {{^isworkspace}}
     {{#hascompetencies}}
     <div class="local-dimensions-central-structure-body" data-region="structure-body">
         <section class="local-dimensions-central-structure-tree-pane" data-region="tree-pane">
@@ -261,7 +266,7 @@
     {{^hascompetencies}}
     <div class="alert alert-info" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
     {{/hascompetencies}}
-    {{/ismap}}
+    {{/isworkspace}}
     {{/hasframeworks}}
 
     {{^hasframeworks}}

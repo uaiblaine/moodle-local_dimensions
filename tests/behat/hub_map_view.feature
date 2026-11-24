@@ -1,8 +1,8 @@
 @local @local_dimensions @javascript
-Feature: Switch the Competency hub's Competencies tab between the list and the map
+Feature: Switch the Competency hub's Competencies tab between the classic list and the map
   In order to see a framework's competencies as a tree I can explore
   As a manager of competencies
-  I need a Map view beside the List view of the Competencies tab, and the hub to remember it
+  I need a Map view beside the Classic view of the Competencies tab, and the hub to remember it
 
   Background:
     Given the following config values are set as admin:
@@ -40,7 +40,7 @@ Feature: Switch the Competency hub's Competencies tab between the list and the m
     When I reload the page
     Then I should see "Circuit design" in the "[data-region='hubv2']" "css_element"
     And the "aria-pressed" attribute of ".local-dimensions-central-viewswitch [data-view='map']" "css_element" should contain "true"
-    When I click on "List" "button" in the ".local-dimensions-central-viewswitch" "css_element"
+    When I click on "Classic" "button" in the ".local-dimensions-central-viewswitch" "css_element"
     Then I should see "Circuit design" in the "[data-region='competency-tree']" "css_element"
     And "[data-region='hubv2']" "css_element" should not exist
 

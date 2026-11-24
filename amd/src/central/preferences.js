@@ -33,7 +33,7 @@ const PREF_NAV = 'local_dimensions_central_nav';
 /** @type {String} User preference name for the hub display-toggle state. */
 const PREF_DISPLAY = 'local_dimensions_central_display';
 /** @type {String[]} The Competencies tab's views (structure::VIEWS); the first is the default. */
-const STRUCTURE_VIEWS = ['list', 'map'];
+const STRUCTURE_VIEWS = ['list', 'outline', 'map', 'both'];
 /** @type {Number} Debounce (ms) before a change is written to the server. */
 const SAVE_DELAY = 400;
 

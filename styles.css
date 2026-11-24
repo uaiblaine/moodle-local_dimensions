@@ -7570,7 +7570,7 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     color: var(--local-dimensions-ink);
 }
 
-/* The List / Map view switch: the Design System's segmented control, as a view switch (aria-pressed). */
+/* The view switch (Classic, Outline, Map, Both): the Design System's segmented control, as a view switch (aria-pressed). */
 .local-dimensions-central-viewswitch {
     display: inline-flex;
     gap: 0.125rem;
@@ -8938,7 +8938,8 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Competency hub v2: the canvas of a framework's tree, the map view of the hub's Competencies tab.
+ * Competency hub v2: the workspace of the hub's Competencies tab, a framework's tree as an outline
+ * and as a canvas (the map), side by side in the Both view, one at a time in Outline and Map.
  *
  * Design System: radii from the plugin's scale tokens (a counter alone is round), colours from the
  * token block only, sentence case. The canvas animates nothing in CSS; its one animated move, the
@@ -8956,6 +8957,8 @@ a.local-dimensions-central-links-badge-warn:focus {
     align-items: stretch;
     min-height: 560px;
     --local-dimensions-hubv2-height: calc(100vh - 14rem);
+    /* The outline's default width in Both; the splitter writes the chosen one inline on this root (Hub.tsx). */
+    --local-dimensions-hubv2-outline-width: 264px;
     border: 1px solid var(--local-dimensions-line);
     border-radius: var(--local-dimensions-radius-lg);
     background-color: var(--local-dimensions-surface);
@@ -8978,12 +8981,324 @@ a.local-dimensions-central-links-badge-warn:focus {
     border-bottom: 1px solid var(--local-dimensions-line);
 }
 
+/* The outline, the splitter and the map, in a row; the outline's width in Both comes from the splitter. */
+.local-dimensions-hubv2-panes {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: stretch;
+    min-width: 0;
+}
+
 .local-dimensions-hubv2-canvas {
     position: relative;
     flex: 1 1 auto;
+    min-width: 0;
     height: var(--local-dimensions-hubv2-height);
     min-height: 32rem;
     background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-outline {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    height: var(--local-dimensions-hubv2-height);
+    min-height: 32rem;
+    background-color: var(--local-dimensions-surface);
+}
+
+/* The width the workspace's root carries (outlinewidth.ts holds the bounds); hub_workspace_contract_test. */
+.local-dimensions-hubv2-layout-both .local-dimensions-hubv2-outline {
+    flex: 0 0 auto;
+    width: var(--local-dimensions-hubv2-outline-width);
+}
+
+.local-dimensions-hubv2-splitter {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 0.5rem;
+    border-right: 1px solid var(--local-dimensions-line);
+    border-left: 1px solid var(--local-dimensions-line);
+    background-color: var(--local-dimensions-surface);
+    cursor: col-resize;
+    touch-action: none;
+}
+
+.local-dimensions-hubv2-splitter:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-splitter-grip {
+    display: block;
+    width: 2px;
+    height: 2rem;
+    border-radius: var(--local-dimensions-radius-xs);
+    background-color: var(--local-dimensions-ink-muted);
+}
+
+.local-dimensions-hubv2-ohead {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 3rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--local-dimensions-line);
+}
+
+.local-dimensions-hubv2-otitle {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--local-dimensions-ink);
+}
+
+/* The Design System's icon button: 32 px (36 on a coarse pointer), radius md, a CSS tooltip naming it. */
+.local-dimensions-hubv2-iconbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0 0.375rem;
+    border: 0;
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: transparent;
+    color: var(--local-dimensions-ink-muted);
+    transition: background-color var(--local-dimensions-motion-fast) var(--local-dimensions-motion-ease);
+}
+
+.local-dimensions-hubv2-iconbtn:hover {
+    background-color: var(--local-dimensions-surface-alt);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-hubv2-iconbtn:disabled {
+    color: var(--local-dimensions-ink-faint);
+    cursor: default;
+}
+
+.local-dimensions-hubv2-iconbtn:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+.local-dimensions-hubv2-onotice {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--local-dimensions-warning-edge);
+    background-color: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+    font-size: 0.875rem;
+}
+
+/* The tree: a flat list of treeitems (outlinerows.ts), 32 px rows (40 on a coarse pointer). */
+.local-dimensions-hubv2-tree {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0.5rem;
+    overflow-x: hidden;
+    overflow-y: auto;
+    list-style: none;
+}
+
+/* A row never overflows its pane: past its indent, the meta gives way first and the name truncates last. */
+.local-dimensions-hubv2-orow {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+    min-height: 2rem;
+    overflow: hidden;
+    padding-inline-end: 0.375rem;
+    border-radius: var(--local-dimensions-radius-sm);
+    color: var(--local-dimensions-ink);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.local-dimensions-hubv2-orow:hover {
+    background-color: var(--local-dimensions-surface-alt);
+}
+
+.local-dimensions-hubv2-orow:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: -2px;
+}
+
+.local-dimensions-hubv2-orow.local-dimensions-hubv2-orow-selected {
+    background-color: var(--local-dimensions-brand-tint);
+    box-shadow: inset 0 0 0 1px var(--local-dimensions-brand-edge);
+    font-weight: 600;
+}
+
+.local-dimensions-hubv2-orow.local-dimensions-hubv2-orow-moving {
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-hubv2-picking .local-dimensions-hubv2-orow {
+    cursor: crosshair;
+}
+
+.local-dimensions-hubv2-orow.local-dimensions-hubv2-orow-sk {
+    cursor: default;
+}
+
+.local-dimensions-hubv2-orow.local-dimensions-hubv2-orow-sk:hover {
+    background-color: transparent;
+}
+
+/* The chevron's target is 24 px (WCAG 2.5.8); a leaf keeps the same room so the names line up. */
+.local-dimensions-hubv2-otoggle {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: var(--local-dimensions-radius-xs);
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+}
+
+.local-dimensions-hubv2-otoggle-on:hover {
+    background-color: var(--local-dimensions-surface-inset);
+    color: var(--local-dimensions-ink);
+}
+
+.local-dimensions-hubv2-mark {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--local-dimensions-radius-xs);
+}
+
+.local-dimensions-hubv2-mark-framework {
+    background-color: var(--local-dimensions-brand-fill);
+}
+
+.local-dimensions-hubv2-mark-depth1 {
+    background-color: var(--local-dimensions-brand-ink);
+}
+
+.local-dimensions-hubv2-mark-depth2 {
+    background-color: var(--local-dimensions-info-ink);
+}
+
+.local-dimensions-hubv2-mark-depth3 {
+    background-color: var(--local-dimensions-success-ink);
+}
+
+.local-dimensions-hubv2-mark-depth4 {
+    background-color: var(--local-dimensions-neutral-ink);
+}
+
+.local-dimensions-hubv2-oname {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Shrinks a hundred times faster than the name, so the name keeps the room until the meta is gone. */
+.local-dimensions-hubv2-ometa {
+    display: inline-flex;
+    flex: 0 100 auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-ometa-related {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Its ground is named so that the accent's contrast is measured against it (colour_tokens_test). */
+.local-dimensions-hubv2-orow-more {
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-accent);
+}
+
+.local-dimensions-hubv2-orow-more .local-dimensions-hubv2-omore {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: var(--local-dimensions-accent);
+    font-size: 0.875rem;
+    text-align: start;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.local-dimensions-hubv2-sk-mark {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--local-dimensions-radius-xs);
+}
+
+.local-dimensions-hubv2-sk-line {
+    width: 60%;
+    height: 0.75rem;
+    border-radius: var(--local-dimensions-radius-xs);
+}
+
+@media (pointer: coarse) {
+    .local-dimensions-hubv2-orow {
+        min-height: 2.5rem;
+    }
+
+    .local-dimensions-hubv2-iconbtn {
+        min-width: 2.25rem;
+        height: 2.25rem;
+    }
+}
+
+/* The Design System's empty state, full form: the framework holds no competency yet. */
+.local-dimensions-hubv2-oempty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.local-dimensions-hubv2-oempty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+    font-size: 1.25rem;
+}
+
+.local-dimensions-hubv2-oempty-title {
+    margin: 0;
+    color: var(--local-dimensions-ink);
+    font-size: 1rem;
+    font-weight: 600;
 }
 
 .local-dimensions-hubv2-bar .local-dimensions-hubv2-hint {
@@ -9003,9 +9318,34 @@ a.local-dimensions-central-links-badge-warn:focus {
     color: var(--local-dimensions-ink);
 }
 
+/* Below the large breakpoint the panes stack (outline, map, panel) and the splitter is not drawn. */
 @media (max-width: 991.98px) {
     .local-dimensions-hubv2-layout {
         flex-direction: column;
+    }
+
+    .local-dimensions-hubv2-panes {
+        flex-direction: column;
+    }
+
+    .local-dimensions-hubv2-outline,
+    .local-dimensions-hubv2-layout-both .local-dimensions-hubv2-outline {
+        width: auto;
+        height: auto;
+        min-height: 0;
+        max-height: 24rem;
+    }
+
+    .local-dimensions-hubv2-layout-outline .local-dimensions-hubv2-outline {
+        max-height: none;
+    }
+
+    .local-dimensions-hubv2-layout-both .local-dimensions-hubv2-canvas {
+        border-top: 1px solid var(--local-dimensions-line);
+    }
+
+    .local-dimensions-hubv2-splitter {
+        display: none;
     }
 
     .local-dimensions-hubv2-panel {

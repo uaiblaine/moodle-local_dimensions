@@ -99,6 +99,57 @@ describe('the graph', () => {
     });
 });
 
+describe('the map\'s nodes for the keyboard and assistive technology', () => {
+    it('takes every node out of the Tab order and drops React Flow\'s English role description', () => {
+        let tree = ruled();
+        tree = insertChildren(tree, ROOT, {items: [node(1, ROOT, {haschildren: true}), node(2)], total: 9});
+        const graph = buildGraph({tree, framework: FRAMEWORK, selected: null, related: [], moving: null, labels: LABELS});
+        graph.nodes.forEach((n) => {
+            expect(n.domAttributes?.tabIndex).toBe(-1);
+            expect(n.ariaRole).toBe('group');
+            expect(n.focusable).toBeUndefined();
+        });
+        const framework = graph.nodes.find((n) => n.id === FRAMEWORK_ID);
+        const more = graph.nodes.find((n) => n.id === 'm0');
+        // Present and undefined: the key must exist to win over the library's attribute.
+        expect(framework?.domAttributes).toHaveProperty('aria-roledescription', undefined);
+        expect(more?.domAttributes).toHaveProperty('aria-roledescription', undefined);
+        expect(graph.nodes.find((n) => n.id === 'c1')?.domAttributes?.['aria-roledescription']).toBe('competency');
+        expect(framework?.domAttributes?.['aria-current']).toBe('true');
+    });
+
+    it('names a competency by its place, its state, its rule and its relation to the selected one', () => {
+        const names: Record<number, unknown> = {};
+        const labels = {
+            ...LABELS,
+            name: (info: {name: string}) => {
+                names[Number(info.name.slice(1))] = info;
+                return `name of ${info.name}`;
+            },
+            framework: (total: number) => `DigCompEdu, ${total}`,
+        };
+        const graph = buildGraph({tree: ruled(), framework: FRAMEWORK, selected: 11, related: [13], moving: null, labels});
+        expect(graph.nodes[0].ariaLabel).toBe('DigCompEdu, 5');
+        expect(graph.nodes.find((n) => n.id === 'c12')?.ariaLabel).toBe('name of C12');
+        // The framework is level 1, as in the outline: a root competency is level 2.
+        expect(names[1]).toEqual({name: 'C1', level: 2, position: 1, total: 2, expandable: true, expanded: true, children: 3,
+            rule: 'Points', relatedto: null});
+        expect(names[13]).toEqual({name: 'C13', level: 3, position: 3, total: 3, expandable: false, expanded: false,
+            children: null, rule: '', relatedto: 'C11'});
+        expect(names[12]).toMatchObject({relatedto: null});
+    });
+
+    it('says no relation when the selected competency is not on the map', () => {
+        const names: Record<number, {relatedto: string | null}> = {};
+        const labels = {...LABELS, name: (info: {name: string, relatedto: string | null}) => {
+            names[Number(info.name.slice(1))] = info;
+            return info.name;
+        }};
+        buildGraph({tree: setExpanded(ruled(), 1, false), framework: FRAMEWORK, selected: 11, related: [2], moving: null, labels});
+        expect(names[2].relatedto).toBeNull();
+    });
+});
+
 describe('the number on a card', () => {
     it('shows none for a competency whose children are not loaded yet', () => {
         expect(cardCount(node(1, ROOT, {haschildren: true, coursecount: 0}), null)).toBeNull();

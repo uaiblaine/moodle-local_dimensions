@@ -14,18 +14,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The map view of the hub's Competencies tab: a framework's tree as a canvas of nodes, with a detail
- * panel beside it.
+ * The workspace of the hub's Competencies tab: a framework's tree as an outline (Outline.tsx, an ARIA
+ * tree) and as a map of nodes (React Flow), side by side or one at a time, with a detail panel.
  *
  * The entry of the bundle (js/esm/bundle.json), mounted by templates/central/structure.mustache in the
- * map view with the props classes/output/hub_map.php builds; the tab around it owns the context, the
- * framework choice and the view switch. The tree is lazy: the first page of roots arrives as props,
- * each branch is loaded when it is first opened (local_dimensions_browse_structure), and a node is
- * refreshed from the server after every change. Nothing is persisted: the layout is recomputed from
- * the tree on every change (layout.ts), and nodes cannot be dragged. Every action reuses the hub's
- * own dialogues and core's competency services, called as the list view (amd/src/central/structure.js)
- * calls them. The selected competency is kept in the address (deeplink.ts), and a competency the link
- * named is revealed at mount when the server found it in this framework (props.reveal).
+ * Outline, Map and Both views with the props classes/output/hub_map.php builds; the tab around it owns
+ * the context, the framework choice and the view switch, and tells the workspace when the viewer moves
+ * between its three layouts (selection.LAYOUT_EVENT), so the store survives the switch.
+ *
+ * One store, two projections: the Workspace below holds the tree (nodes, loaded pages, opened
+ * branches), the selection and the move mode; the outline and the map draw it and send every pick,
+ * key and command back here, so a selection, a move, a search or an "Expand all" made in one shows in
+ * the other. Each pane keeps only its own Tab stop (roving.ts), and both walk the tree with the same
+ * keys (keynav.ts).
+ *
+ * The tree is lazy: the first page of roots arrives as props, each branch is loaded when it is first
+ * opened (local_dimensions_browse_structure), and a node is refreshed from the server after every
+ * change. Nothing is persisted: the map's layout is recomputed from the tree on every change
+ * (layout.ts), and nodes cannot be dragged. Every action reuses the hub's own dialogues and core's
+ * competency services, called as the list view (amd/src/central/structure.js) calls them. The selected
+ * competency is kept in the address (deeplink.ts), and a competency the link named is revealed at
+ * mount when the server found it in this framework (props.reveal).
  *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
@@ -33,14 +42,28 @@
  */
 
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import type {ReactNode} from 'react';
+import type {CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode} from 'react';
 import {
     Background, BackgroundVariant, Controls, MiniMap, ReactFlow, ReactFlowProvider, useReactFlow,
 } from '../../vendor/xyflow/xyflow.js';
 import type {AriaLabelConfig, FitViewOptions, NodeChangeset} from '../../vendor/xyflow/xyflow.js';
 import {load, notifyError} from './amd';
 import type {RuleConfig} from './amd';
-import {CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf} from './graph';
+import {CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf, moreKey} from './graph';
+import {EXPAND_ALL_BOUND, collapseAll, expandStep} from './expandall';
+import {branchTarget, isTypeAheadKey, keyAction, navOrder, nodeName, panTarget, typeAhead} from './keynav';
+import type {Rect} from './keynav';
+import type {NameInfo} from './keynav';
+import Outline, {OUTLINE_ID} from './Outline';
+import type {OutlineActions} from './Outline';
+import {outlineRows} from './outlinerows';
+import type {OutlineRow} from './outlinerows';
+import {useRoving} from './roving';
+import type {Roving} from './roving';
+import {LAYOUT_EVENT, activation, isLayout, panesOf} from './selection';
+import type {Layout} from './selection';
+import Splitter from './Splitter';
+import {OUTLINE_WIDTH, clampWidth, storeWidth, storedWidth} from './outlinewidth';
 import type {CanvasEdge, CanvasNode} from './graph';
 import {rememberSelection} from './deeplink';
 import {blockedBody, confirmBody} from './deletion';
@@ -59,7 +82,7 @@ import {
 } from './repository';
 import type {NodeAnswer} from './repository';
 import Search from './Search';
-import {fill, loadLabels} from './strings';
+import {fill, fillCount, loadLabels} from './strings';
 import type {Labels} from './strings';
 import {
     ROOT, ancestors, branchHas, createTree, expandPath, forgetBranch, hasBranch, insertChildren, isExpanded, isWithin,
@@ -92,15 +115,45 @@ const FIT: FitViewOptions = {padding: {top: '32px', right: '32px', bottom: '140p
 /** Edge components by edge type. */
 const EDGE_TYPES = {rule: RuleEdge};
 
+/** A map node's wrapper, as React Flow draws it; its data-id is the node's key. */
+const NODE_SELECTOR = '.react-flow__node';
+
+/** An outline row; its data-key is the item's key. */
+const ROW_SELECTOR = '[role="treeitem"]';
+
+/** The map's own overlays a focused node must not sit under (WCAG 2.4.11). */
+const OVERLAYS = '.react-flow__minimap, .react-flow__controls';
+
+/** How long a pause ends a type-ahead query, in milliseconds (the APG examples' 500). */
+const TYPE_AHEAD_PAUSE = 500;
+
+/** How many first pages "Expand all" asks for at once. */
+const EXPAND_ALL_PARALLEL = 4;
+
+/** The class of each layout's root, written whole so the stylesheet test finds it. */
+const LAYOUT_CLASSES: Record<Layout, string> = {
+    outline: 'local-dimensions-hubv2-layout-outline',
+    map: 'local-dimensions-hubv2-layout-map',
+    both: 'local-dimensions-hubv2-layout-both',
+};
+
+/** The custom property through which the outline's width reaches the stylesheet in the Both layout. */
+const WIDTH_PROPERTY = '--local-dimensions-hubv2-outline-width';
+
 /**
- * The canvas, the search and the panel, inside the provider useReactFlow() needs.
+ * The workspace: the store, the search, the outline, the map and the panel, inside the provider
+ * useReactFlow() needs.
  *
  * @param {object} props The page's props and the loaded labels.
- * @returns {ReactNode} The canvas.
+ * @returns {ReactNode} The workspace.
  */
-const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
-    const {labels, framework, pagesize} = props;
+const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
+    const {labels, framework, pagesize, rtl} = props;
     const flow = useReactFlow();
+    const [layout, setLayout] = useState<Layout>(isLayout(props.layout) ? props.layout : 'map');
+    const panes = panesOf(layout);
+    const panesRef = useRef(panes);
+    panesRef.current = panes;
 
     const [tree, setTree] = useState<Tree>(() => createTree(props.roots));
     const treeRef = useRef<Tree>(tree);
@@ -117,6 +170,34 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     const selectionAsk = useRef(0);
     // The competency a confirmed deletion is removing: its panel lists are not asked for again.
     const removing = useRef<number | null>(null);
+    // The parents whose first page is on its way, and those whose next page is: a repeated key asks once.
+    const [loadingBranches, setLoadingBranches] = useState<number[]>([]);
+    const opening = useRef(new Set<number>());
+    const paging = useRef(new Set<number>());
+    // "Expand all": whether it runs, which run is current (Collapse all ends one), and its notice.
+    const [expanding, setExpanding] = useState(false);
+    const expandRun = useRef(0);
+    const [notice, setNotice] = useState('');
+    const [outlineWidth, setOutlineWidth] = useState(() => clampWidth(storedWidth(), 0));
+    const panesBox = useRef<HTMLDivElement>(null);
+    const canvasRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLUListElement>(null);
+    const typed = useRef({text: '', at: 0});
+    // A branch just opened on the map, whose children the viewport is to bring into view once drawn, and
+    // the end of the pending token that spans the gap from the click or key to that move (pending.ts).
+    const revealing = useRef<number | null>(null);
+    const revealed = useRef<(() => void) | null>(null);
+
+    /**
+     * End the wait for a branch's children to be brought into view.
+     *
+     * @returns {void}
+     */
+    const settleReveal = (): void => {
+        revealing.current = null;
+        revealed.current?.();
+        revealed.current = null;
+    };
 
     /**
      * Change the tree; the ref is what asynchronous work reads between renders.
@@ -310,19 +391,91 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     }, [choose, commit, loadSelection, relocate]);
 
     /**
-     * Open or close a competency's children, loading them the first time.
+     * Open a competency's children, loading them the first time. Opening one already open, or one
+     * whose first page is on its way, does nothing, so a key repeated while the page loads asks once.
+     *
+     * @param {number} id The competency.
+     * @param {boolean} onmap Whether it was opened on the map, which then brings the children into view.
+     * @returns {void}
+     */
+    const openBranch = useCallback((id: number, onmap: boolean = false): void => {
+        if (isExpanded(treeRef.current, id) || opening.current.has(id)) {
+            return;
+        }
+        if (onmap && panesRef.current.map) {
+            settleReveal();
+            revealing.current = id;
+            track('reveal', new Promise<void>((resolve) => {
+                revealed.current = resolve;
+            })).catch(notifyError);
+        }
+        if (hasBranch(treeRef.current, id)) {
+            commit((current) => setExpanded(current, id, true));
+            return;
+        }
+        opening.current.add(id);
+        setLoadingBranches((current) => [...current, id]);
+        track('children', loadPage(id, false).then(() => commit((current) => setExpanded(current, id, true))))
+            .finally(() => {
+                opening.current.delete(id);
+                setLoadingBranches((current) => current.filter((other) => other !== id));
+                // A page that failed opens nothing, so nothing is drawn to bring into view.
+                if (revealing.current === id && !isExpanded(treeRef.current, id)) {
+                    settleReveal();
+                }
+            })
+            .catch(notifyError);
+    }, [commit, loadPage]);
+
+    /**
+     * Close a competency's children; they stay loaded.
      *
      * @param {number} id The competency.
      * @returns {void}
      */
-    const toggle = useCallback((id: number): void => {
+    const closeBranch = useCallback((id: number): void => {
+        commit((current) => setExpanded(current, id, false));
+    }, [commit]);
+
+    /**
+     * Open or close a competency's children, as the outline's chevron or a card's button asks.
+     *
+     * @param {number} id The competency.
+     * @param {boolean} onmap Whether it was asked on the map.
+     * @returns {void}
+     */
+    const toggle = useCallback((id: number, onmap: boolean = false): void => {
         if (isExpanded(treeRef.current, id)) {
-            commit((current) => setExpanded(current, id, false));
-            return;
+            closeBranch(id);
+        } else {
+            openBranch(id, onmap);
         }
-        const loading = hasBranch(treeRef.current, id) ? Promise.resolve() : loadPage(id, false);
-        track('children', loading.then(() => commit((current) => setExpanded(current, id, true)))).catch(notifyError);
-    }, [commit, loadPage]);
+    }, [closeBranch, openBranch]);
+
+    /**
+     * Open or close a competency's children from its card on the map.
+     *
+     * @param {number} id The competency.
+     * @returns {void}
+     */
+    const toggleOnMap = useCallback((id: number): void => toggle(id, true), [toggle]);
+
+    /**
+     * Load a parent's next page of children, once at a time.
+     *
+     * @param {number} parent The parent.
+     * @returns {Promise} Resolves with the first competency the page brought, or null.
+     */
+    const nextPage = useCallback((parent: number): Promise<number | null> => {
+        if (paging.current.has(parent)) {
+            return Promise.resolve(null);
+        }
+        paging.current.add(parent);
+        const before = treeRef.current.branches[parent]?.ids.length ?? 0;
+        return track('children', loadPage(parent, true))
+            .then(() => treeRef.current.branches[parent]?.ids[before] ?? null)
+            .finally(() => paging.current.delete(parent));
+    }, [loadPage]);
 
     /**
      * Load a parent's next page of children.
@@ -331,8 +484,8 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
      * @returns {void}
      */
     const loadMore = useCallback((parent: number): void => {
-        track('children', loadPage(parent, true)).catch(notifyError);
-    }, [loadPage]);
+        nextPage(parent).catch(notifyError);
+    }, [nextPage]);
 
     /**
      * Say something to assistive technology through the canvas's live region.
@@ -357,15 +510,117 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     }, [labels]);
 
     /**
-     * Focus a node on the canvas once it is drawn.
+     * Pan the map, unless a node is already wholly visible and clear of the overview map and the
+     * controls (keynav.panTarget); without animation when the viewer asks for reduced motion.
      *
-     * @param {string} key The node id.
+     * @param {string} key The node's key.
      * @returns {void}
      */
-    const focusNode = (key: string): void => {
-        window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-            document.querySelector<HTMLElement>(`.local-dimensions-hubv2 .react-flow__node[data-id="${key}"]`)?.focus();
-        }));
+    const panTo = (key: string): void => {
+        const position = graphRef.current?.positions[key];
+        const canvas = measureCanvas();
+        if (!position || !canvas) {
+            return;
+        }
+        const target = panTarget({...position, ...CARD}, flow.getViewport(), canvas.view, canvas.obstacles);
+        if (target) {
+            flow.setCenter(target.x, target.y, {zoom: flow.getZoom(), duration: motionDuration(200)}).catch(() => null);
+        }
+    };
+
+    /**
+     * The map's size and its overlays (the overview map, the controls), in pixels from its top left corner.
+     *
+     * @returns {object|null} The view's size and the overlays' boxes, or null while the map is not drawn.
+     */
+    const measureCanvas = (): {view: {width: number, height: number}, obstacles: Rect[]} | null => {
+        const element = canvasRef.current?.querySelector<HTMLElement>('.react-flow');
+        if (!element) {
+            return null;
+        }
+        const box = element.getBoundingClientRect();
+        const obstacles = [...element.querySelectorAll<HTMLElement>(OVERLAYS)].map((overlay) => {
+            const rect = overlay.getBoundingClientRect();
+            return {x: rect.left - box.left, y: rect.top - box.top, width: rect.width, height: rect.height};
+        });
+        return {view: {width: box.width, height: box.height}, obstacles};
+    };
+
+    const order = useMemo(() => navOrder(tree), [tree]);
+    const rows = useMemo(() => outlineRows(tree, framework.shortname), [tree, framework.shortname]);
+    const rowsRef = useRef<OutlineRow[]>(rows);
+    rowsRef.current = rows;
+
+    const mapStop = useRoving({
+        order,
+        tree,
+        selected,
+        container: canvasRef,
+        item: NODE_SELECTOR,
+        /**
+         * The node an element draws.
+         *
+         * @param {HTMLElement} element The node wrapper.
+         * @returns {string|undefined} Its key.
+         */
+        keyOf: (element) => element.dataset.id,
+        /**
+         * A node's element on the map.
+         *
+         * @param {string} key The node.
+         * @returns {HTMLElement|null} Its wrapper, when it is drawn.
+         */
+        find: (key) => canvasRef.current?.querySelector<HTMLElement>(`${NODE_SELECTOR}[data-id="${key}"]`) ?? null,
+        /**
+         * Bring a node into view before it takes the focus.
+         *
+         * @param {string} key The node.
+         * @param {boolean} pan Whether the viewport may move.
+         * @returns {void}
+         */
+        beforeFocus: (key, pan) => {
+            if (pan) {
+                panTo(key);
+            }
+        },
+    });
+
+    const outlineStop = useRoving({
+        order,
+        tree,
+        selected,
+        container: listRef,
+        item: ROW_SELECTOR,
+        /**
+         * The item a row draws.
+         *
+         * @param {HTMLElement} element The row.
+         * @returns {string|undefined} Its key.
+         */
+        keyOf: (element) => element.dataset.key,
+        /**
+         * An item's row in the outline.
+         *
+         * @param {string} key The item.
+         * @returns {HTMLElement|null} Its row, when it is drawn.
+         */
+        find: (key) => listRef.current?.querySelector<HTMLElement>(`[data-key="${key}"]`) ?? null,
+    });
+
+    /**
+     * Focus an item in the pane that takes the focus after a command: the outline when it is drawn,
+     * the real tree, else the map.
+     *
+     * @param {string} key The item's key.
+     * @param {boolean} pan Whether the map pans to it (not when the caller has just centred on it).
+     * @returns {void}
+     */
+    const focusItem = (key: string, pan: boolean = true): void => {
+        if (panesRef.current.outline) {
+            outlineStop.focusKey(key);
+        } else {
+            mapStop.focusKey(key, pan);
+        }
     };
 
     /**
@@ -426,8 +681,28 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
-     * React to what React Flow reports: a node's size, and a selection by click or keyboard,
-     * which in the move mode picks the new parent instead.
+     * Act on an item picked by click, Enter or Space in either pane: select it, or in the move mode make
+     * it the new parent. A selection made in the outline brings its node into the map's view.
+     *
+     * @param {number} id The competency, ROOT for the framework.
+     * @param {string} from The pane it was picked in.
+     * @returns {void}
+     */
+    const activate = (id: number, from: 'outline' | 'map'): void => {
+        const action = activation(movingRef.current, id);
+        if (action.type === 'pick') {
+            pickParent(action.parent);
+            return;
+        }
+        choose(action.id);
+        if (from === 'outline' && panesRef.current.map) {
+            panTo(action.id === null ? FRAMEWORK_ID : competencyKey(action.id));
+        }
+    };
+
+    /**
+     * React to what React Flow reports: a node's size, and a selection by click, which in the move
+     * mode picks the new parent instead.
      *
      * @param {object} changes The changes, a NodeChangeset.
      * @returns {void}
@@ -449,11 +724,7 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
             if (id === null) {
                 return;
             }
-            if (movingRef.current !== null) {
-                pickParent(id);
-            } else {
-                choose(id === ROOT ? null : id);
-            }
+            activate(id, 'map');
             return;
         }
         const unselected = selections.some((change) => !change.selected);
@@ -583,7 +854,7 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
         movingRef.current = node.id;
         setMoving(node.id);
         announce(fill(labels.hubv2_movepick, node.shortname));
-        focusNode(competencyKey(node.id));
+        focusItem(competencyKey(node.id));
     };
 
     /**
@@ -610,10 +881,6 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
             // Set before any dialogue opens: the dialogue reports its closing before its promise settles, and
             // that closing would otherwise ask for the lists of a competency that is going away.
             removing.current = node.id;
-            /**
-             *
-             * @param check
-             */
             /**
              * Tell why core would refuse the deletion.
              *
@@ -707,6 +974,144 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
      */
     const cancelMove = (): void => endMove(true);
 
+    /**
+     * Load the next page of a parent from the keyboard, then focus the first competency it brought.
+     *
+     * @param {number} parent The parent.
+     * @param {object} stop The pane's Tab stop.
+     * @returns {void}
+     */
+    const loadMoreAndFocus = (parent: number, stop: Roving): void => {
+        nextPage(parent).then((first) => {
+            if (first !== null) {
+                stop.focusKey(competencyKey(first));
+            }
+            return null;
+        }).catch(notifyError);
+    };
+
+    /**
+     * Move the outline's focus to the next visible name that starts with what was typed.
+     *
+     * @param {string} character The character typed.
+     * @param {number} time The key's time stamp, in milliseconds.
+     * @returns {boolean} Whether a name matched.
+     */
+    const typeTo = (character: string, time: number): boolean => {
+        const previous = typed.current;
+        const text = time - previous.at > TYPE_AHEAD_PAUSE ? character : previous.text + character;
+        typed.current = {text, at: time};
+        const key = typeAhead(rowsRef.current, outlineStop.activeRef.current, text);
+        if (key !== null) {
+            outlineStop.focusKey(key);
+        }
+        return key !== null;
+    };
+
+    /**
+     * Walk the tree with the keyboard in either pane (keynav.keyAction).
+     *
+     * The item the key acts on is the pane's Tab stop, which moves at once, and the walk is read from
+     * the latest tree, so a key repeated before React renders acts on where the previous one went.
+     *
+     * @param {object} event The key event.
+     * @param {object} stop The pane's Tab stop.
+     * @param {string} selector The CSS selector of the pane's items.
+     * @param {string} from The pane.
+     * @returns {void}
+     */
+    const walk = (event: ReactKeyboardEvent<HTMLElement>, stop: Roving, selector: string, from: 'outline' | 'map'): void => {
+        const target = event.target as HTMLElement;
+        const element = target.closest<HTMLElement>(selector);
+        if (!element || !event.currentTarget.contains(element)) {
+            return;
+        }
+        // Enter and Space on an item's own button (focused by a click) are the button's.
+        if (element !== target && (event.key === 'Enter' || event.key === ' ')) {
+            return;
+        }
+        const action = keyAction(navOrder(treeRef.current), stop.activeRef.current, event, rtl);
+        if (!action) {
+            if (from === 'outline' && isTypeAheadKey(event) && typeTo(event.key, event.timeStamp)) {
+                event.preventDefault();
+            }
+            return;
+        }
+        event.preventDefault();
+        switch (action.type) {
+            case 'focus':
+                stop.focusKey(action.key);
+                break;
+            case 'expand':
+                openBranch(action.id, from === 'map');
+                break;
+            case 'collapse':
+                closeBranch(action.id);
+                break;
+            case 'select':
+                activate(action.id, from);
+                break;
+            case 'loadmore':
+                loadMoreAndFocus(action.parent, stop);
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
+     * Open every branch of the visible tree, level by level, up to EXPAND_ALL_BOUND competencies.
+     *
+     * @returns {void}
+     */
+    const expandAll = (): void => {
+        const run = ++expandRun.current;
+        setExpanding(true);
+        setNotice('');
+        track('expandall', (async() => {
+            let capped = false;
+            // Each round opens at least one parent, so the walk ends; the bound on rounds is a guard.
+            for (let round = 0; round < 100 && run === expandRun.current; round++) {
+                const step = expandStep(treeRef.current, EXPAND_ALL_BOUND, pagesize);
+                capped = step.capped;
+                for (let index = 0; index < step.load.length && run === expandRun.current; index += EXPAND_ALL_PARALLEL) {
+                    const batch = step.load.slice(index, index + EXPAND_ALL_PARALLEL)
+                        .filter((id) => !hasBranch(treeRef.current, id));
+                    await Promise.all(batch.map((id) => loadPage(id, false)));
+                }
+                if (run !== expandRun.current) {
+                    return;
+                }
+                const ids = [...step.open, ...step.load];
+                commit((current) => ids.reduce((next, id) => setExpanded(next, id, true), current));
+                if (capped || ids.length === 0) {
+                    break;
+                }
+            }
+            if (capped && run === expandRun.current) {
+                const message = fill(labels.hubv2_expandall_capped, String(EXPAND_ALL_BOUND));
+                setNotice(message);
+                announce(message);
+            }
+        })()).finally(() => {
+            if (run === expandRun.current) {
+                setExpanding(false);
+            }
+        }).catch(notifyError);
+    };
+
+    /**
+     * Close every branch, ending an "Expand all" still running.
+     *
+     * @returns {void}
+     */
+    const collapseEverything = (): void => {
+        expandRun.current++;
+        setExpanding(false);
+        setNotice('');
+        commit(collapseAll);
+    };
+
     const actions: PanelActions = {
         edit, addChild, rule: editRule, links: openLinks, relate: openRelated, move: startMove, moveRoot, cancelMove,
         moveOne: stepMove, remove, reveal: revealItem,
@@ -776,6 +1181,23 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     const moreLabel = useCallback((remaining: number): string =>
         fill(labels.hubv2_loadmore, String(Math.min(remaining, pagesize))), [labels, pagesize]);
 
+    /**
+     * A competency node's accessible name.
+     *
+     * @param {object} info What to say.
+     * @returns {string} The name.
+     */
+    const nameOf = useCallback((info: NameInfo): string => nodeName(labels, info), [labels]);
+
+    /**
+     * The framework node's accessible name.
+     *
+     * @param {number} total The framework's competency count.
+     * @returns {string} The name.
+     */
+    const frameworkName = useCallback((total: number): string =>
+        `${framework.shortname}, ${fillCount(labels, 'hubv2_competencies', total)}`, [framework.shortname, labels]);
+
     const relatedids = useMemo(() => related.map((item) => item.id), [related]);
     const graph = useMemo(() => buildGraph({
         tree,
@@ -783,14 +1205,17 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
         selected,
         related: relatedids,
         moving,
-        labels: {roledescription: labels.hubv2_noderole, more: moreLabel},
-        rtl: props.rtl,
-    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, props.rtl]);
+        labels: {roledescription: labels.hubv2_noderole, more: moreLabel, name: nameOf, framework: frameworkName},
+        rtl,
+    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl]);
+    const graphRef = useRef(graph);
+    graphRef.current = graph;
 
-    const nodes = useMemo((): CanvasNode[] => graph.nodes.map((node) =>
-        (measured[node.id] ? {...node, measured: measured[node.id]} : node)), [graph, measured]);
-
-    const oncanvas = useMemo(() => new Set(graph.nodes.map((node) => node.id)), [graph]);
+    // Only the Tab stop's node object changes when the stop moves: React Flow redraws that wrapper alone.
+    const nodes = useMemo((): CanvasNode[] => graph.nodes.map((node) => {
+        const sized = measured[node.id] ? {...node, measured: measured[node.id]} : node;
+        return node.id === mapStop.active ? {...sized, domAttributes: {...sized.domAttributes, tabIndex: 0}} : sized;
+    }), [graph, measured, mapStop.active]);
 
     // Reveal the competency the address named, once, when the server found it in this framework.
     const linked = useRef(false);
@@ -817,16 +1242,139 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
             return;
         }
         centreOn.current = null;
-        const zoom = Math.max(flow.getZoom(), 0.8);
-        flow.setCenter(position.x + CARD.width / 2, position.y + CARD.height / 2, {zoom, duration: motionDuration(300)})
-            .catch(() => null);
-        focusNode(key);
+        if (panesRef.current.map) {
+            const zoom = Math.max(flow.getZoom(), 0.8);
+            flow.setCenter(position.x + CARD.width / 2, position.y + CARD.height / 2, {zoom, duration: motionDuration(300)})
+                .catch(() => null);
+        }
+        focusItem(key, false);
     }, [graph, flow]);
 
+    // The tab's view switch moves among the three layouts without reloading the pane (selection.LAYOUT_EVENT).
+    useEffect(() => {
+        /**
+         * Take the layout the switch chose.
+         *
+         * @param {object} event The event, its detail {layout}.
+         * @returns {void}
+         */
+        const onLayout = (event: Event): void => {
+            const next = (event as CustomEvent<{layout?: unknown}>).detail?.layout;
+            if (isLayout(next)) {
+                setLayout(next);
+            }
+        };
+        document.addEventListener(LAYOUT_EVENT, onLayout);
+        return () => document.removeEventListener(LAYOUT_EVENT, onLayout);
+    }, []);
+
+    /**
+     * The width of the outline, the splitter and the map together.
+     *
+     * @returns {number} The width in pixels, 0 before the panes are drawn.
+     */
+    const available = (): number => panesBox.current?.getBoundingClientRect().width ?? 0;
+
+    // In the Both layout the kept width is held to the room the panes have now.
+    useEffect(() => {
+        if (layout === 'both') {
+            setOutlineWidth((width) => clampWidth(width, available()));
+        }
+    }, [layout]);
+
+    /**
+     * Take a width from the splitter, and keep it when the key or the drop that made it ends.
+     *
+     * @param {number} width The width.
+     * @param {boolean} final Whether to keep it.
+     * @returns {void}
+     */
+    const onOutlineWidth = (width: number, final: boolean): void => {
+        setOutlineWidth(width);
+        if (final) {
+            storeWidth(width);
+        }
+    };
+
+    /**
+     * Go back to the default width and forget the kept one.
+     *
+     * @returns {void}
+     */
+    const resetOutlineWidth = (): void => {
+        setOutlineWidth(clampWidth(OUTLINE_WIDTH.initial, available()));
+        storeWidth(null);
+    };
+
+    // Once a branch opened on the map is drawn, move the viewport just enough to show the parent and the
+    // start of its children (keynav.branchTarget); instant under reduced motion, no move when they fit.
+    useEffect(() => {
+        const id = revealing.current;
+        if (id === null || !isExpanded(treeRef.current, id)) {
+            return;
+        }
+        const parent = graph.positions[competencyKey(id)];
+        const canvas = measureCanvas();
+        const done = revealed.current;
+        revealing.current = null;
+        revealed.current = null;
+        const keys = [...(treeRef.current.branches[id]?.ids ?? []).map(competencyKey), moreKey(id)];
+        const children = keys.flatMap((key) => (graph.positions[key] ? [{...graph.positions[key], ...CARD}] : []));
+        const target = parent && canvas
+            ? branchTarget({...parent, ...CARD}, children, flow.getViewport(), canvas.view, canvas.obstacles, rtl)
+            : null;
+        if (!target) {
+            done?.();
+            return;
+        }
+        flow.setCenter(target.x, target.y, {zoom: flow.getZoom(), duration: motionDuration(200)})
+            .catch(() => null)
+            .finally(() => done?.());
+    }, [graph, flow, rtl]);
+
     const canvasActions: CanvasActions = useMemo(
-        () => ({labels, pagesize, rtl: props.rtl, toggle, loadMore}),
-        [labels, pagesize, props.rtl, toggle, loadMore]
+        () => ({labels, pagesize, rtl, toggle: toggleOnMap, loadMore}),
+        [labels, pagesize, rtl, toggleOnMap, loadMore]
     );
+
+    const outlineActions: OutlineActions = {
+        /**
+         * Select the competency of a row; a "load more" row selects nothing.
+         *
+         * @param {object} row The row.
+         * @returns {void}
+         */
+        activate: (row) => {
+            if (row.kind !== 'more') {
+                activate(row.id, 'outline');
+            }
+        },
+        toggle,
+        /**
+         * Load a branch's next page and move the focus to its first new item.
+         *
+         * @param {number} parent The branch.
+         * @returns {void}
+         */
+        loadMore: (parent) => loadMoreAndFocus(parent, outlineStop),
+        expandAll,
+        collapseAll: collapseEverything,
+        /**
+         * Add a top-level competency.
+         *
+         * @returns {void}
+         */
+        add: () => addChild(null),
+        /**
+         * Walk the outline with the tree's keys.
+         *
+         * @param {object} event The key event.
+         * @returns {void}
+         */
+        onKeyDown: (event) => walk(event, outlineStop, ROW_SELECTOR, 'outline'),
+        onFocus: outlineStop.onFocus,
+        onBlur: outlineStop.onBlur,
+    };
 
     /**
      * Nothing to say.
@@ -836,6 +1384,8 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     const silent = (): string => '';
 
     const aria: Partial<AriaLabelConfig> = useMemo(() => ({
+        // Both, because the library shows keyboardDisabled's text when its own keyboard is off
+        // (nodesFocusable false); every node's aria-describedby points at it.
         'node.a11yDescription.default': labels.hubv2_a11y_node,
         'node.a11yDescription.keyboardDisabled': labels.hubv2_a11y_node,
         // Spoken when a node is moved by the arrow keys, which a node that cannot be dragged never is.
@@ -855,52 +1405,106 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     const islast = !!siblings && position === siblings.ids.length - 1 && siblings.ids.length >= siblings.total;
     const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
 
+    const relatedcount = node && usage !== null ? related.length : null;
+    const widthstyle = {[WIDTH_PROPERTY]: `${outlineWidth}px`} as CSSProperties;
+    const rootclasses = ['local-dimensions-hubv2-layout', LAYOUT_CLASSES[layout]];
+    if (moving !== null) {
+        rootclasses.push('local-dimensions-hubv2-picking');
+    }
+
     return (
-        <div className={`local-dimensions-hubv2-layout${moving !== null ? ' local-dimensions-hubv2-picking' : ''}`}>
+        <div className={rootclasses.join(' ')} style={widthstyle}>
             <div className="local-dimensions-hubv2-main">
                 <div className="local-dimensions-hubv2-bar">
                     <Search labels={labels} frameworkid={framework.id} onChoose={actions.reveal} />
-                    <span className="local-dimensions-hubv2-hint">
-                        <i className="fa fa-search-plus me-1" aria-hidden="true" />{labels.hubv2_zoomhint}
-                    </span>
+                    {panes.map ? (
+                        <span className="local-dimensions-hubv2-hint">
+                            <i className="fa fa-search-plus me-1" aria-hidden="true" />{labels.hubv2_zoomhint}
+                        </span>
+                    ) : null}
                 </div>
-                <div className="local-dimensions-hubv2-canvas" role="region" aria-label={labels.hubv2_canvas}>
-                    <CanvasContext.Provider value={canvasActions}>
-                        <ReactFlow<CanvasNode, CanvasEdge>
-                            nodes={nodes}
-                            edges={graph.edges}
-                            nodeTypes={NODE_TYPES}
-                            edgeTypes={EDGE_TYPES}
-                            onNodesChange={onNodesChange}
-                            nodesDraggable={false}
-                            nodesConnectable={false}
-                            edgesFocusable={false}
-                            // The selected card's edges, its related ones too, stay under the other cards.
-                            elevateEdgesOnSelect={false}
-                            selectNodesOnDrag={false}
-                            deleteKeyCode={null}
-                            selectionKeyCode={null}
-                            multiSelectionKeyCode={null}
-                            zoomOnDoubleClick={false}
-                            zoomOnScroll={false}
-                            zoomOnPinch
-                            preventScrolling={false}
-                            zoomActivationKeyCode={ZOOM_KEYS}
-                            fitView
-                            fitViewOptions={FIT}
-                            minZoom={0.2}
-                            maxZoom={1.5}
-                            ariaLabelConfig={aria}
-                            // The library's wrapper is an application; it is named after the framework it draws.
-                            aria-label={framework.shortname}
-                            proOptions={{hideAttribution: true}}
+                <div className="local-dimensions-hubv2-panes" ref={panesBox}>
+                    {panes.outline ? (
+                        <Outline
+                            labels={labels}
+                            framework={framework}
+                            count={count}
+                            rows={rows}
+                            selected={selected}
+                            moving={moving}
+                            relatedcount={relatedcount}
+                            active={outlineStop.active}
+                            loading={loadingBranches}
+                            expanding={expanding}
+                            notice={notice}
+                            rtl={rtl}
+                            pagesize={pagesize}
+                            listRef={listRef}
+                            actions={outlineActions}
+                        />
+                    ) : null}
+                    {layout === 'both' ? (
+                        <Splitter
+                            label={labels.hubv2_resizeoutline}
+                            controls={OUTLINE_ID}
+                            width={outlineWidth}
+                            available={available}
+                            rtl={rtl}
+                            onWidth={onOutlineWidth}
+                            onReset={resetOutlineWidth}
+                        />
+                    ) : null}
+                    {panes.map ? (
+                        <div
+                            className="local-dimensions-hubv2-canvas"
+                            role="region"
+                            aria-label={labels.hubv2_canvas}
+                            ref={canvasRef}
+                            onKeyDown={(event) => walk(event, mapStop, NODE_SELECTOR, 'map')}
+                            onFocus={mapStop.onFocus}
+                            onBlur={mapStop.onBlur}
                         >
-                            <Background variant={BackgroundVariant.Dots} gap={18} size={1}
-                                className="local-dimensions-hubv2-dots" />
-                            <Controls showInteractive={false} fitViewOptions={FIT} />
-                            <MiniMap pannable zoomable ariaLabel={labels.hubv2_minimap} style={MINIMAP} />
-                        </ReactFlow>
-                    </CanvasContext.Provider>
+                            <CanvasContext.Provider value={canvasActions}>
+                                <ReactFlow<CanvasNode, CanvasEdge>
+                                    nodes={nodes}
+                                    edges={graph.edges}
+                                    nodeTypes={NODE_TYPES}
+                                    edgeTypes={EDGE_TYPES}
+                                    onNodesChange={onNodesChange}
+                                    // The workspace's own keyboard (walk) replaces the library's: no tabindex 0 on
+                                    // every node, no Enter, Space or Escape of its own, no pan on focus.
+                                    nodesFocusable={false}
+                                    nodesDraggable={false}
+                                    nodesConnectable={false}
+                                    edgesFocusable={false}
+                                    // The selected card's edges, its related ones too, stay under the other cards.
+                                    elevateEdgesOnSelect={false}
+                                    selectNodesOnDrag={false}
+                                    deleteKeyCode={null}
+                                    selectionKeyCode={null}
+                                    multiSelectionKeyCode={null}
+                                    zoomOnDoubleClick={false}
+                                    zoomOnScroll={false}
+                                    zoomOnPinch
+                                    preventScrolling={false}
+                                    zoomActivationKeyCode={ZOOM_KEYS}
+                                    fitView
+                                    fitViewOptions={FIT}
+                                    minZoom={0.2}
+                                    maxZoom={1.5}
+                                    ariaLabelConfig={aria}
+                                    // The library's wrapper is an application; it is named after the framework it draws.
+                                    aria-label={framework.shortname}
+                                    proOptions={{hideAttribution: true}}
+                                >
+                                    <Background variant={BackgroundVariant.Dots} gap={18} size={1}
+                                        className="local-dimensions-hubv2-dots" />
+                                    <Controls showInteractive={false} fitViewOptions={FIT} />
+                                    <MiniMap pannable zoomable ariaLabel={labels.hubv2_minimap} style={MINIMAP} />
+                                </ReactFlow>
+                            </CanvasContext.Provider>
+                        </div>
+                    ) : null}
                 </div>
             </div>
             <Panel
@@ -911,7 +1515,6 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
                 path={node ? ancestors(tree, node.id).map((id) => tree.nodes[id].shortname) : []}
                 usage={usage}
                 related={related}
-                onCanvas={(id) => oncanvas.has(competencyKey(id))}
                 moving={movingnode}
                 canUp={position > 0}
                 canDown={position >= 0 && !islast}
@@ -923,7 +1526,7 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
 };
 
 /**
- * Competency hub v2's canvas: the strings first, read in one call from the page's own cache.
+ * The workspace: the strings first, read in one call from the page's own cache.
  *
  * @param {object} props The page's props.
  * @returns {ReactNode} The component.
@@ -939,7 +1542,7 @@ const Hub = (props: HubProps): ReactNode => {
     return (
         <div className="local-dimensions-hubv2-root">
             <ReactFlowProvider>
-                <Canvas {...props} labels={labels} />
+                <Workspace {...props} labels={labels} />
             </ReactFlowProvider>
         </div>
     );

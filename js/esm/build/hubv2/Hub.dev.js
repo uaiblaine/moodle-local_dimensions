@@ -2,18 +2,27 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { jsxDEV } from "react/jsx-dev-runtime";
 /**
- * The map view of the hub's Competencies tab: a framework's tree as a canvas of nodes, with a detail
- * panel beside it.
+ * The workspace of the hub's Competencies tab: a framework's tree as an outline (Outline.tsx, an ARIA
+ * tree) and as a map of nodes (React Flow), side by side or one at a time, with a detail panel.
  *
  * The entry of the bundle (js/esm/bundle.json), mounted by templates/central/structure.mustache in the
- * map view with the props classes/output/hub_map.php builds; the tab around it owns the context, the
- * framework choice and the view switch. The tree is lazy: the first page of roots arrives as props,
- * each branch is loaded when it is first opened (local_dimensions_browse_structure), and a node is
- * refreshed from the server after every change. Nothing is persisted: the layout is recomputed from
- * the tree on every change (layout.ts), and nodes cannot be dragged. Every action reuses the hub's
- * own dialogues and core's competency services, called as the list view (amd/src/central/structure.js)
- * calls them. The selected competency is kept in the address (deeplink.ts), and a competency the link
- * named is revealed at mount when the server found it in this framework (props.reveal).
+ * Outline, Map and Both views with the props classes/output/hub_map.php builds; the tab around it owns
+ * the context, the framework choice and the view switch, and tells the workspace when the viewer moves
+ * between its three layouts (selection.LAYOUT_EVENT), so the store survives the switch.
+ *
+ * One store, two projections: the Workspace below holds the tree (nodes, loaded pages, opened
+ * branches), the selection and the move mode; the outline and the map draw it and send every pick,
+ * key and command back here, so a selection, a move, a search or an "Expand all" made in one shows in
+ * the other. Each pane keeps only its own Tab stop (roving.ts), and both walk the tree with the same
+ * keys (keynav.ts).
+ *
+ * The tree is lazy: the first page of roots arrives as props, each branch is loaded when it is first
+ * opened (local_dimensions_browse_structure), and a node is refreshed from the server after every
+ * change. Nothing is persisted: the map's layout is recomputed from the tree on every change
+ * (layout.ts), and nodes cannot be dragged. Every action reuses the hub's own dialogues and core's
+ * competency services, called as the list view (amd/src/central/structure.js) calls them. The selected
+ * competency is kept in the address (deeplink.ts), and a competency the link named is revealed at
+ * mount when the server found it in this framework (props.reveal).
  *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
@@ -30,7 +39,15 @@ import {
   useReactFlow
 } from "../../vendor/xyflow/xyflow.js";
 import { load, notifyError } from "./amd";
-import { CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf } from "./graph";
+import { CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf, moreKey } from "./graph";
+import { EXPAND_ALL_BOUND, collapseAll, expandStep } from "./expandall";
+import { branchTarget, isTypeAheadKey, keyAction, navOrder, nodeName, panTarget, typeAhead } from "./keynav";
+import Outline, { OUTLINE_ID } from "./Outline";
+import { outlineRows } from "./outlinerows";
+import { useRoving } from "./roving";
+import { LAYOUT_EVENT, activation, isLayout, panesOf } from "./selection";
+import Splitter from "./Splitter";
+import { OUTLINE_WIDTH, clampWidth, storeWidth, storedWidth } from "./outlinewidth";
 import { rememberSelection } from "./deeplink";
 import { blockedBody, confirmBody } from "./deletion";
 import { escapeHtml } from "./html";
@@ -52,7 +69,7 @@ import {
   updateRule
 } from "./repository";
 import Search from "./Search";
-import { fill, loadLabels } from "./strings";
+import { fill, fillCount, loadLabels } from "./strings";
 import {
   ROOT,
   ancestors,
@@ -75,9 +92,24 @@ const ZOOM_KEYS = ["Control", "Meta"];
 const MINIMAP = { width: 140, height: 96 };
 const FIT = { padding: { top: "32px", right: "32px", bottom: "140px", left: "32px" }, maxZoom: 1 };
 const EDGE_TYPES = { rule: RuleEdge };
-const Canvas = /* @__PURE__ */ __name((props) => {
-  const { labels, framework, pagesize } = props;
+const NODE_SELECTOR = ".react-flow__node";
+const ROW_SELECTOR = '[role="treeitem"]';
+const OVERLAYS = ".react-flow__minimap, .react-flow__controls";
+const TYPE_AHEAD_PAUSE = 500;
+const EXPAND_ALL_PARALLEL = 4;
+const LAYOUT_CLASSES = {
+  outline: "local-dimensions-hubv2-layout-outline",
+  map: "local-dimensions-hubv2-layout-map",
+  both: "local-dimensions-hubv2-layout-both"
+};
+const WIDTH_PROPERTY = "--local-dimensions-hubv2-outline-width";
+const Workspace = /* @__PURE__ */ __name((props) => {
+  const { labels, framework, pagesize, rtl } = props;
   const flow = useReactFlow();
+  const [layout, setLayout] = useState(isLayout(props.layout) ? props.layout : "map");
+  const panes = panesOf(layout);
+  const panesRef = useRef(panes);
+  panesRef.current = panes;
   const [tree, setTree] = useState(() => createTree(props.roots));
   const treeRef = useRef(tree);
   const [selected, setSelected] = useState(null);
@@ -92,6 +124,24 @@ const Canvas = /* @__PURE__ */ __name((props) => {
   const centreOn = useRef(null);
   const selectionAsk = useRef(0);
   const removing = useRef(null);
+  const [loadingBranches, setLoadingBranches] = useState([]);
+  const opening = useRef(/* @__PURE__ */ new Set());
+  const paging = useRef(/* @__PURE__ */ new Set());
+  const [expanding, setExpanding] = useState(false);
+  const expandRun = useRef(0);
+  const [notice, setNotice] = useState("");
+  const [outlineWidth, setOutlineWidth] = useState(() => clampWidth(storedWidth(), 0));
+  const panesBox = useRef(null);
+  const canvasRef = useRef(null);
+  const listRef = useRef(null);
+  const typed = useRef({ text: "", at: 0 });
+  const revealing = useRef(null);
+  const revealed = useRef(null);
+  const settleReveal = /* @__PURE__ */ __name(() => {
+    revealing.current = null;
+    revealed.current?.();
+    revealed.current = null;
+  }, "settleReveal");
   const commit = useCallback((update) => {
     treeRef.current = update(treeRef.current);
     setTree(treeRef.current);
@@ -200,17 +250,53 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       loadSelection(id);
     }
   }, [choose, commit, loadSelection, relocate]);
-  const toggle = useCallback((id) => {
-    if (isExpanded(treeRef.current, id)) {
-      commit((current) => setExpanded(current, id, false));
+  const openBranch = useCallback((id, onmap = false) => {
+    if (isExpanded(treeRef.current, id) || opening.current.has(id)) {
       return;
     }
-    const loading = hasBranch(treeRef.current, id) ? Promise.resolve() : loadPage(id, false);
-    track("children", loading.then(() => commit((current) => setExpanded(current, id, true)))).catch(notifyError);
+    if (onmap && panesRef.current.map) {
+      settleReveal();
+      revealing.current = id;
+      track("reveal", new Promise((resolve) => {
+        revealed.current = resolve;
+      })).catch(notifyError);
+    }
+    if (hasBranch(treeRef.current, id)) {
+      commit((current) => setExpanded(current, id, true));
+      return;
+    }
+    opening.current.add(id);
+    setLoadingBranches((current) => [...current, id]);
+    track("children", loadPage(id, false).then(() => commit((current) => setExpanded(current, id, true)))).finally(() => {
+      opening.current.delete(id);
+      setLoadingBranches((current) => current.filter((other) => other !== id));
+      if (revealing.current === id && !isExpanded(treeRef.current, id)) {
+        settleReveal();
+      }
+    }).catch(notifyError);
   }, [commit, loadPage]);
-  const loadMore = useCallback((parent) => {
-    track("children", loadPage(parent, true)).catch(notifyError);
+  const closeBranch = useCallback((id) => {
+    commit((current) => setExpanded(current, id, false));
+  }, [commit]);
+  const toggle = useCallback((id, onmap = false) => {
+    if (isExpanded(treeRef.current, id)) {
+      closeBranch(id);
+    } else {
+      openBranch(id, onmap);
+    }
+  }, [closeBranch, openBranch]);
+  const toggleOnMap = useCallback((id) => toggle(id, true), [toggle]);
+  const nextPage = useCallback((parent) => {
+    if (paging.current.has(parent)) {
+      return Promise.resolve(null);
+    }
+    paging.current.add(parent);
+    const before = treeRef.current.branches[parent]?.ids.length ?? 0;
+    return track("children", loadPage(parent, true)).then(() => treeRef.current.branches[parent]?.ids[before] ?? null).finally(() => paging.current.delete(parent));
   }, [loadPage]);
+  const loadMore = useCallback((parent) => {
+    nextPage(parent).catch(notifyError);
+  }, [nextPage]);
   const announce = /* @__PURE__ */ __name((message) => setAnnouncement(message), "announce");
   const endMove = useCallback((cancelled) => {
     movingRef.current = null;
@@ -219,11 +305,94 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       setAnnouncement(labels.hubv2_movecancelled);
     }
   }, [labels]);
-  const focusNode = /* @__PURE__ */ __name((key) => {
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      document.querySelector(`.local-dimensions-hubv2 .react-flow__node[data-id="${key}"]`)?.focus();
-    }));
-  }, "focusNode");
+  const panTo = /* @__PURE__ */ __name((key) => {
+    const position2 = graphRef.current?.positions[key];
+    const canvas = measureCanvas();
+    if (!position2 || !canvas) {
+      return;
+    }
+    const target = panTarget({ ...position2, ...CARD }, flow.getViewport(), canvas.view, canvas.obstacles);
+    if (target) {
+      flow.setCenter(target.x, target.y, { zoom: flow.getZoom(), duration: motionDuration(200) }).catch(() => null);
+    }
+  }, "panTo");
+  const measureCanvas = /* @__PURE__ */ __name(() => {
+    const element = canvasRef.current?.querySelector(".react-flow");
+    if (!element) {
+      return null;
+    }
+    const box = element.getBoundingClientRect();
+    const obstacles = [...element.querySelectorAll(OVERLAYS)].map((overlay) => {
+      const rect = overlay.getBoundingClientRect();
+      return { x: rect.left - box.left, y: rect.top - box.top, width: rect.width, height: rect.height };
+    });
+    return { view: { width: box.width, height: box.height }, obstacles };
+  }, "measureCanvas");
+  const order = useMemo(() => navOrder(tree), [tree]);
+  const rows = useMemo(() => outlineRows(tree, framework.shortname), [tree, framework.shortname]);
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  const mapStop = useRoving({
+    order,
+    tree,
+    selected,
+    container: canvasRef,
+    item: NODE_SELECTOR,
+    /**
+     * The node an element draws.
+     *
+     * @param {HTMLElement} element The node wrapper.
+     * @returns {string|undefined} Its key.
+     */
+    keyOf: /* @__PURE__ */ __name((element) => element.dataset.id, "keyOf"),
+    /**
+     * A node's element on the map.
+     *
+     * @param {string} key The node.
+     * @returns {HTMLElement|null} Its wrapper, when it is drawn.
+     */
+    find: /* @__PURE__ */ __name((key) => canvasRef.current?.querySelector(`${NODE_SELECTOR}[data-id="${key}"]`) ?? null, "find"),
+    /**
+     * Bring a node into view before it takes the focus.
+     *
+     * @param {string} key The node.
+     * @param {boolean} pan Whether the viewport may move.
+     * @returns {void}
+     */
+    beforeFocus: /* @__PURE__ */ __name((key, pan) => {
+      if (pan) {
+        panTo(key);
+      }
+    }, "beforeFocus")
+  });
+  const outlineStop = useRoving({
+    order,
+    tree,
+    selected,
+    container: listRef,
+    item: ROW_SELECTOR,
+    /**
+     * The item a row draws.
+     *
+     * @param {HTMLElement} element The row.
+     * @returns {string|undefined} Its key.
+     */
+    keyOf: /* @__PURE__ */ __name((element) => element.dataset.key, "keyOf"),
+    /**
+     * An item's row in the outline.
+     *
+     * @param {string} key The item.
+     * @returns {HTMLElement|null} Its row, when it is drawn.
+     */
+    find: /* @__PURE__ */ __name((key) => listRef.current?.querySelector(`[data-key="${key}"]`) ?? null, "find")
+  });
+  const focusItem = /* @__PURE__ */ __name((key, pan = true) => {
+    if (panesRef.current.outline) {
+      outlineStop.focusKey(key);
+    } else {
+      mapStop.focusKey(key, pan);
+    }
+  }, "focusItem");
   const pickParent = /* @__PURE__ */ __name((target) => {
     const source = movingRef.current !== null ? treeRef.current.nodes[movingRef.current] : void 0;
     if (!source) {
@@ -265,6 +434,17 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       })());
     })().catch(notifyError);
   }, "pickParent");
+  const activate = /* @__PURE__ */ __name((id, from) => {
+    const action = activation(movingRef.current, id);
+    if (action.type === "pick") {
+      pickParent(action.parent);
+      return;
+    }
+    choose(action.id);
+    if (from === "outline" && panesRef.current.map) {
+      panTo(action.id === null ? FRAMEWORK_ID : competencyKey(action.id));
+    }
+  }, "activate");
   const onNodesChange = /* @__PURE__ */ __name((changes) => {
     const sizes = {};
     changes.getByType("dimensions").forEach((change) => {
@@ -282,11 +462,7 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       if (id === null) {
         return;
       }
-      if (movingRef.current !== null) {
-        pickParent(id);
-      } else {
-        choose(id === ROOT ? null : id);
-      }
+      activate(id, "map");
       return;
     }
     const unselected = selections.some((change) => !change.selected);
@@ -357,7 +533,7 @@ const Canvas = /* @__PURE__ */ __name((props) => {
     movingRef.current = node2.id;
     setMoving(node2.id);
     announce(fill(labels.hubv2_movepick, node2.shortname));
-    focusNode(competencyKey(node2.id));
+    focusItem(competencyKey(node2.id));
   }, "startMove");
   const stepMove = /* @__PURE__ */ __name((node2, up) => {
     track("refresh", moveOne(node2.id, up).then(() => reloadBranch(node2.parentid))).catch(notifyError);
@@ -416,6 +592,100 @@ const Canvas = /* @__PURE__ */ __name((props) => {
   const addChild = /* @__PURE__ */ __name((node2) => openForm(null, node2), "addChild");
   const moveRoot = /* @__PURE__ */ __name(() => pickParent(ROOT), "moveRoot");
   const cancelMove = /* @__PURE__ */ __name(() => endMove(true), "cancelMove");
+  const loadMoreAndFocus = /* @__PURE__ */ __name((parent, stop) => {
+    nextPage(parent).then((first) => {
+      if (first !== null) {
+        stop.focusKey(competencyKey(first));
+      }
+      return null;
+    }).catch(notifyError);
+  }, "loadMoreAndFocus");
+  const typeTo = /* @__PURE__ */ __name((character, time) => {
+    const previous = typed.current;
+    const text = time - previous.at > TYPE_AHEAD_PAUSE ? character : previous.text + character;
+    typed.current = { text, at: time };
+    const key = typeAhead(rowsRef.current, outlineStop.activeRef.current, text);
+    if (key !== null) {
+      outlineStop.focusKey(key);
+    }
+    return key !== null;
+  }, "typeTo");
+  const walk = /* @__PURE__ */ __name((event, stop, selector, from) => {
+    const target = event.target;
+    const element = target.closest(selector);
+    if (!element || !event.currentTarget.contains(element)) {
+      return;
+    }
+    if (element !== target && (event.key === "Enter" || event.key === " ")) {
+      return;
+    }
+    const action = keyAction(navOrder(treeRef.current), stop.activeRef.current, event, rtl);
+    if (!action) {
+      if (from === "outline" && isTypeAheadKey(event) && typeTo(event.key, event.timeStamp)) {
+        event.preventDefault();
+      }
+      return;
+    }
+    event.preventDefault();
+    switch (action.type) {
+      case "focus":
+        stop.focusKey(action.key);
+        break;
+      case "expand":
+        openBranch(action.id, from === "map");
+        break;
+      case "collapse":
+        closeBranch(action.id);
+        break;
+      case "select":
+        activate(action.id, from);
+        break;
+      case "loadmore":
+        loadMoreAndFocus(action.parent, stop);
+        break;
+      default:
+        break;
+    }
+  }, "walk");
+  const expandAll = /* @__PURE__ */ __name(() => {
+    const run = ++expandRun.current;
+    setExpanding(true);
+    setNotice("");
+    track("expandall", (async () => {
+      let capped = false;
+      for (let round = 0; round < 100 && run === expandRun.current; round++) {
+        const step = expandStep(treeRef.current, EXPAND_ALL_BOUND, pagesize);
+        capped = step.capped;
+        for (let index = 0; index < step.load.length && run === expandRun.current; index += EXPAND_ALL_PARALLEL) {
+          const batch = step.load.slice(index, index + EXPAND_ALL_PARALLEL).filter((id) => !hasBranch(treeRef.current, id));
+          await Promise.all(batch.map((id) => loadPage(id, false)));
+        }
+        if (run !== expandRun.current) {
+          return;
+        }
+        const ids = [...step.open, ...step.load];
+        commit((current) => ids.reduce((next, id) => setExpanded(next, id, true), current));
+        if (capped || ids.length === 0) {
+          break;
+        }
+      }
+      if (capped && run === expandRun.current) {
+        const message = fill(labels.hubv2_expandall_capped, String(EXPAND_ALL_BOUND));
+        setNotice(message);
+        announce(message);
+      }
+    })()).finally(() => {
+      if (run === expandRun.current) {
+        setExpanding(false);
+      }
+    }).catch(notifyError);
+  }, "expandAll");
+  const collapseEverything = /* @__PURE__ */ __name(() => {
+    expandRun.current++;
+    setExpanding(false);
+    setNotice("");
+    commit(collapseAll);
+  }, "collapseEverything");
   const actions = {
     edit,
     addChild,
@@ -458,6 +728,8 @@ const Canvas = /* @__PURE__ */ __name((props) => {
     return () => off();
   }, [loadSelection]);
   const moreLabel = useCallback((remaining) => fill(labels.hubv2_loadmore, String(Math.min(remaining, pagesize))), [labels, pagesize]);
+  const nameOf = useCallback((info) => nodeName(labels, info), [labels]);
+  const frameworkName = useCallback((total) => `${framework.shortname}, ${fillCount(labels, "hubv2_competencies", total)}`, [framework.shortname, labels]);
   const relatedids = useMemo(() => related.map((item) => item.id), [related]);
   const graph = useMemo(() => buildGraph({
     tree,
@@ -465,11 +737,15 @@ const Canvas = /* @__PURE__ */ __name((props) => {
     selected,
     related: relatedids,
     moving,
-    labels: { roledescription: labels.hubv2_noderole, more: moreLabel },
-    rtl: props.rtl
-  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, props.rtl]);
-  const nodes = useMemo(() => graph.nodes.map((node2) => measured[node2.id] ? { ...node2, measured: measured[node2.id] } : node2), [graph, measured]);
-  const oncanvas = useMemo(() => new Set(graph.nodes.map((node2) => node2.id)), [graph]);
+    labels: { roledescription: labels.hubv2_noderole, more: moreLabel, name: nameOf, framework: frameworkName },
+    rtl
+  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl]);
+  const graphRef = useRef(graph);
+  graphRef.current = graph;
+  const nodes = useMemo(() => graph.nodes.map((node2) => {
+    const sized = measured[node2.id] ? { ...node2, measured: measured[node2.id] } : node2;
+    return node2.id === mapStop.active ? { ...sized, domAttributes: { ...sized.domAttributes, tabIndex: 0 } } : sized;
+  }), [graph, measured, mapStop.active]);
   const linked = useRef(false);
   useEffect(() => {
     const target = props.reveal;
@@ -492,16 +768,103 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       return;
     }
     centreOn.current = null;
-    const zoom = Math.max(flow.getZoom(), 0.8);
-    flow.setCenter(position2.x + CARD.width / 2, position2.y + CARD.height / 2, { zoom, duration: motionDuration(300) }).catch(() => null);
-    focusNode(key);
+    if (panesRef.current.map) {
+      const zoom = Math.max(flow.getZoom(), 0.8);
+      flow.setCenter(position2.x + CARD.width / 2, position2.y + CARD.height / 2, { zoom, duration: motionDuration(300) }).catch(() => null);
+    }
+    focusItem(key, false);
   }, [graph, flow]);
+  useEffect(() => {
+    const onLayout = /* @__PURE__ */ __name((event) => {
+      const next = event.detail?.layout;
+      if (isLayout(next)) {
+        setLayout(next);
+      }
+    }, "onLayout");
+    document.addEventListener(LAYOUT_EVENT, onLayout);
+    return () => document.removeEventListener(LAYOUT_EVENT, onLayout);
+  }, []);
+  const available = /* @__PURE__ */ __name(() => panesBox.current?.getBoundingClientRect().width ?? 0, "available");
+  useEffect(() => {
+    if (layout === "both") {
+      setOutlineWidth((width) => clampWidth(width, available()));
+    }
+  }, [layout]);
+  const onOutlineWidth = /* @__PURE__ */ __name((width, final) => {
+    setOutlineWidth(width);
+    if (final) {
+      storeWidth(width);
+    }
+  }, "onOutlineWidth");
+  const resetOutlineWidth = /* @__PURE__ */ __name(() => {
+    setOutlineWidth(clampWidth(OUTLINE_WIDTH.initial, available()));
+    storeWidth(null);
+  }, "resetOutlineWidth");
+  useEffect(() => {
+    const id = revealing.current;
+    if (id === null || !isExpanded(treeRef.current, id)) {
+      return;
+    }
+    const parent = graph.positions[competencyKey(id)];
+    const canvas = measureCanvas();
+    const done = revealed.current;
+    revealing.current = null;
+    revealed.current = null;
+    const keys = [...(treeRef.current.branches[id]?.ids ?? []).map(competencyKey), moreKey(id)];
+    const children = keys.flatMap((key) => graph.positions[key] ? [{ ...graph.positions[key], ...CARD }] : []);
+    const target = parent && canvas ? branchTarget({ ...parent, ...CARD }, children, flow.getViewport(), canvas.view, canvas.obstacles, rtl) : null;
+    if (!target) {
+      done?.();
+      return;
+    }
+    flow.setCenter(target.x, target.y, { zoom: flow.getZoom(), duration: motionDuration(200) }).catch(() => null).finally(() => done?.());
+  }, [graph, flow, rtl]);
   const canvasActions = useMemo(
-    () => ({ labels, pagesize, rtl: props.rtl, toggle, loadMore }),
-    [labels, pagesize, props.rtl, toggle, loadMore]
+    () => ({ labels, pagesize, rtl, toggle: toggleOnMap, loadMore }),
+    [labels, pagesize, rtl, toggleOnMap, loadMore]
   );
+  const outlineActions = {
+    /**
+     * Select the competency of a row; a "load more" row selects nothing.
+     *
+     * @param {object} row The row.
+     * @returns {void}
+     */
+    activate: /* @__PURE__ */ __name((row) => {
+      if (row.kind !== "more") {
+        activate(row.id, "outline");
+      }
+    }, "activate"),
+    toggle,
+    /**
+     * Load a branch's next page and move the focus to its first new item.
+     *
+     * @param {number} parent The branch.
+     * @returns {void}
+     */
+    loadMore: /* @__PURE__ */ __name((parent) => loadMoreAndFocus(parent, outlineStop), "loadMore"),
+    expandAll,
+    collapseAll: collapseEverything,
+    /**
+     * Add a top-level competency.
+     *
+     * @returns {void}
+     */
+    add: /* @__PURE__ */ __name(() => addChild(null), "add"),
+    /**
+     * Walk the outline with the tree's keys.
+     *
+     * @param {object} event The key event.
+     * @returns {void}
+     */
+    onKeyDown: /* @__PURE__ */ __name((event) => walk(event, outlineStop, ROW_SELECTOR, "outline"), "onKeyDown"),
+    onFocus: outlineStop.onFocus,
+    onBlur: outlineStop.onBlur
+  };
   const silent = /* @__PURE__ */ __name(() => "", "silent");
   const aria = useMemo(() => ({
+    // Both, because the library shows keyboardDisabled's text when its own keyboard is off
+    // (nodesFocusable false); every node's aria-describedby points at it.
     "node.a11yDescription.default": labels.hubv2_a11y_node,
     "node.a11yDescription.keyboardDisabled": labels.hubv2_a11y_node,
     // Spoken when a node is moved by the arrow keys, which a node that cannot be dragged never is.
@@ -519,107 +882,181 @@ const Canvas = /* @__PURE__ */ __name((props) => {
   const position = node && siblings ? siblings.ids.indexOf(node.id) : -1;
   const islast = !!siblings && position === siblings.ids.length - 1 && siblings.ids.length >= siblings.total;
   const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
-  return /* @__PURE__ */ jsxDEV("div", { className: `local-dimensions-hubv2-layout${moving !== null ? " local-dimensions-hubv2-picking" : ""}`, children: [
+  const relatedcount = node && usage !== null ? related.length : null;
+  const widthstyle = { [WIDTH_PROPERTY]: `${outlineWidth}px` };
+  const rootclasses = ["local-dimensions-hubv2-layout", LAYOUT_CLASSES[layout]];
+  if (moving !== null) {
+    rootclasses.push("local-dimensions-hubv2-picking");
+  }
+  return /* @__PURE__ */ jsxDEV("div", { className: rootclasses.join(" "), style: widthstyle, children: [
     /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-main", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 862,
+          lineNumber: 1419,
           columnNumber: 21
         }),
-        /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
+        panes.map ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 864,
-            columnNumber: 25
+            lineNumber: 1422,
+            columnNumber: 29
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 863,
-          columnNumber: 21
-        })
+          lineNumber: 1421,
+          columnNumber: 25
+        }) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 861,
+        lineNumber: 1418,
         columnNumber: 17
       }),
-      /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-canvas", role: "region", "aria-label": labels.hubv2_canvas, children: /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
-        ReactFlow,
-        {
-          nodes,
-          edges: graph.edges,
-          nodeTypes: NODE_TYPES,
-          edgeTypes: EDGE_TYPES,
-          onNodesChange,
-          nodesDraggable: false,
-          nodesConnectable: false,
-          edgesFocusable: false,
-          elevateEdgesOnSelect: false,
-          selectNodesOnDrag: false,
-          deleteKeyCode: null,
-          selectionKeyCode: null,
-          multiSelectionKeyCode: null,
-          zoomOnDoubleClick: false,
-          zoomOnScroll: false,
-          zoomOnPinch: true,
-          preventScrolling: false,
-          zoomActivationKeyCode: ZOOM_KEYS,
-          fitView: true,
-          fitViewOptions: FIT,
-          minZoom: 0.2,
-          maxZoom: 1.5,
-          ariaLabelConfig: aria,
-          "aria-label": framework.shortname,
-          proOptions: { hideAttribution: true },
-          children: [
-            /* @__PURE__ */ jsxDEV(
-              Background,
+      /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-panes", ref: panesBox, children: [
+        panes.outline ? /* @__PURE__ */ jsxDEV(
+          Outline,
+          {
+            labels,
+            framework,
+            count,
+            rows,
+            selected,
+            moving,
+            relatedcount,
+            active: outlineStop.active,
+            loading: loadingBranches,
+            expanding,
+            notice,
+            rtl,
+            pagesize,
+            listRef,
+            actions: outlineActions
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 1428,
+            columnNumber: 25
+          }
+        ) : null,
+        layout === "both" ? /* @__PURE__ */ jsxDEV(
+          Splitter,
+          {
+            label: labels.hubv2_resizeoutline,
+            controls: OUTLINE_ID,
+            width: outlineWidth,
+            available,
+            rtl,
+            onWidth: onOutlineWidth,
+            onReset: resetOutlineWidth
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 1447,
+            columnNumber: 25
+          }
+        ) : null,
+        panes.map ? /* @__PURE__ */ jsxDEV(
+          "div",
+          {
+            className: "local-dimensions-hubv2-canvas",
+            role: "region",
+            "aria-label": labels.hubv2_canvas,
+            ref: canvasRef,
+            onKeyDown: (event) => walk(event, mapStop, NODE_SELECTOR, "map"),
+            onFocus: mapStop.onFocus,
+            onBlur: mapStop.onBlur,
+            children: /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
+              ReactFlow,
               {
-                variant: BackgroundVariant.Dots,
-                gap: 18,
-                size: 1,
-                className: "local-dimensions-hubv2-dots"
+                nodes,
+                edges: graph.edges,
+                nodeTypes: NODE_TYPES,
+                edgeTypes: EDGE_TYPES,
+                onNodesChange,
+                nodesFocusable: false,
+                nodesDraggable: false,
+                nodesConnectable: false,
+                edgesFocusable: false,
+                elevateEdgesOnSelect: false,
+                selectNodesOnDrag: false,
+                deleteKeyCode: null,
+                selectionKeyCode: null,
+                multiSelectionKeyCode: null,
+                zoomOnDoubleClick: false,
+                zoomOnScroll: false,
+                zoomOnPinch: true,
+                preventScrolling: false,
+                zoomActivationKeyCode: ZOOM_KEYS,
+                fitView: true,
+                fitViewOptions: FIT,
+                minZoom: 0.2,
+                maxZoom: 1.5,
+                ariaLabelConfig: aria,
+                "aria-label": framework.shortname,
+                proOptions: { hideAttribution: true },
+                children: [
+                  /* @__PURE__ */ jsxDEV(
+                    Background,
+                    {
+                      variant: BackgroundVariant.Dots,
+                      gap: 18,
+                      size: 1,
+                      className: "local-dimensions-hubv2-dots"
+                    },
+                    void 0,
+                    false,
+                    {
+                      fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                      lineNumber: 1500,
+                      columnNumber: 37
+                    }
+                  ),
+                  /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
+                    fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                    lineNumber: 1502,
+                    columnNumber: 37
+                  }),
+                  /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
+                    fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+                    lineNumber: 1503,
+                    columnNumber: 37
+                  })
+                ]
               },
               void 0,
-              false,
+              true,
               {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 898,
-                columnNumber: 29
+                lineNumber: 1468,
+                columnNumber: 33
               }
-            ),
-            /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
+            ) }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 900,
-              columnNumber: 29
-            }),
-            /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
-              fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 901,
+              lineNumber: 1467,
               columnNumber: 29
             })
-          ]
-        },
-        void 0,
-        true,
-        {
-          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 869,
-          columnNumber: 25
-        }
-      ) }, void 0, false, {
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 1458,
+            columnNumber: 25
+          }
+        ) : null
+      ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 868,
-        columnNumber: 21
-      }) }, void 0, false, {
-        fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 867,
+        lineNumber: 1426,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 860,
+      lineNumber: 1417,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -632,7 +1069,6 @@ const Canvas = /* @__PURE__ */ __name((props) => {
         path: node ? ancestors(tree, node.id).map((id) => tree.nodes[id].shortname) : [],
         usage,
         related,
-        onCanvas: (id) => oncanvas.has(competencyKey(id)),
         moving: movingnode,
         canUp: position > 0,
         canDown: position >= 0 && !islast,
@@ -642,21 +1078,21 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 906,
+        lineNumber: 1510,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 920,
+      lineNumber: 1523,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 859,
+    lineNumber: 1416,
     columnNumber: 9
   });
-}, "Canvas");
+}, "Workspace");
 const Hub = /* @__PURE__ */ __name((props) => {
   const [labels, setLabels] = useState(null);
   useEffect(() => {
@@ -665,21 +1101,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 937,
+      lineNumber: 1540,
       columnNumber: 16
     });
   }
-  return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Canvas, { ...props, labels }, void 0, false, {
+  return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Workspace, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 942,
+    lineNumber: 1545,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 941,
+    lineNumber: 1544,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 940,
+    lineNumber: 1543,
     columnNumber: 9
   });
 }, "Hub");

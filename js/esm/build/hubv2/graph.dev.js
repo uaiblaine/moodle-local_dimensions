@@ -6,7 +6,10 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
  * selected competency, a dotted edge to each related competency on the canvas.
  *
  * Every edge is drawing only: what an edge says (a parent, a rule, a relation) the nodes and the panel
- * say in words, so each edge is left out of the accessibility tree ({@see EDGE_A11Y}).
+ * say in words, so each edge is left out of the accessibility tree ({@see EDGE_A11Y}). Every node is a
+ * group named with its place in the tree (keynav.nodeName): React Flow's wrapper is an application,
+ * which no tree role can cross, so the map says the structure in words and the outline beside it is
+ * the workspace's real tree.
  *
  * Pure: the nodes carry plain data, and the components read the callbacks from context.
  *
@@ -30,6 +33,8 @@ const cardCount = /* @__PURE__ */ __name((node, childcount) => {
 }, "cardCount");
 const competencyKey = /* @__PURE__ */ __name((id) => `c${id}`, "competencyKey");
 const parentKey = /* @__PURE__ */ __name((id) => id === ROOT ? FRAMEWORK_ID : competencyKey(id), "parentKey");
+const moreKey = /* @__PURE__ */ __name((parent) => `m${parent}`, "moreKey");
+const NODE_ATTRIBUTES = { tabIndex: -1, "aria-roledescription": void 0 };
 const competencyOf = /* @__PURE__ */ __name((key) => /^c\d+$/.test(key) ? Number(key.slice(1)) : null, "competencyOf");
 const buildGraph = /* @__PURE__ */ __name((input) => {
   const { tree, framework, selected, related, moving, labels } = input;
@@ -37,12 +42,15 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
   const layoutinput = [{ key: FRAMEWORK_ID, parent: null }];
   items.forEach((item) => {
     layoutinput.push({
-      key: item.kind === "competency" ? competencyKey(item.id) : `m${item.parent}`,
+      key: item.kind === "competency" ? competencyKey(item.id) : moreKey(item.parent),
       parent: parentKey(item.parent)
     });
   });
   const placed = layoutTree(layoutinput);
   const positions = input.rtl ? mirrorLayout(placed) : placed;
+  const drawn = new Set(items.flatMap((item) => item.kind === "competency" ? [item.id] : []));
+  const relatedto = selected !== null && drawn.has(selected) ? tree.nodes[selected].shortname : null;
+  const relatedset = new Set(relatedto !== null ? related.filter((id) => id !== selected) : []);
   const nodes = [{
     id: FRAMEWORK_ID,
     type: "framework",
@@ -50,15 +58,15 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
     data: { kind: "framework", framework, count: framework.competencycount },
     ...CARD,
     selected: selected === null,
-    ariaLabel: framework.shortname,
-    ariaRole: "group"
+    ariaLabel: labels.framework ? labels.framework(framework.competencycount) : framework.shortname,
+    ariaRole: "group",
+    domAttributes: { ...NODE_ATTRIBUTES, "aria-current": selected === null ? "true" : void 0 }
   }];
   const edges = [];
   const ruled = /* @__PURE__ */ new Set();
-  const onCanvas = /* @__PURE__ */ new Set();
   items.forEach((item) => {
     if (item.kind === "more") {
-      const key2 = `m${item.parent}`;
+      const key2 = moreKey(item.parent);
       nodes.push({
         id: key2,
         type: "more",
@@ -66,8 +74,9 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
         data: { kind: "more", parent: item.parent, remaining: item.remaining },
         ...CARD,
         selectable: false,
-        focusable: false,
-        ariaLabel: labels.more(item.remaining)
+        ariaLabel: labels.more(item.remaining),
+        ariaRole: "group",
+        domAttributes: NODE_ATTRIBUTES
       });
       edges.push({
         id: `e-${key2}`,
@@ -82,7 +91,19 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
     const node = tree.nodes[item.id];
     const key = competencyKey(item.id);
     const branch = tree.branches[item.id];
-    onCanvas.add(item.id);
+    const siblings = tree.branches[item.parent];
+    const info = {
+      name: node.shortname,
+      // The framework is level 1 in both panes, so a competency is its depth plus one.
+      level: item.depth + 1,
+      position: (siblings ? siblings.ids.indexOf(item.id) : 0) + 1,
+      total: siblings ? siblings.total : 1,
+      expandable: node.haschildren,
+      expanded: isExpanded(tree, item.id),
+      children: branch ? branch.total : null,
+      rule: node.ruletype ? node.rulelabel : "",
+      relatedto: relatedset.has(item.id) ? relatedto : null
+    };
     nodes.push({
       id: key,
       type: "competency",
@@ -97,9 +118,10 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       },
       ...CARD,
       selected: selected === item.id,
-      ariaLabel: node.shortname,
+      ariaLabel: labels.name ? labels.name(info) : node.shortname,
       ariaRole: "group",
       domAttributes: {
+        ...NODE_ATTRIBUTES,
         "aria-roledescription": labels.roledescription,
         "aria-current": selected === item.id ? "true" : void 0
       }
@@ -120,8 +142,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       ...EDGE_A11Y
     });
   });
-  if (selected !== null && onCanvas.has(selected)) {
-    related.filter((id) => id !== selected && onCanvas.has(id)).forEach((id) => {
+  if (selected !== null && drawn.has(selected)) {
+    related.filter((id) => id !== selected && drawn.has(id)).forEach((id) => {
       edges.push({
         id: `r-${selected}-${id}`,
         source: competencyKey(selected),
@@ -142,6 +164,8 @@ export {
   buildGraph,
   cardCount,
   competencyKey,
-  competencyOf
+  competencyOf,
+  moreKey,
+  parentKey
 };
 //# sourceMappingURL=graph.dev.js.map
