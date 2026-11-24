@@ -125,6 +125,15 @@ final class colour_tokens_test extends \basic_testcase {
         'motion-ease' => 'cubic-bezier(0.4, 0, 0.2, 1)',
     ];
 
+    /** @var array The local-only radius scale in the :root rule, suffix => the fallback it carries (the family's scale). */
+    private const RADIUS = [
+        'radius-xs' => '4px',
+        'radius-sm' => '6px',
+        'radius-md' => '8px',
+        'radius-lg' => '12px',
+        'radius-xl' => '16px',
+    ];
+
     /** @var string The course card's root (moodle-dev/docs/course-card/CONTRACT.md): the one rule that declares its tokens. */
     private const CARD_ROOT = '.local-dimensions-course-card-lg';
 
@@ -1285,7 +1294,8 @@ final class colour_tokens_test extends \basic_testcase {
                     }
                     $suffix = substr($property, strlen(self::PREFIX));
                     $incontract = in_array($suffix, $contract, true) || in_array($suffix, $card, true)
-                        || array_key_exists($suffix, self::MOTION) || array_key_exists($suffix, self::STATE_ALIASES);
+                        || array_key_exists($suffix, self::MOTION) || array_key_exists($suffix, self::RADIUS)
+                        || array_key_exists($suffix, self::STATE_ALIASES);
                     if (!$incontract && preg_match('/(?<![a-z0-9-])' . preg_quote(self::FAMILY, '/') . '/', $value)) {
                         $offenders[] = $rule['line'] . ': ' . $property . ' is outside the contract but reads ' . $value;
                     }
@@ -1294,7 +1304,13 @@ final class colour_tokens_test extends \basic_testcase {
             $text = $this->uncommented($path);
             preg_match_all('/(?<![a-z0-9-])' . preg_quote(self::FAMILY, '/') . '([a-z0-9-]+)/', $text, $names);
             $allowed = $contract;
-            $allowed = array_merge($allowed, $card, array_keys(self::MOTION), array_keys(self::STATE_ALIASES));
+            $allowed = array_merge(
+                $allowed,
+                $card,
+                array_keys(self::MOTION),
+                array_keys(self::RADIUS),
+                array_keys(self::STATE_ALIASES)
+            );
             foreach (array_unique($names[1]) as $name) {
                 if (!in_array($name, $allowed, true)) {
                     $offenders[] = basename($path) . ' names ' . self::FAMILY . $name . ', which is not in the contract';
@@ -1312,12 +1328,13 @@ final class colour_tokens_test extends \basic_testcase {
     }
 
     /**
-     * The local-only tokens (3 motion, 18 state) read their family token first.
+     * The local-only tokens (3 motion, 5 radius, 18 state) read their family token first.
      *
-     * They live outside the shared block: motion in the :root rule, the state aliases in a second
-     * bare body rule. The fallback is exactly what they carried before the family layer.
+     * They live outside the shared block: motion and the radius scale in the :root rule, the state
+     * aliases in a second bare body rule. A motion or state fallback is exactly what the token carried
+     * before the family layer; a radius fallback is the family scale's own step.
      *
-     * Changes that must make it fail: unwrap one of them; change a motion fallback.
+     * Changes that must make it fail: unwrap one of them; change a motion or a radius fallback.
      *
      * @return void
      */
@@ -1331,13 +1348,13 @@ final class colour_tokens_test extends \basic_testcase {
             }
         }
         $expected = [];
-        foreach (self::MOTION as $suffix => $fallback) {
+        foreach (self::MOTION + self::RADIUS as $suffix => $fallback) {
             $expected[$suffix] = 'var(' . self::FAMILY . $suffix . ', ' . $fallback . ')';
         }
         foreach (self::STATE_ALIASES as $suffix => $target) {
             $expected[$suffix] = 'var(' . self::FAMILY . $suffix . ', var(' . self::PREFIX . $target . '))';
         }
-        $this->assertCount(21, $expected);
+        $this->assertCount(26, $expected);
         $offenders = [];
         foreach ($expected as $suffix => $value) {
             if (($found[$suffix] ?? null) !== $value) {
