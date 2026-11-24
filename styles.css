@@ -8891,7 +8891,9 @@ a.local-dimensions-central-links-badge-warn:focus {
  *
  * React Flow's own stylesheet is not loaded. The rules it needs to work (positioning, layers,
  * pointer events) are ported from its base.css, each under the plugin's root class, and painted
- * with the plugin's tokens instead of the library's palette.
+ * with the plugin's tokens instead of the library's palette. Its colour-scheme and light-dark()
+ * rules are not ported: the canvas follows Moodle's data-bs-theme through the tokens, never the
+ * system preference.
  * ------------------------------------------------------------------------------------------- */
 
 .local-dimensions-hubv2-layout {
@@ -9246,11 +9248,18 @@ a.local-dimensions-central-links-badge-warn:focus {
     touch-action: none;
 }
 
-.local-dimensions-hubv2 .react-flow__pane.draggable {
+/* The pan cursor sits on a layer of its own, so nothing drawn above the pane inherits it. */
+.local-dimensions-hubv2 .react-flow__pane::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+
+.local-dimensions-hubv2 .react-flow__pane.draggable::before {
     cursor: grab;
 }
 
-.local-dimensions-hubv2 .react-flow__pane.dragging {
+.local-dimensions-hubv2 .react-flow__pane.dragging::before {
     cursor: grabbing;
 }
 

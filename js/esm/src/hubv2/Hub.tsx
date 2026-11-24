@@ -34,7 +34,7 @@ import type {ReactNode} from 'react';
 import {
     Background, BackgroundVariant, Controls, MiniMap, ReactFlow, ReactFlowProvider, useReactFlow,
 } from '../../vendor/xyflow/xyflow.js';
-import type {AriaLabelConfig, NodeChange} from '../../vendor/xyflow/xyflow.js';
+import type {AriaLabelConfig, FitViewOptions, NodeChangeset} from '../../vendor/xyflow/xyflow.js';
 import {load, notifyError} from './amd';
 import type {RuleConfig} from './amd';
 import {CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf} from './graph';
@@ -80,7 +80,7 @@ const MINIMAP = {width: 140, height: 96};
  * How the tree is framed: a margin all round, and below it room for the overview map and the
  * controls so that no fitted node sits under them.
  */
-const FIT = {padding: {top: '32px', right: '32px', bottom: '140px', left: '32px'}, maxZoom: 1};
+const FIT: FitViewOptions = {padding: {top: '32px', right: '32px', bottom: '140px', left: '32px'}, maxZoom: 1};
 
 /** Edge components by edge type. */
 const EDGE_TYPES = {rule: RuleEdge};
@@ -408,21 +408,22 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
      * React to what React Flow reports: a node's size, and a selection by click or keyboard,
      * which in the move mode picks the new parent instead.
      *
-     * @param {Array} changes The changes.
+     * @param {object} changes The changes, a NodeChangeset.
      * @returns {void}
      */
-    const onNodesChange = (changes: NodeChange[]): void => {
+    const onNodesChange = (changes: NodeChangeset<CanvasNode>): void => {
         const sizes: Record<string, {width: number, height: number}> = {};
-        changes.forEach((change) => {
-            if (change.type === 'dimensions' && change.dimensions) {
+        changes.getByType('dimensions').forEach((change) => {
+            if (change.dimensions) {
                 sizes[change.id] = change.dimensions;
             }
         });
         if (Object.keys(sizes).length > 0) {
             setMeasured((current) => ({...current, ...sizes}));
         }
-        const picked = changes.find((change) => change.type === 'select' && change.selected);
-        if (picked && 'id' in picked) {
+        const selections = changes.getByType('select');
+        const picked = selections.find((change) => change.selected);
+        if (picked) {
             const id = picked.id === FRAMEWORK_ID ? ROOT : competencyOf(picked.id);
             if (id === null) {
                 return;
@@ -434,7 +435,7 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
             }
             return;
         }
-        const unselected = changes.some((change) => change.type === 'select' && !change.selected);
+        const unselected = selections.some((change) => !change.selected);
         if (unselected && movingRef.current === null) {
             choose(null);
         }
@@ -834,6 +835,8 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
                             nodesDraggable={false}
                             nodesConnectable={false}
                             edgesFocusable={false}
+                            // The selected card's edges, its related ones too, stay under the other cards.
+                            elevateEdgesOnSelect={false}
                             selectNodesOnDrag={false}
                             deleteKeyCode={null}
                             selectionKeyCode={null}

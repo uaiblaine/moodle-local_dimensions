@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Competency hub v2 on React Flow 13
+
+Version `2026100533`. The canvas looks and behaves as before, on the new library.
+
+- **React Flow** (`@xyflow/react`) goes from 12.12.1 to 13.0.3, with `@xyflow/system` 1.0.1,
+  zustand 5 and React's `react-compiler-runtime`; `js/esm/vendor/xyflow/xyflow.js` is rebuilt as its
+  README says, and `thirdpartylibs.xml` carries the new version and SHA-384. `useStore`,
+  `applyNodeChanges` and `applyEdgeChanges`, which 13 no longer exports, leave the module.
+  One error message of `react-compiler-runtime` is reworded as the module is built, because its
+  text starts with a marker the development-leftover check refuses in a shipped file.
+- The canvas reads 13's change batch (`NodeChangeset`) by type for the measured sizes and the
+  selection, and keeps 12's `elevateEdgesOnSelect` off, so the selected card's edges, its
+  related ones included, stay under the other cards.
+- 13 follows the system's colour scheme through its stylesheet only (`color-scheme` and
+  `light-dark()`); that stylesheet is not loaded and those rules are not ported, so the canvas
+  keeps following Moodle's `data-bs-theme` through the plugin's tokens.
+- `styles.css`: the pan cursor moves to the pane's `::before` layer, as 13's base rules do, so
+  nothing drawn above the pane (an edge, a rule label) inherits it.
+
 ### Design System: the filter line's funnel and eraser (D107, D109, D110)
 
 Version `2026100532`.

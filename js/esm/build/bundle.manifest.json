@@ -2,7 +2,7 @@
     "entry": "src/hubv2/Hub.tsx",
     "outfile": "build/bundle.js",
     "sources": {
-        "src/hubv2/Hub.tsx": "aca571bf459673e07c03cee386006d633029a423",
+        "src/hubv2/Hub.tsx": "582bdd66dbdeafe028bcc34a9ff2d3c9f2f8fd8e",
         "src/hubv2/Nodes.tsx": "1e5abf1d05f8a7e6ae2b2761c9b6f11b5ab40a31",
         "src/hubv2/Panel.tsx": "b0973673f28fddb16583bbc7c0f3ab3fcb834193",
         "src/hubv2/Search.tsx": "f967af550124d7720a80b07a1a284300fed32562",

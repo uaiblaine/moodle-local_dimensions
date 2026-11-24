@@ -252,16 +252,17 @@ const Canvas = /* @__PURE__ */ __name((props) => {
   }, "pickParent");
   const onNodesChange = /* @__PURE__ */ __name((changes) => {
     const sizes = {};
-    changes.forEach((change) => {
-      if (change.type === "dimensions" && change.dimensions) {
+    changes.getByType("dimensions").forEach((change) => {
+      if (change.dimensions) {
         sizes[change.id] = change.dimensions;
       }
     });
     if (Object.keys(sizes).length > 0) {
       setMeasured((current) => ({ ...current, ...sizes }));
     }
-    const picked = changes.find((change) => change.type === "select" && change.selected);
-    if (picked && "id" in picked) {
+    const selections = changes.getByType("select");
+    const picked = selections.find((change) => change.selected);
+    if (picked) {
       const id = picked.id === FRAMEWORK_ID ? ROOT : competencyOf(picked.id);
       if (id === null) {
         return;
@@ -273,7 +274,7 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       }
       return;
     }
-    const unselected = changes.some((change) => change.type === "select" && !change.selected);
+    const unselected = selections.some((change) => !change.selected);
     if (unselected && movingRef.current === null) {
       choose(null);
     }
@@ -492,24 +493,24 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 821,
+          lineNumber: 822,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 823,
+            lineNumber: 824,
             columnNumber: 25
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 822,
+          lineNumber: 823,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 820,
+        lineNumber: 821,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-canvas", role: "region", "aria-label": labels.hubv2_canvas, children: /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
@@ -523,6 +524,7 @@ const Canvas = /* @__PURE__ */ __name((props) => {
           nodesDraggable: false,
           nodesConnectable: false,
           edgesFocusable: false,
+          elevateEdgesOnSelect: false,
           selectNodesOnDrag: false,
           deleteKeyCode: null,
           selectionKeyCode: null,
@@ -551,18 +553,18 @@ const Canvas = /* @__PURE__ */ __name((props) => {
               false,
               {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 853,
+                lineNumber: 856,
                 columnNumber: 29
               }
             ),
             /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 855,
+              lineNumber: 858,
               columnNumber: 29
             }),
             /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 856,
+              lineNumber: 859,
               columnNumber: 29
             })
           ]
@@ -571,21 +573,21 @@ const Canvas = /* @__PURE__ */ __name((props) => {
         true,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 828,
+          lineNumber: 829,
           columnNumber: 25
         }
       ) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 827,
+        lineNumber: 828,
         columnNumber: 21
       }) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 826,
+        lineNumber: 827,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 819,
+      lineNumber: 820,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -608,18 +610,18 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 861,
+        lineNumber: 864,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 875,
+      lineNumber: 878,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 818,
+    lineNumber: 819,
     columnNumber: 9
   });
 }, "Canvas");
@@ -631,21 +633,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 892,
+      lineNumber: 895,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Canvas, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 897,
+    lineNumber: 900,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 896,
+    lineNumber: 899,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 895,
+    lineNumber: 898,
     columnNumber: 9
   });
 }, "Hub");
