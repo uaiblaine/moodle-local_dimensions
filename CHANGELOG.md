@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Framework insights for the map's lenses and checker (server side)
+
+Version `2026100537`. A new read-only web service, `local_dimensions_get_framework_insights`, answers
+for one framework what the map's lenses and "Check structure" will show; no page uses it yet.
+
+- **Usage** per competency: courses, activities, learning plan templates and learning plans (a plan
+  holds a competency of its own, an archived rating of a completed plan, or its template's, as core's
+  `plan::get_by_user_and_competency()` reads it). Counts are exact only for a viewer holding at the
+  site every capability core's own usage lists ask (course competencies, hidden courses and
+  activities, availability, template management, plans and their drafts) and when no role refuses
+  any of those capabilities (a prevent or prohibit in any context demotes the viewer to the next
+  level; the site administrator is not demoted). A manager of the
+  framework's competencies is told which kinds of use apply (0 or 1), what the delete check already
+  tells them; any other reader is told nothing about usage.
+- **Rules**: type, core's label, outcome and, for a points rule, the points asked, the points its
+  listed competencies still add up to, the required ones and whether a learner could ever meet it,
+  mirroring `competency_rule_points::matches()`.
+- **Relations**: every related pair of the framework once, lower id first (`pairs`, for the lens to
+  draw), and per competency the count of its relations, both from one statement; a row that
+  reaches another framework, which core never writes, is not read.
+- **Checks**, each with its title and sentence in `hubv2_check_<code>` and `_desc`: a rule that can
+  never fire, a rule over a single child, a rule without children (core saves an "all" rule on a
+  leaf), an empty description, an empty ID number (core keeps ID numbers unique but stores an empty
+  one), a competency nothing uses (only from exact counts) and custom colours under WCAG's 4.5:1
+  (`local\contrast_ratio`). Core refuses a framework scale with no proficient value, so that check is
+  not offered.
+- **Summary**: competencies, levels, rules, relation pairs and findings.
+- **Access** as the hub's framework lists: logged in, not the guest, competencyview in the
+  framework's own context, and a framework in a category `local_unlistedcourses` withholds from the
+  viewer refused as a missing one. The answer is a fixed number of statements whatever the
+  framework's size, and nothing is cached: each node computes it from the database.
+
 ### Commands: a node's menu, a command palette, "Move to" and typing in the outline
 
 Version `2026100536`. Every action of the workspace (Outline, Map, Both) is in one registry

@@ -115,6 +115,17 @@ $functions = [
         'readonlysession' => true,
     ],
 
+    // Competency hub map view — usage, rules, relations and the structure's findings of one framework.
+    'local_dimensions_get_framework_insights' => [
+        'classname' => 'local_dimensions\external\get_framework_insights',
+        'methodname' => 'execute',
+        'description' => 'Tell how a framework\'s competencies are used, ruled and related, and what its structure gets wrong.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+        'readonlysession' => true,
+    ],
+
     // Competency hub Structure tab — in-tree search with ancestor path.
     'local_dimensions_search_structure' => [
         'classname' => 'local_dimensions\external\search_structure',

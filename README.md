@@ -127,6 +127,16 @@ current parent, and says which parent's rule core will reset before the move is 
 outline's **Display options** (identifiers, taxonomy) are the classic list's, saved in the same
 preference.
 
+The read-only `local_dimensions_get_framework_insights` service answers, for one framework, how each
+competency is used (courses, activities, learning plan templates, learning plans), what its rule
+asks and whether a learner could ever meet it, its relations (each pair of the framework once, and a
+count per competency), and what "Check
+structure" finds: a rule that can never fire, a rule over a single child or with no children, an
+empty description or ID number, a competency nothing uses, custom colours under a 4.5:1 contrast.
+Usage counts are exact only for a viewer who may list every use at the site and whom no role refuses
+any of the capabilities core's lists ask in any context (the administrator excepted); a manager of the
+framework's competencies learns which kinds of use apply, and any other reader nothing about usage.
+
 The workspace is a view of the tab, not a page: it lists exactly the frameworks the list does, in the
 same context, so it is reached from Site administration and from a course category's menu alike,
 locked to that category with its subcategories, and keeps the category rules of
