@@ -151,6 +151,15 @@ export type Insights = {
     summary: {competencies: number, maxdepth: number, withrule: number, relations: number, findings: number},
 };
 
+/** What local_dimensions_set_competencies_appearance answers: the ids that changed, and every one's effective values. */
+export type AppearanceAnswer = {
+    changed: number[],
+    competencies: {id: number, fields: {name: string, value: string}[]}[],
+};
+
+/** The options of the appearance fields that are selects, plain labels; position + 1 is what the service takes. */
+export type AppearanceOptions = {tag1: string[], tag2: string[], type: string[]};
+
 /** A competency the canvas reveals at mount: the deep link, checked by the server against the framework shown. */
 export type RevealTarget = {id: number, pathids: number[]};
 
@@ -170,4 +179,6 @@ export type HubProps = {
     structures: Structures,
     /** The lens when it mounts (hub_map::LENSES): the address's, else the saved one, else none. */
     lens: 'none' | 'usage' | 'rules' | 'relations',
+    /** The bulk dock's appearance choices (hub_map::appearance_options()); null for a reader, absent from an older page. */
+    appearance?: AppearanceOptions | null,
 };

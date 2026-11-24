@@ -25,7 +25,8 @@
 
 import {load} from './amd';
 import type {AjaxRequest, RuleConfig} from './amd';
-import type {DeleteCheck, Insights, NodePage, PathItem, StructureNode, Usage} from './types';
+import type {FieldEntry} from './bulk';
+import type {AppearanceAnswer, DeleteCheck, Insights, NodePage, PathItem, StructureNode, Usage} from './types';
 
 /** A child competency as the rule dialogue lists it. */
 type Child = {id: number, shortname: string};
@@ -150,6 +151,31 @@ export const selectionData = (competencyid: number): Promise<[Usage, PathItem[]]
  */
 export const deleteCheck = (competencyid: number): Promise<DeleteCheck> =>
     call<DeleteCheck>('local_dimensions_competency_delete_check', {competencyid});
+
+/**
+ * What deleting each of several competencies would destroy, and whether core would refuse it, in one request.
+ *
+ * @param {Array} ids The competencies.
+ * @returns {Promise} Resolves with the checks in the same order.
+ */
+export const deleteChecks = (ids: number[]): Promise<DeleteCheck[]> =>
+    (ids.length === 0
+        ? Promise.resolve([])
+        : callMany(ids.map((competencyid) => ({methodname: 'local_dimensions_competency_delete_check', args: {competencyid}})))
+            .then((answers) => answers as DeleteCheck[]));
+
+/**
+ * Set or clear appearance fields of several competencies of the framework, all or nothing: the server checks the
+ * capability in the framework's context, that every id is the framework's, and each value as the competency form
+ * does (local_dimensions_set_competencies_appearance).
+ *
+ * @param {number} frameworkid The framework.
+ * @param {Array} competencyids The competencies, at most 200.
+ * @param {Array} fields The fields not left as they are.
+ * @returns {Promise} Resolves with the ids that changed and each competency's effective values.
+ */
+export const setAppearance = (frameworkid: number, competencyids: number[], fields: FieldEntry[]): Promise<AppearanceAnswer> =>
+    call<AppearanceAnswer>('local_dimensions_set_competencies_appearance', {frameworkid, competencyids, fields});
 
 /**
  * Delete a competency. Core answers false when it cannot be deleted (it is in use).

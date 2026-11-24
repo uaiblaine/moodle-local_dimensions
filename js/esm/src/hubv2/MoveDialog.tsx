@@ -26,8 +26,13 @@
  * them has a rule that core resets (move.ruleNotes, the same sentences the pick-on-the-map flow shows).
  * The commit button names the target and calls the workspace's one move (Hub.tsx moveUnder), which the
  * dialogue itself is the confirmation of. "Pick on the map" starts the pick-on-the-map flow instead.
- * It is always opened by another layer (a menu, the palette), already closed: on close the focus goes to
+ * It is opened by another layer (a menu, the palette), already closed: on close the focus goes to
  * the selected item of the pane that last had it (focusreturn.ts).
+ *
+ * The bulk dock opens it with several competencies, the topmost picked (bulk.topmost): its title counts them, its
+ * body names the first five, none of them or their descendants can be chosen, a parent they all have is refused, and
+ * once a parent is chosen it says how many already under it are skipped. Its rule notes name the parents of the
+ * ones that move. It then returns the focus to the dock's button, and "Pick on the map" is not offered.
  *
  * @module     local_dimensions/hubv2/MoveDialog
  * @copyright  2026 Anderson Blaine
@@ -42,12 +47,13 @@ import {FRAMEWORK_ID} from './graph';
 import {keyAction, navOrder} from './keynav';
 import {ruleNotes} from './move';
 import type {MoveParent} from './move';
-import {hitSelectable, parentChoices, pickerTree} from './moveparents';
+import {movePlan, preview} from './bulk';
+import {hitSelectable, parentChoices, pickerTree, sharedParent} from './moveparents';
 import type {ParentChoice} from './moveparents';
 import {searchable} from './paletteitems';
 import {track} from './pending';
 import {search} from './repository';
-import {fill, fillCount} from './strings';
+import {fill, fillCount, fillObject} from './strings';
 import type {Labels} from './strings';
 import {ROOT} from './tree';
 import type {Tree} from './tree';
@@ -60,7 +66,8 @@ const DEBOUNCE_MS = 300;
 export type MoveDialogProps = {
     labels: Labels,
     tree: Tree,
-    moving: StructureNode,
+    // The competencies to move: one from a node's menu, the topmost picked from the bulk dock.
+    subjects: StructureNode[],
     frameworkid: number,
     frameworkname: string,
     rtl: boolean,
@@ -107,14 +114,76 @@ const choiceClass = (chosen: boolean): string => (chosen
     : 'local-dimensions-hubv2-pick');
 
 /**
+ * The dialogue's title: the competency's name, or how many the bulk dock moves.
+ *
+ * @param {object} labels The labels.
+ * @param {Array} subjects The competencies to move.
+ * @returns {string} The title.
+ */
+const titleOf = (labels: Labels, subjects: StructureNode[]): string => (subjects.length > 1
+    ? fillCount(labels, 'hubv2_bulk_move_title', subjects.length)
+    : fill(labels.hubv2_moveto_title, subjects[0].shortname));
+
+/**
+ * The commit button's words: the target named once chosen, with the number the bulk dock moves.
+ *
+ * @param {object} labels The labels.
+ * @param {object|null} target The chosen parent.
+ * @param {boolean} bulk Whether several competencies move.
+ * @param {number} count How many will move.
+ * @returns {string} The words.
+ */
+const commitLabelOf = (labels: Labels, target: Target | null, bulk: boolean, count: number): string => {
+    if (!target) {
+        return labels.hubv2_move;
+    }
+    if (bulk) {
+        return target.id === ROOT
+            ? fillCount(labels, 'hubv2_bulk_move_commitroot', count)
+            : fillObject(labels.hubv2_bulk_move_commit, {count: String(count), name: target.name});
+    }
+    return target.id === ROOT ? labels.hubv2_moveto_commitroot : fill(labels.hubv2_moveto_commit, target.name);
+};
+
+/**
+ * What the bulk dock's move says above the picker: the first five names, and once a parent is chosen how many
+ * already under it are skipped. Nothing for one competency.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The lines, or nothing.
+ */
+const BulkLines = (props: {labels: Labels, subjects: StructureNode[], skipped: number}): ReactNode => {
+    const {labels, subjects, skipped} = props;
+    if (subjects.length < 2) {
+        return null;
+    }
+    const names = preview(subjects.map((subject) => subject.shortname));
+    return (
+        <>
+            <ul className="local-dimensions-hubv2-bulknames">
+                {names.shown.map((name, index) => <li key={`${index}-${name}`}>{name}</li>)}
+                {names.more > 0 ? <li>{fill(labels.hubv2_bulk_more, String(names.more))}</li> : null}
+            </ul>
+            {skipped > 0 ? (
+                <p className="local-dimensions-hubv2-dialog-label">{fillCount(labels, 'hubv2_bulk_move_skipped', skipped)}</p>
+            ) : null}
+        </>
+    );
+};
+
+/**
  * The dialogue.
  *
  * @param {object} props The props.
  * @returns {ReactNode} The dialogue.
  */
 const MoveDialog = (props: MoveDialogProps): ReactNode => {
-    const {labels, tree, moving, frameworkid, frameworkname, rtl, canpick, loadBranch, freshParent, onPick, onCommit, onClose,
+    const {labels, tree, subjects, frameworkid, frameworkname, rtl, loadBranch, freshParent, onPick, onCommit, onClose,
         onLostFocus, onTarget} = props;
+    const bulk = subjects.length > 1;
+    const canpick = props.canpick && !bulk;
+    const ids = useMemo(() => subjects.map((subject) => subject.id), [subjects]);
+    const currentparent = sharedParent(tree, ids);
     const [open, setOpen] = useState<number[]>([]);
     const [active, setActive] = useState<string>(FRAMEWORK_ID);
     const [target, setTarget] = useState<Target | null>(null);
@@ -137,8 +206,12 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
         onTarget?.(targetid);
     }, [targetid, onTarget]);
 
-    const choices = useMemo(() => parentChoices(tree, open, moving.id, topname), [tree, open, moving.id, topname]);
-    const order = useMemo(() => navOrder(pickerTree(tree, open, moving.id)), [tree, open, moving.id]);
+    const choices = useMemo(() => parentChoices(tree, open, ids, topname), [tree, open, ids, topname]);
+    const order = useMemo(() => navOrder(pickerTree(tree, open, ids)), [tree, open, ids]);
+    // Which of the subjects a chosen parent would move, and which it already holds.
+    const plan = target ? movePlan(tree, ids, target.id) : {move: ids, skipped: []};
+    // The parents the moved ones leave, each once, as a key the notes' effect can compare.
+    const leaving = [...new Set(plan.move.map((subject) => tree.nodes[subject]?.parentid ?? ROOT))].join(',');
     const searching = searchable(query);
 
     useEffect(() => {
@@ -163,22 +236,25 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
         return () => window.clearTimeout(timer);
     }, [query, frameworkid]);
 
-    // Once a parent is chosen, both parents are read afresh: whether each has a rule is what the note says.
+    // Once a parent is chosen, the parents are read afresh: whether each has a rule is what the note says. Several
+    // subjects may leave several parents; each is named once.
     useEffect(() => {
         const ask = ++noted.current;
         if (!target) {
             setNotes([]);
             return;
         }
-        track('moveto', Promise.all([freshParent(moving.parentid), freshParent(target.id)]))
-            .then(([oldparent, newparent]) => {
+        const parents = leaving === '' ? [] : leaving.split(',').map(Number);
+        track('moveto', Promise.all([Promise.all(parents.map(freshParent)), freshParent(target.id)]))
+            .then(([oldparents, newparent]) => {
                 if (ask === noted.current) {
-                    setNotes(ruleNotes(labels, oldparent, newparent));
+                    const notes = oldparents.flatMap((oldparent) => ruleNotes(labels, oldparent, null));
+                    setNotes([...new Set([...notes, ...ruleNotes(labels, null, newparent)])]);
                 }
                 return null;
             })
             .catch(notifyError);
-    }, [target, moving.parentid, freshParent, labels]);
+    }, [target, leaving, freshParent, labels]);
 
     /**
      * Focus a row of the tree once it is drawn.
@@ -294,15 +370,12 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
      * @returns {void}
      */
     const chooseHit = (item: PathItem): void => {
-        if (hitSelectable(item, moving.id, moving.parentid)) {
+        if (hitSelectable(item, ids, currentparent)) {
             setTarget({id: item.id, name: item.shortname});
         }
     };
 
-    let commitlabel = labels.hubv2_move;
-    if (target) {
-        commitlabel = target.id === ROOT ? labels.hubv2_moveto_commitroot : fill(labels.hubv2_moveto_commit, target.name);
-    }
+    const commitlabel = commitLabelOf(labels, target, bulk, plan.move.length);
     const activekey = choices.some((choice) => choice.key === active) ? active : FRAMEWORK_ID;
 
     return (
@@ -310,7 +383,7 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
             initialFocus={field} returnTo="item" onClose={onClose} onLostFocus={onLostFocus}>
             <div className="local-dimensions-hubv2-dialog-head">
                 <h2 id={titleid} className="local-dimensions-hubv2-dialog-title">
-                    {fill(labels.hubv2_moveto_title, moving.shortname)}
+                    {titleOf(labels, subjects)}
                 </h2>
                 <button type="button" className="local-dimensions-hubv2-iconbtn" aria-label={labels['core:closebuttontitle']}
                     onClick={onClose}>
@@ -318,6 +391,7 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
                 </button>
             </div>
             <div className="local-dimensions-hubv2-dialog-body">
+                <BulkLines labels={labels} subjects={subjects} skipped={target ? plan.skipped.length : 0} />
                 <label className="visually-hidden" htmlFor={`${id}-search`}>{labels.hubv2_moveto_search}</label>
                 <input
                     ref={field}
@@ -347,7 +421,7 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
                         <ul ref={hitsRef} className="local-dimensions-hubv2-picklist" role="listbox"
                             aria-labelledby={`${id}-parent`} onKeyDown={onHitsKey}>
                             {(hits?.items ?? []).map((item, index) => {
-                                const selectable = hitSelectable(item, moving.id, moving.parentid);
+                                const selectable = hitSelectable(item, ids, currentparent);
                                 return (
                                     <li
                                         key={item.id}
@@ -408,8 +482,10 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
                                 {row.current ? (
                                     <span className="local-dimensions-hubv2-pick-note">{labels.hubv2_moveto_current}</span>
                                 ) : null}
-                                {row.kind === 'competency' && row.id === moving.id ? (
-                                    <span className="local-dimensions-hubv2-pick-note">{labels.hubv2_moveto_self}</span>
+                                {row.kind === 'competency' && ids.includes(row.id) ? (
+                                    <span className="local-dimensions-hubv2-pick-note">
+                                        {bulk ? labels.hubv2_bulk_moveto_picked : labels.hubv2_moveto_self}
+                                    </span>
                                 ) : null}
                             </li>
                         ))}
@@ -429,7 +505,7 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
                     </button>
                 ) : null}
                 <button type="button" className="btn btn-sm btn-secondary" onClick={onClose}>{labels['core:cancel']}</button>
-                <button type="button" className="btn btn-sm btn-primary" disabled={!target}
+                <button type="button" className="btn btn-sm btn-primary" disabled={!target || plan.move.length === 0}
                     onClick={() => {
                         if (target) {
                             onCommit(target.id);

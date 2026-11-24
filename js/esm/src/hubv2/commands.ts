@@ -50,15 +50,17 @@ export type ActionId =
     | 'viewoutline' | 'viewmap' | 'viewboth' | 'expandall' | 'collapseall' | 'addtop' | 'summary'
     | 'lensnone' | 'lensusage' | 'lensrules' | 'lensrelations' | 'check' | 'nextfinding' | 'prevfinding'
     | 'fwedit' | 'fwscale' | 'fwhide' | 'fwshow' | 'fwduplicate' | 'fwexport' | 'fwdelete'
-    | 'fwnew' | 'fwimport';
+    | 'fwnew' | 'fwimport'
+    | 'bulkappearance' | 'bulkmove' | 'bulkdelete';
 
 /**
  * Where an action applies: to one competency (the panel, its menu and the palette's first group), to
  * the move in progress (the panel's move section and the palette), to the workspace (the palette's
  * last group), to the framework on the root (the root's panel, its menu and the palette's first group), or to
- * the tab's structures as a whole (the tab's Structures menu and the palette's last group).
+ * the tab's structures as a whole (the tab's Structures menu and the palette's last group), or to the competencies
+ * picked for the bulk dock (the dock alone).
  */
-export type Scope = 'node' | 'move' | 'workspace' | 'framework' | 'structures';
+export type Scope = 'node' | 'move' | 'workspace' | 'framework' | 'structures' | 'bulk';
 
 /** A key and its modifiers; mod is Ctrl, or Cmd on a Mac. */
 export type Shortcut = {key: string, mod?: boolean, shift?: boolean, alt?: boolean};
@@ -112,6 +114,8 @@ export type ActionContext = {
     usagelevel?: UsageLevel | null,
     // How many findings the checker has, null before the insights are read.
     findings?: number | null,
+    // How many competencies are picked for the bulk dock; none when not said.
+    picked?: number,
 };
 
 /** Every action, in the menu's order. */
@@ -162,6 +166,9 @@ export const ACTIONS: ActionSpec[] = [
         shortcut: {key: 'F8', shift: true}},
     {id: 'fwnew', scope: 'structures', group: 1, label: 'central_frameworks_new', icon: 'fa-plus'},
     {id: 'fwimport', scope: 'structures', group: 1, label: 'central_frameworks_import_title', icon: 'fa-upload'},
+    {id: 'bulkappearance', scope: 'bulk', group: 1, label: 'hubv2_bulk_appearance', icon: 'fa-palette', changes: true},
+    {id: 'bulkmove', scope: 'bulk', group: 1, label: 'hubv2_bulk_move', icon: 'fa-folder-tree', changes: true},
+    {id: 'bulkdelete', scope: 'bulk', group: 2, label: 'hubv2_bulk_delete', icon: 'fa-trash', danger: true, changes: true},
 ];
 
 /** The views the palette switches to, by action. */
@@ -303,6 +310,10 @@ export const actionState = (id: ActionId, context: ActionContext): ActionState =
     }
     if (spec.scope === 'structures') {
         return context.cancreate && !context.moving ? 'enabled' : 'hidden';
+    }
+    if (spec.scope === 'bulk') {
+        // The selection variant exists for a manager only (Design System D129), and the dock while something is picked.
+        return context.frameworkcanmanage && (context.picked ?? 0) > 0 && !context.moving ? 'enabled' : 'hidden';
     }
     if (spec.scope === 'move') {
         if (!context.moving) {

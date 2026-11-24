@@ -37,6 +37,16 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  * everything the server says of it is fresh; the opened branches and the selection survive the reload
  * (carry.ts). Above the map's columns, the taxonomy term of each level (ColumnHeads.tsx).
  *
+ * Beside the one competency the panel shows, a manager picks several for the bulk dock (multiselect.ts): Space on an
+ * item, Shift+Up and Shift+Down from the anchor, Ctrl+A (Cmd+A) for the item's level, a box on each row and card,
+ * Ctrl+click (Cmd+click) on a card; Escape releases them. The picks survive opening and closing branches and lose the
+ * competencies that leave the tree. The dock (Dock.tsx) sits after the panes and acts on them through the registry's
+ * `bulk` scope: "Set appearance…" (BulkDialogs.tsx, one all-or-nothing call of
+ * local_dimensions_set_competencies_appearance), "Move under…" ("Move to" with every topmost pick, then core's
+ * set_parent_competency once per competency, in the tree's order, stopping at the first refusal) and "Delete…" (core's
+ * refusal reasons first, then core's delete for the competencies it allows). Each then reads the touched branches and
+ * the insights again, says the outcome in the polite region, and keeps picked only what failed.
+ *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -54,6 +64,9 @@ import {
   shortcutCaps,
   specOf
 } from "./commands";
+import { AppearanceDialog, DeleteDialog } from "./BulkDialogs";
+import { APPEARANCE_FIELDS, appearanceOutcome, deleteOutcome, deletionSummary, moveOutcome, movePlan, topmost } from "./bulk";
+import Dock from "./Dock";
 import Editor from "./Editor";
 import { codeTitle, findingCounts, orderFindings, stepFinding } from "./findings";
 import { NO_IMPACT, deleteImpact, moveImpact, sameImpact } from "./impact";
@@ -85,6 +98,7 @@ import { branchTarget, entryKey, isTypeAheadKey, keyAction, navOrder, nodeName, 
 import Outline, { OUTLINE_ID } from "./Outline";
 import { editorSlot, outlineRows } from "./outlinerows";
 import { useRoving } from "./roving";
+import { NONE, extend, keepOnly, pickGesture, pickLevel, prune, toggle as togglePicked } from "./multiselect";
 import { LAYOUT_EVENT, activation, isLayout, panesOf } from "./selection";
 import Splitter from "./Splitter";
 import { OUTLINE_WIDTH, clampWidth, storeWidth, storedWidth } from "./outlinewidth";
@@ -102,6 +116,7 @@ import {
   countCompetencies,
   createCompetency,
   deleteCheck,
+  deleteChecks,
   deleteCompetency,
   getNode,
   getNodes,
@@ -110,6 +125,7 @@ import {
   moveUpTimes,
   renameCompetency,
   selectionData,
+  setAppearance,
   setParent,
   updateRule
 } from "./repository";
@@ -243,6 +259,11 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const [impact, setImpactState] = useState(NO_IMPACT);
   const moveDialogRef = useRef(null);
   moveDialogRef.current = moveDialog;
+  const multiselect = framework.canmanage;
+  const [picked, setPicked] = useState(NONE);
+  const pickedRef = useRef(picked);
+  pickedRef.current = picked;
+  const [bulk, setBulk] = useState(null);
   const commit = useCallback((update) => {
     treeRef.current = update(treeRef.current);
     setTree(treeRef.current);
@@ -631,9 +652,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       setMeasured((current) => ({ ...current, ...sizes }));
     }
     const selections = changes.getByType("select");
-    const picked = selections.find((change) => change.selected);
-    if (picked) {
-      const id = picked.id === FRAMEWORK_ID ? ROOT : competencyOf(picked.id);
+    const picked2 = selections.find((change) => change.selected);
+    if (picked2) {
+      const id = picked2.id === FRAMEWORK_ID ? ROOT : competencyOf(picked2.id);
       if (id === null) {
         return;
       }
@@ -779,6 +800,161 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       })());
     })().catch(notifyError);
   }, "remove");
+  const updatePicked = /* @__PURE__ */ __name((update) => {
+    pickedRef.current = update(pickedRef.current);
+    setPicked(pickedRef.current);
+  }, "updatePicked");
+  const pick = /* @__PURE__ */ __name((id) => {
+    if (!multiselect || movingRef.current !== null || !treeRef.current.nodes[id]) {
+      return;
+    }
+    updatePicked((current) => togglePicked(current, id));
+  }, "pick");
+  const clearPicked = /* @__PURE__ */ __name(() => {
+    updatePicked(() => NONE);
+    announce(labels.hubv2_bulk_cleared);
+  }, "clearPicked");
+  const checkDeletion = /* @__PURE__ */ __name(() => {
+    const ids = topmost(treeRef.current, pickedRef.current.ids);
+    setBulk({ kind: "delete", ids, summary: null });
+    track("bulk", deleteChecks(ids)).then((checks) => {
+      const summary = deletionSummary(labels, ids.map((id, index2) => ({
+        id,
+        name: treeRef.current.nodes[id]?.shortname ?? "",
+        check: checks[index2] ?? null
+      })));
+      setBulk((current) => current && current.kind === "delete" && current.ids === ids ? { ...current, summary } : current);
+      setImpact(new Set(summary.allowed));
+      return null;
+    }).catch((error) => {
+      setBulk(null);
+      notifyError(error);
+    });
+  }, "checkDeletion");
+  const closeBulk = /* @__PURE__ */ __name(() => {
+    setBulk(null);
+    setImpact(NO_IMPACT);
+  }, "closeBulk");
+  const rereadParent = /* @__PURE__ */ __name(async (parent, atleast = 1) => {
+    if (hasBranch(treeRef.current, parent)) {
+      await reloadBranch(parent, atleast);
+    }
+    await refreshParent(parent);
+  }, "rereadParent");
+  const commitAppearance = /* @__PURE__ */ __name(async (fields) => {
+    const ids = pickedRef.current.ids;
+    try {
+      const answer = await track("bulk", setAppearance(framework.id, ids, fields));
+      const names2 = APPEARANCE_FIELDS;
+      commit((current) => answer.competencies.reduce((next, item) => {
+        const known = next.nodes[item.id];
+        if (!known) {
+          return next;
+        }
+        const fresh = { ...known };
+        item.fields.filter((field) => names2.includes(field.name)).forEach((field) => {
+          fresh[field.name] = field.value;
+        });
+        return replaceNode(next, fresh);
+      }, current));
+      setBulk(null);
+      updatePicked(() => NONE);
+      announce(appearanceOutcome(labels, answer.changed.length));
+      settled("bulkappearance");
+      return null;
+    } catch (error) {
+      return messageOf(error);
+    }
+  }, "commitAppearance");
+  const bulkMove = /* @__PURE__ */ __name((target) => {
+    closeBulk();
+    const plan = movePlan(treeRef.current, pickedRef.current.ids, target);
+    track("bulk", (async () => {
+      const result = { moved: 0, skipped: plan.skipped.length, refused: null, left: 0 };
+      const moved = [];
+      const parents = /* @__PURE__ */ new Set();
+      let failed = null;
+      for (let index2 = 0; index2 < plan.move.length; index2++) {
+        const id = plan.move[index2];
+        const node2 = treeRef.current.nodes[id];
+        announce(fillObject(labels.hubv2_bulk_move_progress, {
+          position: String(index2 + 1),
+          total: String(plan.move.length)
+        }));
+        try {
+          await setParent(id, target);
+        } catch (error) {
+          failed = id;
+          result.refused = { name: node2?.shortname ?? "", reason: messageOf(error) };
+          result.left = plan.move.length - index2 - 1;
+          break;
+        }
+        moved.push(id);
+        parents.add(node2?.parentid ?? ROOT);
+      }
+      result.moved = moved.length;
+      moved.forEach((id) => commit((current) => forgetBranch(current, id)));
+      for (const parent of parents) {
+        await rereadParent(parent);
+      }
+      if (moved.length > 0) {
+        await rereadParent(target, (treeRef.current.branches[target]?.ids.length ?? 0) + moved.length);
+        if (hasBranch(treeRef.current, target)) {
+          commit((current) => setExpanded(current, target, true));
+        }
+      }
+      if (selectedRef.current !== null && !treeRef.current.nodes[selectedRef.current]) {
+        choose(null);
+      }
+      const stopped = failed;
+      updatePicked((current) => stopped === null ? NONE : keepOnly(current, plan.move.slice(plan.move.indexOf(stopped))));
+      announce(moveOutcome(labels, result));
+      if (moved.length > 0) {
+        settled("bulkmove");
+      }
+    })()).catch(notifyError);
+  }, "bulkMove");
+  const bulkDelete = /* @__PURE__ */ __name((summary) => {
+    closeBulk();
+    track("bulk", (async () => {
+      const deleted = [];
+      const failed = [];
+      const parents = /* @__PURE__ */ new Set();
+      for (const id of summary.allowed) {
+        const node2 = treeRef.current.nodes[id];
+        const done = await deleteCompetency(id).catch(() => false);
+        if (done === false) {
+          failed.push(id);
+          continue;
+        }
+        deleted.push(id);
+        parents.add(node2?.parentid ?? ROOT);
+        commit((current) => removeNode(current, id));
+      }
+      for (const parent of parents) {
+        await rereadParent(parent);
+      }
+      setCount(await countCompetencies(framework.id));
+      if (selectedRef.current !== null && !treeRef.current.nodes[selectedRef.current]) {
+        choose(null);
+      }
+      const kept = [...summary.refused.map((item) => item.id), ...failed];
+      const names2 = kept.map((id) => treeRef.current.nodes[id]?.shortname ?? summary.refused.find((item) => item.id === id)?.name ?? "");
+      updatePicked((current) => kept.length === 0 ? NONE : keepOnly(current, kept));
+      announce(deleteOutcome(labels, deleted.length, names2));
+      if (deleted.length > 0) {
+        settled("bulkdelete");
+      }
+    })()).catch(notifyError);
+  }, "bulkDelete");
+  const runBulkAction = /* @__PURE__ */ __name((id) => {
+    setMenu(null);
+    if (id === "bulkappearance" || id === "bulkmove") {
+      setBulk({ kind: id === "bulkappearance" ? "appearance" : "move" });
+    } else if (id === "bulkdelete") {
+      checkDeletion();
+    }
+  }, "runBulkAction");
   const revealItem = /* @__PURE__ */ __name((item) => {
     track("reveal", reveal(item.id, item.pathids)).catch(notifyError);
   }, "revealItem");
@@ -956,7 +1132,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       cancreate: props.structures.cancreate,
       lens: lensRef.current,
       usagelevel: indexRef.current ? indexRef.current.answer.usagelevel : null,
-      findings: indexRef.current ? indexRef.current.answer.checks.length : null
+      findings: indexRef.current ? indexRef.current.answer.checks.length : null,
+      picked: pickedRef.current.ids.length
     };
   }, "contextFor");
   const switchLayout = /* @__PURE__ */ __name((next) => {
@@ -1202,6 +1379,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       runNodeAction(id, context.node);
     } else if (scope === "framework" || scope === "structures") {
       runFrameworkAction(id);
+    } else if (scope === "bulk") {
+      runBulkAction(id);
     } else {
       runWorkspaceAction(id);
     }
@@ -1291,8 +1470,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     return true;
   }, "keyCommand");
   const onRootKeyDown = /* @__PURE__ */ __name((event) => {
+    if (event.key === "Escape" && pickedRef.current.ids.length > 0 && menu === null && !palette && moveDialog === null && bulk === null && editorRef.current === null && movingRef.current === null) {
+      event.preventDefault();
+      clearPicked();
+      return;
+    }
     const command = shortcutAction(event, "map");
-    if (palette || moveDialog !== null) {
+    if (palette || moveDialog !== null || bulk !== null) {
       return;
     }
     if (command === "nextfinding" || command === "prevfinding") {
@@ -1320,13 +1504,57 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       return null;
     }).catch(notifyError);
   }, "toggleDisplay");
+  const pickKey = /* @__PURE__ */ __name((event, stop) => {
+    if (!multiselect || movingRef.current !== null) {
+      return false;
+    }
+    const key = stop.activeRef.current;
+    const id = competencyOf(key);
+    const gesture = pickGesture(event);
+    if (gesture === "toggle" && id !== null) {
+      pick(id);
+      return true;
+    }
+    if (gesture === "up" || gesture === "down") {
+      extendTo(stop, key, id, gesture === "down");
+      return true;
+    }
+    if (gesture === "level") {
+      updatePicked((current) => pickLevel(current, navOrder(treeRef.current), key));
+      return true;
+    }
+    return false;
+  }, "pickKey");
+  const extendTo = /* @__PURE__ */ __name((stop, key, from, down) => {
+    const order2 = navOrder(treeRef.current);
+    const index2 = order2.findIndex((item) => item.key === key);
+    const next = index2 < 0 ? void 0 : order2[index2 + (down ? 1 : -1)];
+    if (!next) {
+      return;
+    }
+    stop.focusKey(next.key);
+    const to = competencyOf(next.key);
+    if (to !== null) {
+      updatePicked((current) => extend(current, order2, from, to));
+    }
+  }, "extendTo");
+  const ownKey = /* @__PURE__ */ __name((event, element, stop) => {
+    if (element !== event.target && (event.key === "Enter" || event.key === " ")) {
+      return true;
+    }
+    if (pickKey(event, stop)) {
+      event.preventDefault();
+      return true;
+    }
+    return false;
+  }, "ownKey");
   const walk = /* @__PURE__ */ __name((event, stop, selector, from) => {
     const target = event.target;
     const element = target.closest(selector);
     if (!element || !event.currentTarget.contains(element)) {
       return;
     }
-    if (element !== target && (event.key === "Enter" || event.key === " ")) {
+    if (ownKey(event, element, stop)) {
       return;
     }
     const command = shortcutAction(event, from);
@@ -1484,16 +1712,27 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     pairs: mappairs ? mappairs.edges : void 0
   }), [marks, findingsmarked, findingwords, impact, lens, index, mappairs]);
   const relatedids = useMemo(() => related.map((item) => item.id), [related]);
+  const pickedset = useMemo(() => new Set(picked.ids), [picked]);
   const graph = useMemo(() => buildGraph({
     tree,
     framework: { ...framework, competencycount: count },
     selected,
     related: relatedids,
     moving,
-    labels: { roledescription: labels.hubv2_noderole, more: moreLabel, name: nameOf, framework: frameworkName },
+    labels: {
+      roledescription: labels.hubv2_noderole,
+      more: moreLabel,
+      name: nameOf,
+      framework: frameworkName,
+      picked: labels.hubv2_bulk_picked
+    },
     rtl,
-    decor
-  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl, decor]);
+    decor,
+    picked: pickedset
+  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl, decor, pickedset]);
+  useEffect(() => {
+    updatePicked((current) => prune(current, tree));
+  }, [tree]);
   const graphRef = useRef(graph);
   graphRef.current = graph;
   const nodes = useMemo(() => graph.nodes.map((node2) => {
@@ -1535,12 +1774,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         await reloadBranch(id, carry.loaded[id] ?? 1);
         commit((current) => setExpanded(current, id, true));
       }
-      const picked = carry.selected;
-      if (picked) {
-        await ensureVisible(picked.id, picked.pathids);
-        if (treeRef.current.nodes[picked.id]) {
-          centreOn.current = competencyKey(picked.id);
-          choose(picked.id);
+      const picked2 = carry.selected;
+      if (picked2) {
+        await ensureVisible(picked2.id, picked2.pathids);
+        if (treeRef.current.nodes[picked2.id]) {
+          centreOn.current = competencyKey(picked2.id);
+          choose(picked2.id);
         }
       }
     })()).catch(notifyError);
@@ -1629,9 +1868,23 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     [levels, framework.taxonomies, framework.taxonomyfallback, rtl]
   );
   const editLevels = /* @__PURE__ */ __name(() => runAction("fwedit", null), "editLevels");
+  const pickRef = useRef(pick);
+  pickRef.current = pick;
+  const pickOnMap = useCallback((id) => pickRef.current(id), []);
   const canvasActions = useMemo(
-    () => ({ labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu }),
-    [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu]
+    () => ({
+      labels,
+      pagesize,
+      rtl,
+      toggle: toggleOnMap,
+      loadMore,
+      menuFor,
+      menuOpen,
+      openMenu: openMapMenu,
+      multiselect,
+      pick: pickOnMap
+    }),
+    [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu, multiselect, pickOnMap]
   );
   const outlineActions = {
     /**
@@ -1689,7 +1942,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     openMenu: /* @__PURE__ */ __name((id, anchor) => {
       openMenu(id, anchor, "outline");
     }, "openMenu"),
-    toggleDisplay
+    toggleDisplay,
+    pick
   };
   const outlineHints = /* @__PURE__ */ __name(() => {
     const hints = [];
@@ -1731,7 +1985,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2672,
+            lineNumber: 3037,
             columnNumber: 21
           }
         ) };
@@ -1760,7 +2014,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2687,
+            lineNumber: 3052,
             columnNumber: 21
           }
         ) };
@@ -1804,7 +2058,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const nameOfItem = /* @__PURE__ */ __name((id) => id === ROOT ? framework.shortname : tree.nodes[id]?.shortname, "nameOfItem");
   const overlays = /* @__PURE__ */ __name(() => {
     const menuname = menu ? nameOfItem(menu.id) : void 0;
-    const movingnode2 = moveDialog !== null ? tree.nodes[moveDialog] : void 0;
+    const movingnode2 = moveto;
     const offered = palette ? actionsFor(["node", "framework", "move", "workspace", "structures"], selectedcontext) : [];
     const onthis = /* @__PURE__ */ __name((view) => view.spec.scope === "node" || view.spec.scope === "framework", "onthis");
     const enabled = offered.filter((view) => view.state === "enabled");
@@ -1828,7 +2082,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2790,
+          lineNumber: 3156,
           columnNumber: 21
         }
       ) : null,
@@ -1856,7 +2110,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2805,
+          lineNumber: 3171,
           columnNumber: 21
         }
       ) : null,
@@ -1865,7 +2119,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         {
           labels,
           tree,
-          moving: movingnode2,
+          subjects: movesubjects,
           frameworkid: framework.id,
           frameworkname: framework.shortname,
           rtl,
@@ -1894,17 +2148,90 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2825,
+          lineNumber: 3191,
+          columnNumber: 21
+        }
+      ) : null,
+      bulksubjects.length > 0 ? /* @__PURE__ */ jsxDEV(
+        MoveDialog,
+        {
+          labels,
+          tree,
+          subjects: bulksubjects,
+          frameworkid: framework.id,
+          frameworkname: framework.shortname,
+          rtl,
+          pagesize,
+          canpick: false,
+          loadBranch: (parent, more) => track("children", loadPage(parent, more)),
+          freshParent,
+          onPick: closeBulk,
+          onCommit: bulkMove,
+          onClose: closeBulk,
+          onLostFocus: restoreFocus
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 3221,
+          columnNumber: 21
+        }
+      ) : null,
+      bulk !== null && bulk.kind === "appearance" ? /* @__PURE__ */ jsxDEV(
+        AppearanceDialog,
+        {
+          labels,
+          names: picked.ids.map((id) => tree.nodes[id]?.shortname ?? ""),
+          options: props.appearance ?? { tag1: [], tag2: [], type: [] },
+          onCommit: commitAppearance,
+          onClose: closeBulk,
+          onLostFocus: restoreFocus
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 3239,
+          columnNumber: 21
+        }
+      ) : null,
+      bulk !== null && bulk.kind === "delete" ? /* @__PURE__ */ jsxDEV(
+        DeleteDialog,
+        {
+          labels,
+          names: bulk.ids.map((id) => tree.nodes[id]?.shortname ?? ""),
+          summary: bulk.summary,
+          onCommit: () => {
+            if (bulk.summary) {
+              bulkDelete(bulk.summary);
+            }
+          },
+          onClose: closeBulk,
+          onLostFocus: restoreFocus
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 3249,
           columnNumber: 21
         }
       ) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2788,
+      lineNumber: 3154,
       columnNumber: 13
     });
   }, "overlays");
   const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
+  const moveto = moveDialog !== null ? tree.nodes[moveDialog] : void 0;
+  const movesubjects = useMemo(() => moveto ? [moveto] : [], [moveto]);
+  const bulkmoving = bulk !== null && bulk.kind === "move";
+  const bulksubjects = useMemo(
+    () => bulkmoving ? topmost(tree, picked.ids).map((id) => tree.nodes[id]) : [],
+    [bulkmoving, tree, picked]
+  );
   const offeredlenses = LENSES.filter((value) => value !== "usage" || lens === "usage" || index?.answer.usagelevel !== "none");
   const facts = insightFacts(index);
   const orderedfindings = orderFindings(facts.checks);
@@ -1936,7 +2263,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     false,
     {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2879,
+      lineNumber: 3295,
       columnNumber: 9
     }
   ) : null, "checkerPanel");
@@ -1946,29 +2273,32 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   if (moving !== null) {
     rootclasses.push("local-dimensions-hubv2-picking");
   }
+  if (picked.ids.length > 0) {
+    rootclasses.push("local-dimensions-hubv2-haspicks");
+  }
   return /* @__PURE__ */ jsxDEV("div", { className: rootclasses.join(" "), style: widthstyle, ref: rootRef, onKeyDown: onRootKeyDown, children: [
     /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-main", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(LensSwitch, { labels, lens, offered: offeredlenses, onChange: changeLens }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2912,
+          lineNumber: 3331,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2913,
+          lineNumber: 3332,
           columnNumber: 21
         }),
         panes.map ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2916,
+            lineNumber: 3335,
             columnNumber: 29
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2915,
+          lineNumber: 3334,
           columnNumber: 25
         }) : null,
         /* @__PURE__ */ jsxDEV(
@@ -1984,7 +2314,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2919,
+            lineNumber: 3338,
             columnNumber: 21
           }
         ),
@@ -2003,11 +2333,11 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               labels.hubv2_commands,
               /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-keys", "aria-hidden": "true", children: shortcutCaps(PALETTE_SHORTCUT, mac).map((cap) => /* @__PURE__ */ jsxDEV("kbd", { children: cap }, cap, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2933,
+                lineNumber: 3352,
                 columnNumber: 79
               })) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2932,
+                lineNumber: 3351,
                 columnNumber: 25
               })
             ]
@@ -2016,13 +2346,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2921,
+            lineNumber: 3340,
             columnNumber: 21
           }
         )
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2911,
+        lineNumber: 3330,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-panes", ref: panesBox, children: [
@@ -2053,13 +2383,15 @@ const Workspace = /* @__PURE__ */ __name((props) => {
             marks,
             findings: findingsmarked,
             findingwords,
-            impact
+            impact,
+            multiselect,
+            picked: pickedset
           },
           void 0,
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2939,
+            lineNumber: 3358,
             columnNumber: 25
           }
         ) : null,
@@ -2078,7 +2410,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2968,
+            lineNumber: 3389,
             columnNumber: 25
           }
         ) : null,
@@ -2096,6 +2428,15 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               mapStop.onFocus(event);
             },
             onBlur: mapStop.onBlur,
+            onClickCapture: (event) => {
+              const card = event.target.closest(NODE_SELECTOR);
+              const id = card && (event.ctrlKey || event.metaKey) ? competencyOf(card.dataset.id ?? "") : null;
+              if (multiselect && id !== null) {
+                event.preventDefault();
+                event.stopPropagation();
+                pick(id);
+              }
+            },
             children: [
               /* @__PURE__ */ jsxDEV(
                 ColumnHeads,
@@ -2113,7 +2454,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                 false,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                  lineNumber: 2992,
+                  lineNumber: 3423,
                   columnNumber: 29
                 }
               ),
@@ -2160,18 +2501,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                       false,
                       {
                         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                        lineNumber: 3036,
+                        lineNumber: 3467,
                         columnNumber: 37
                       }
                     ),
                     /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 3038,
+                      lineNumber: 3469,
                       columnNumber: 37
                     }),
                     /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 3039,
+                      lineNumber: 3470,
                       columnNumber: 37
                     })
                   ]
@@ -2180,12 +2521,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                 true,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                  lineNumber: 3003,
+                  lineNumber: 3434,
                   columnNumber: 33
                 }
               ) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 3002,
+                lineNumber: 3433,
                 columnNumber: 29
               })
             ]
@@ -2194,18 +2535,36 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2979,
+            lineNumber: 3400,
             columnNumber: 25
           }
         ) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2937,
+        lineNumber: 3356,
         columnNumber: 17
-      })
+      }),
+      /* @__PURE__ */ jsxDEV(
+        Dock,
+        {
+          labels,
+          count: picked.ids.length,
+          hidden: picked.ids.filter((id) => !drawn.has(id)).length,
+          actions: actionsFor(["bulk"], selectedcontext),
+          onRun: (id) => runAction(id, null),
+          onClear: clearPicked
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 3476,
+          columnNumber: 17
+        }
+      )
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2910,
+      lineNumber: 3329,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -2249,7 +2608,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3064,
+            lineNumber: 3503,
             columnNumber: 21
           }
         ),
@@ -2259,19 +2618,19 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 3046,
+        lineNumber: 3485,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3083,
+      lineNumber: 3522,
       columnNumber: 13
     }),
     overlays()
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2909,
+    lineNumber: 3328,
     columnNumber: 9
   });
 }, "Workspace");
@@ -2283,21 +2642,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3101,
+      lineNumber: 3540,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Workspace, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3106,
+    lineNumber: 3545,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3105,
+    lineNumber: 3544,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3104,
+    lineNumber: 3543,
     columnNumber: 9
   });
 }, "Hub");

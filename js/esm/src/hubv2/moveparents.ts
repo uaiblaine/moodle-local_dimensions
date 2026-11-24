@@ -22,7 +22,9 @@
  * framework is the root, standing for the top level. The competency being moved is drawn and cannot be
  * chosen, and it never opens, so none of its descendants is ever offered (core would make the move a
  * cycle; the canvas refuses before asking). Its current parent is marked and cannot be chosen either:
- * a move there changes nothing.
+ * a move there changes nothing. The bulk dock moves several competencies at once: each of them is closed and
+ * cannot be chosen, and a parent is marked current, and refused, only when it is every one's parent already (a
+ * competency already under the chosen parent is skipped, bulk.movePlan).
  *
  * Pure: Jest pins it without a DOM.
  *
@@ -46,20 +48,34 @@ export type ParentChoice = OutlineRow & {
 };
 
 /**
- * The workspace's tree as the dialogue walks it: its own opened branches, and the moved competency
- * closed and childless, so the keys and the rows never go below it.
+ * The competencies being moved, as a list.
+ *
+ * @param {number|Array} moving The competency, or the competencies.
+ * @returns {Array} The ids.
+ */
+const subjectsOf = (moving: number | number[]): number[] => (Array.isArray(moving) ? moving : [moving]);
+
+/**
+ * The workspace's tree as the dialogue walks it: its own opened branches, and the moved competencies
+ * closed and childless, so the keys and the rows never go below them.
  *
  * @param {object} tree The workspace's tree.
  * @param {Array} open The branches the dialogue opened.
- * @param {number} moving The competency being moved.
+ * @param {number|Array} moving The competency being moved, or the competencies.
  * @returns {object} The tree.
  */
-export const pickerTree = (tree: Tree, open: number[], moving: number): Tree => {
-    const node = tree.nodes[moving];
+export const pickerTree = (tree: Tree, open: number[], moving: number | number[]): Tree => {
+    const subjects = subjectsOf(moving);
+    const nodes = {...tree.nodes};
+    subjects.forEach((id) => {
+        if (nodes[id]) {
+            nodes[id] = {...nodes[id], haschildren: false};
+        }
+    });
     return {
-        nodes: node ? {...tree.nodes, [moving]: {...node, haschildren: false}} : tree.nodes,
+        nodes,
         branches: tree.branches,
-        expanded: open.filter((id) => id !== moving && tree.branches[id] !== undefined && !!tree.nodes[id]?.haschildren),
+        expanded: open.filter((id) => !subjects.includes(id) && tree.branches[id] !== undefined && !!tree.nodes[id]?.haschildren),
     };
 };
 
@@ -80,33 +96,47 @@ export const canMoveUnder = (tree: Tree, target: number, moving: number, current
 };
 
 /**
+ * The parent every competency being moved shares, or null when they do not share one.
+ *
+ * @param {object} tree The workspace's tree.
+ * @param {Array} subjects The competencies being moved.
+ * @returns {number|null} The shared parent, ROOT for the top level.
+ */
+export const sharedParent = (tree: Tree, subjects: number[]): number | null => {
+    const parents = new Set(subjects.map((id) => tree.nodes[id]?.parentid ?? ROOT));
+    return parents.size === 1 ? [...parents][0] : null;
+};
+
+/**
  * The dialogue's tree rows, the framework first.
  *
  * @param {object} tree The workspace's tree.
  * @param {Array} open The branches the dialogue opened.
- * @param {number} moving The competency being moved.
+ * @param {number|Array} moving The competency being moved, or the competencies.
  * @param {string} topname The framework row's name: the top level.
  * @returns {Array} The rows.
  */
-export const parentChoices = (tree: Tree, open: number[], moving: number, topname: string): ParentChoice[] => {
-    const currentparent = tree.nodes[moving]?.parentid ?? ROOT;
-    return outlineRows(pickerTree(tree, open, moving), topname).map((row) => {
+export const parentChoices = (tree: Tree, open: number[], moving: number | number[], topname: string): ParentChoice[] => {
+    const subjects = subjectsOf(moving);
+    const currentparent = sharedParent(tree, subjects);
+    return outlineRows(pickerTree(tree, open, subjects), topname).map((row) => {
         if (row.kind === 'more') {
             return {...row, disabled: false, current: false};
         }
         const current = row.id === currentparent;
-        return {...row, current, disabled: !canMoveUnder(tree, row.id, moving, currentparent)};
+        const inside = row.id !== ROOT && subjects.some((id) => isWithin(tree, row.id, id));
+        return {...row, current, disabled: current || inside};
     });
 };
 
 /**
- * Whether a search hit may become the new parent: not the competency, not one of its descendants
- * (the hit's own ancestors name it), not its current parent.
+ * Whether a search hit may become the new parent: not a competency being moved, not one of their descendants
+ * (the hit's own ancestors name it), not the parent they all have now.
  *
  * @param {object} item The hit, with its ancestors.
- * @param {number} moving The competency being moved.
- * @param {number} currentparent Its parent now.
+ * @param {number|Array} moving The competency being moved, or the competencies.
+ * @param {number|null} currentparent The parent they all have now, or null when they have several.
  * @returns {boolean} Whether it may.
  */
-export const hitSelectable = (item: PathItem, moving: number, currentparent: number): boolean =>
-    item.id !== moving && !item.pathids.includes(moving) && item.id !== currentparent;
+export const hitSelectable = (item: PathItem, moving: number | number[], currentparent: number | null): boolean =>
+    subjectsOf(moving).every((id) => item.id !== id && !item.pathids.includes(id)) && item.id !== currentparent;

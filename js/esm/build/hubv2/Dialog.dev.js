@@ -19,7 +19,7 @@ import { jsxDEV } from "react/jsx-dev-runtime";
  */
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex="0"], a[href]';
+const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex="0"], a[href]';
 const Dialog = /* @__PURE__ */ __name(({ labelledby, className, initialFocus, returnTo, onClose, onLostFocus, children }) => {
   const box = useRef(null);
   const latest = useRef({ onLostFocus, returnTo });

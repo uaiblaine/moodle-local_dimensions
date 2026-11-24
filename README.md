@@ -193,6 +193,37 @@ do nothing; core checks the right again on every change.
 | | Ctrl+Enter (Cmd+Enter), Insert | Type a new sibling right below: a name and an ID number (the next one is offered when the siblings' numbers show a pattern); Enter saves and opens the next one, Escape stops |
 | | Ctrl+Shift+Enter | Type a new first child |
 
+#### Acting on several competencies at once
+
+A manager of the framework's competencies can pick several of them and act on them from a dock under the
+panes; a reader has no boxes, no dock and no picking keys.
+
+| Where | Key or gesture | What it does |
+|---|---|---|
+| On a competency of the outline or the map | Space, or the box at the start of its row (on its card's corner on the map) | Pick it, or release it; Enter still shows it in the panel |
+| | Shift+Up, Shift+Down | Move and pick every competency between the last one picked and the new one |
+| | Ctrl+A (Cmd+A) | Pick the competencies shown at its level under the same parent |
+| On a card of the map | Ctrl+click (Cmd+click) | Pick it, or release it |
+| Anywhere in the workspace | Escape | Release every pick |
+
+The dock says how many are picked and offers:
+
+- **Set appearance…**: background colour, text colour, tag 1, tag 2 and the competency label, each
+  left as it is unless a value or **Clear** is chosen. A colour is a hex value (`#rgb` or `#rrggbb`);
+  with both colours set, the dialogue previews them and says their contrast ratio, warning under 4.5:1.
+  The change goes through `local_dimensions_set_competencies_appearance` (at most 200 competencies a
+  call, all of one framework): it requires `moodle/competency:competencymanage` in the framework's
+  context, checks every value as the competency form does, writes all or nothing, and logs one
+  "Competency custom fields updated" event per competency that changed.
+- **Move under…**: the **Move to** dialogue for every picked competency whose parent is not picked too;
+  those already under the chosen parent are skipped, the others move one by one, in the tree's order,
+  and the first one core refuses stops the run and is named.
+- **Delete…**: asks core first, for each picked competency whose parent is not picked too, then one
+  confirmation says how many can be deleted, what goes with them, and which core will refuse and why;
+  only those core allows are deleted.
+
+What core refuses stays picked; everything else is released when the action is done.
+
 **Move to…** in the menu or the palette opens a dialogue to choose the new parent from a tree of the
 framework or by searching; it cannot offer the competency itself or one of its descendants, marks the
 current parent, and says which parent's rule core will reset before the move is confirmed. The

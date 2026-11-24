@@ -265,10 +265,12 @@ final class structure_view_test extends advanced_testcase {
         $props = $data['decoded'];
         $this->assertSame(
             ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal', 'layout',
-                'structures', 'lens'],
+                'structures', 'lens', 'appearance'],
             array_keys($props)
         );
         $this->assertSame('none', $props['lens']);
+        // A manager's bulk dock gets the appearance selects' options, each list in its field's order.
+        $this->assertSame(['tag1', 'tag2', 'type'], array_keys($props['appearance']));
         $this->assertSame(
             ['id', 'shortname', 'idnumber', 'competencycount', 'canmanage', 'visible', 'contextname', 'scale', 'taxonomies',
                 'taxonomyfallback', 'deletable'],

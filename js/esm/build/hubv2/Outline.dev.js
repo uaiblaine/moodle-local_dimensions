@@ -13,6 +13,13 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  * (a count, a mark) and its words to the description; while the checker is open a row with findings carries a
  * warning mark and their count, said in the description too.
  *
+ * For a manager the tree is multi-select (aria-multiselectable), the APG way: each competency row starts with a real
+ * check box named "Select <name>", out of the Tab order (the row is the stop; Space on it toggles the box), and the
+ * row's aria-selected follows the box, true or false on every competency row. The competency the panel shows is then
+ * the row's aria-current, and Enter keeps choosing it. For a reader the variant is absent: no box, and the tree stays
+ * single-select, aria-selected on the panel's competency alone. The framework and "load more" rows are never picked;
+ * they keep an empty place of the box's width so the names stay aligned.
+ *
  * @module     local_dimensions/hubv2/Outline
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -46,14 +53,14 @@ const meta = /* @__PURE__ */ __name((labels, row, count, related) => {
     if (part.kind === "count") {
       shown.push(/* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ometa-count", children: part.value }, "count", false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 158,
+        lineNumber: 170,
         columnNumber: 24
       }));
       said.push(fillCount(labels, row.kind === "framework" ? "hubv2_competencies" : "hubv2_children", part.value));
     } else if (part.kind === "rule") {
       shown.push(/* @__PURE__ */ jsxDEV("i", { className: "fa fa-diagram-project local-dimensions-hubv2-ometa-rule" }, "rule", false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 161,
+        lineNumber: 173,
         columnNumber: 24
       }));
       said.push(fill(labels.hubv2_a11y_rule, part.label));
@@ -62,13 +69,13 @@ const meta = /* @__PURE__ */ __name((labels, row, count, related) => {
         /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ometa-related", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-share-nodes" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-            lineNumber: 166,
+            lineNumber: 178,
             columnNumber: 21
           }),
           part.value
         ] }, "related", true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 165,
+          lineNumber: 177,
           columnNumber: 17
         })
       );
@@ -109,7 +116,7 @@ const RowMenuButton = /* @__PURE__ */ __name((props) => {
       },
       children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-ellipsis-vertical", "aria-hidden": "true" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 229,
+        lineNumber: 241,
         columnNumber: 13
       })
     },
@@ -117,13 +124,16 @@ const RowMenuButton = /* @__PURE__ */ __name((props) => {
     false,
     {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 212,
+      lineNumber: 224,
       columnNumber: 9
     }
   );
 }, "RowMenuButton");
-const rowClasses = /* @__PURE__ */ __name((selected, moving, impact) => {
+const rowClasses = /* @__PURE__ */ __name((selected, moving, impact, picked) => {
   const classes = ["local-dimensions-hubv2-orow"];
+  if (picked) {
+    classes.push("local-dimensions-hubv2-orow-picked");
+  }
   if (selected) {
     classes.push("local-dimensions-hubv2-orow-selected");
   }
@@ -141,38 +151,95 @@ const LensMeta = /* @__PURE__ */ __name(({ mark, findings }) => {
     meta2 ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ometa local-dimensions-hubv2-olens", "aria-hidden": "true", children: [
       meta2.dashed ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ometa-unused" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 269,
+        lineNumber: 285,
         columnNumber: 36
       }) : null,
       meta2.icon ? /* @__PURE__ */ jsxDEV("i", { className: `fa ${meta2.icon}` }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 270,
+        lineNumber: 286,
         columnNumber: 34
       }) : null,
       meta2.text
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 268,
+      lineNumber: 284,
       columnNumber: 17
     }) : null,
     findings > 0 ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-findmark", "aria-hidden": "true", children: [
       /* @__PURE__ */ jsxDEV("i", { className: "fa fa-triangle-exclamation" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 276,
+        lineNumber: 292,
         columnNumber: 21
       }),
       findings
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 275,
+      lineNumber: 291,
       columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-    lineNumber: 266,
+    lineNumber: 282,
     columnNumber: 9
   });
 }, "LensMeta");
+const selectionStates = /* @__PURE__ */ __name((multiselect, row, picked, selected) => {
+  if (!multiselect) {
+    return selected ? { "aria-selected": true } : {};
+  }
+  const states = {};
+  if (row.kind === "competency") {
+    states["aria-selected"] = picked;
+  }
+  if (selected) {
+    states["aria-current"] = "true";
+  }
+  return states;
+}, "selectionStates");
+const PickBox = /* @__PURE__ */ __name((props) => {
+  const { multiselect, row, picked, labels, actions } = props;
+  if (!multiselect) {
+    return null;
+  }
+  if (row.kind !== "competency") {
+    return /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pickwrap", "aria-hidden": "true" }, void 0, false, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
+      lineNumber: 340,
+      columnNumber: 16
+    });
+  }
+  return (
+    // The label stops its click from also choosing the row; the box's change picks it.
+    /* @__PURE__ */ jsxDEV("label", { className: "local-dimensions-hubv2-pickwrap", onClick: (event) => event.stopPropagation(), children: [
+      /* @__PURE__ */ jsxDEV(
+        "input",
+        {
+          type: "checkbox",
+          className: "local-dimensions-hubv2-pickbox",
+          tabIndex: -1,
+          checked: picked,
+          onChange: () => actions.pick(row.id)
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
+          lineNumber: 345,
+          columnNumber: 13
+        }
+      ),
+      /* @__PURE__ */ jsxDEV("span", { className: "visually-hidden", children: fill(labels.hubv2_bulk_select, row.name) }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
+        lineNumber: 347,
+        columnNumber: 13
+      })
+    ] }, void 0, true, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
+      lineNumber: 344,
+      columnNumber: 9
+    })
+  );
+}, "PickBox");
 const Row = /* @__PURE__ */ __name((props) => {
   const {
     row,
@@ -192,8 +259,15 @@ const Row = /* @__PURE__ */ __name((props) => {
     mark,
     findings,
     findingwords,
-    impact
+    impact,
+    multiselect,
+    picked
   } = props;
+  const box = /* @__PURE__ */ jsxDEV(PickBox, { multiselect, row, picked, labels, actions }, void 0, false, {
+    fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
+    lineNumber: 383,
+    columnNumber: 17
+  });
   const indent = { paddingInlineStart: `${0.25 + (row.level - 1) * 1.25}rem` };
   const common = {
     "role": "treeitem",
@@ -215,9 +289,10 @@ const Row = /* @__PURE__ */ __name((props) => {
         "aria-label": `${label}, ${remaining}`,
         onClick: () => actions.loadMore(row.id),
         children: [
+          box,
           /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-otoggle", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-            lineNumber: 331,
+            lineNumber: 404,
             columnNumber: 17
           }),
           /* @__PURE__ */ jsxDEV(
@@ -237,13 +312,13 @@ const Row = /* @__PURE__ */ __name((props) => {
             false,
             {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-              lineNumber: 332,
+              lineNumber: 405,
               columnNumber: 17
             }
           ),
           /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ometa", "aria-hidden": "true", children: remaining }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-            lineNumber: 339,
+            lineNumber: 412,
             columnNumber: 17
           })
         ]
@@ -252,7 +327,7 @@ const Row = /* @__PURE__ */ __name((props) => {
       true,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 329,
+        lineNumber: 401,
         columnNumber: 13
       }
     );
@@ -267,7 +342,7 @@ const Row = /* @__PURE__ */ __name((props) => {
     markstyle = isHexColour(node.bgcolor) ? { backgroundColor: node.bgcolor } : void 0;
     markclass = markstyle ? "local-dimensions-hubv2-mark" : `local-dimensions-hubv2-mark ${DEPTH_MARKS[Math.min(row.level - 1, DEPTH_MARKS.length) - 1]}`;
   }
-  const classes = rowClasses(selected, moving, impact);
+  const classes = rowClasses(selected, moving, impact, picked);
   const onChevron = /* @__PURE__ */ __name((event) => {
     event.stopPropagation();
     actions.toggle(row.id);
@@ -278,11 +353,12 @@ const Row = /* @__PURE__ */ __name((props) => {
       ...common,
       className: classes.join(" "),
       "aria-expanded": row.expandable ? row.expanded : void 0,
-      "aria-selected": selected ? true : void 0,
+      ...selectionStates(multiselect, row, picked, selected),
       "aria-labelledby": `${ID}-${row.key}-name`,
       "aria-describedby": said ? `${ID}-${row.key}-desc` : void 0,
       onClick: () => actions.activate(row),
       children: [
+        box,
         row.expandable && row.kind === "competency" ? /* @__PURE__ */ jsxDEV(
           "span",
           {
@@ -291,7 +367,7 @@ const Row = /* @__PURE__ */ __name((props) => {
             onClick: onChevron,
             children: /* @__PURE__ */ jsxDEV("i", { className: `fa ${chevron(row.expanded, rtl)}` }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-              lineNumber: 382,
+              lineNumber: 455,
               columnNumber: 21
             })
           },
@@ -299,47 +375,47 @@ const Row = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-            lineNumber: 380,
+            lineNumber: 453,
             columnNumber: 17
           }
         ) : /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-otoggle", "aria-hidden": "true" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 384,
+          lineNumber: 457,
           columnNumber: 17
         }),
         /* @__PURE__ */ jsxDEV("span", { className: markclass, style: markstyle, "aria-hidden": "true" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 385,
+          lineNumber: 458,
           columnNumber: 13
         }),
         /* @__PURE__ */ jsxDEV("span", { id: `${ID}-${row.key}-name`, className: "local-dimensions-hubv2-oname", title: row.name, children: row.name }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 388,
+          lineNumber: 461,
           columnNumber: 13
         }),
         extras.length > 0 ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-oextra", "aria-hidden": "true", children: extras.map((extra) => extra.shown).join(" \xB7 ") }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 390,
+          lineNumber: 463,
           columnNumber: 17
         }) : null,
         shown.length > 0 ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ometa", "aria-hidden": "true", children: shown }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 394,
+          lineNumber: 467,
           columnNumber: 33
         }) : null,
         /* @__PURE__ */ jsxDEV(LensMeta, { mark, findings }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 395,
+          lineNumber: 468,
           columnNumber: 13
         }),
         menu ? /* @__PURE__ */ jsxDEV(RowMenuButton, { labels, row, open: menuopen, actions }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 396,
+          lineNumber: 469,
           columnNumber: 21
         }) : null,
         said ? /* @__PURE__ */ jsxDEV("span", { id: `${ID}-${row.key}-desc`, className: "visually-hidden", children: said }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 397,
+          lineNumber: 470,
           columnNumber: 21
         }) : null
       ]
@@ -348,7 +424,7 @@ const Row = /* @__PURE__ */ __name((props) => {
     true,
     {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 369,
+      lineNumber: 442,
       columnNumber: 9
     }
   );
@@ -363,17 +439,17 @@ const SkeletonRows = /* @__PURE__ */ __name(({ level, parent }) => /* @__PURE__ 
     children: [
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-otoggle" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 414,
+        lineNumber: 487,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-sk-block local-dimensions-hubv2-sk-mark" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 415,
+        lineNumber: 488,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-sk-block local-dimensions-hubv2-sk-line" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 416,
+        lineNumber: 489,
         columnNumber: 17
       })
     ]
@@ -382,12 +458,12 @@ const SkeletonRows = /* @__PURE__ */ __name(({ level, parent }) => /* @__PURE__ 
   true,
   {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-    lineNumber: 411,
+    lineNumber: 484,
     columnNumber: 13
   }
 )) }, void 0, false, {
   fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-  lineNumber: 409,
+  lineNumber: 482,
   columnNumber: 5
 }), "SkeletonRows");
 const Outline = /* @__PURE__ */ __name((props) => {
@@ -416,7 +492,9 @@ const Outline = /* @__PURE__ */ __name((props) => {
     marks,
     findings,
     findingwords,
-    impact
+    impact,
+    multiselect,
+    picked
   } = props;
   const scrolled = useRef(null);
   const optionsButton = useRef(null);
@@ -466,13 +544,15 @@ const Outline = /* @__PURE__ */ __name((props) => {
           mark: row.kind === "competency" ? marks.get(row.id) ?? null : null,
           findings: row.kind === "more" ? 0 : findings.get(row.id) ?? 0,
           findingwords,
-          impact: row.kind !== "more" && impact.has(row.id)
+          impact: row.kind !== "more" && impact.has(row.id),
+          multiselect,
+          picked: row.kind === "competency" && picked.has(row.id)
         },
         row.key,
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 464,
+          lineNumber: 538,
           columnNumber: 13
         }
       )
@@ -480,7 +560,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
     if (row.kind === "competency" && !row.expanded && loading.includes(row.id)) {
       items.push(/* @__PURE__ */ jsxDEV(SkeletonRows, { level: row.level + 1, parent: row.key }, `${row.key}-loading`, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 487,
+        lineNumber: 563,
         columnNumber: 24
       }));
     }
@@ -498,7 +578,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
     /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-ohead", children: [
       /* @__PURE__ */ jsxDEV("h3", { id: `${ID}-title`, className: "local-dimensions-hubv2-otitle", children: labels.hubv2_outline }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 511,
+        lineNumber: 587,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV(
@@ -512,7 +592,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
           onClick: actions.expandAll,
           children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-angles-down", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-            lineNumber: 520,
+            lineNumber: 596,
             columnNumber: 21
           })
         },
@@ -520,7 +600,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 512,
+          lineNumber: 588,
           columnNumber: 17
         }
       ),
@@ -535,7 +615,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
           onClick: actions.collapseAll,
           children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-angles-up", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-            lineNumber: 530,
+            lineNumber: 606,
             columnNumber: 21
           })
         },
@@ -543,7 +623,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 522,
+          lineNumber: 598,
           columnNumber: 17
         }
       ),
@@ -561,12 +641,12 @@ const Outline = /* @__PURE__ */ __name((props) => {
           children: [
             /* @__PURE__ */ jsxDEV("i", { className: "fa fa-sliders", "aria-hidden": "true" }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-              lineNumber: 542,
+              lineNumber: 618,
               columnNumber: 21
             }),
             /* @__PURE__ */ jsxDEV("i", { className: "fa fa-chevron-down local-dimensions-hubv2-iconbtn-chevron", "aria-hidden": "true" }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-              lineNumber: 543,
+              lineNumber: 619,
               columnNumber: 21
             })
           ]
@@ -575,13 +655,13 @@ const Outline = /* @__PURE__ */ __name((props) => {
         true,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 532,
+          lineNumber: 608,
           columnNumber: 17
         }
       )
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 510,
+      lineNumber: 586,
       columnNumber: 13
     }),
     options && optionsButton.current ? /* @__PURE__ */ jsxDEV(
@@ -603,13 +683,13 @@ const Outline = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 547,
+        lineNumber: 623,
         columnNumber: 17
       }
     ) : null,
     notice ? /* @__PURE__ */ jsxDEV("p", { className: "local-dimensions-hubv2-onotice", children: notice }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 561,
+      lineNumber: 637,
       columnNumber: 23
     }) : null,
     /* @__PURE__ */ jsxDEV(
@@ -619,6 +699,7 @@ const Outline = /* @__PURE__ */ __name((props) => {
         className: "local-dimensions-hubv2-tree",
         role: "tree",
         "aria-label": framework.shortname,
+        "aria-multiselectable": multiselect ? true : void 0,
         "aria-busy": loading.length > 0 || expanding ? true : void 0,
         onKeyDown: actions.onKeyDown,
         onFocus: actions.onFocus,
@@ -629,70 +710,70 @@ const Outline = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 562,
+        lineNumber: 638,
         columnNumber: 13
       }
     ),
     loading.length > 0 ? /* @__PURE__ */ jsxDEV("span", { className: "visually-hidden", role: "status", children: labels.hubv2_loading }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 574,
+      lineNumber: 651,
       columnNumber: 35
     }) : null,
     hints.length > 0 && !empty ? /* @__PURE__ */ jsxDEV("p", { className: "local-dimensions-hubv2-ohints", children: hints.map((hint) => /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-ohint", children: [
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-keys", children: shortcutCaps(hint.shortcut, mac).map((cap) => /* @__PURE__ */ jsxDEV("kbd", { children: cap }, cap, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 580,
+        lineNumber: 657,
         columnNumber: 80
       })) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 579,
+        lineNumber: 656,
         columnNumber: 29
       }),
       hint.label
     ] }, hint.label, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 578,
+      lineNumber: 655,
       columnNumber: 25
     })) }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 576,
+      lineNumber: 653,
       columnNumber: 17
     }) : null,
     empty ? /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-oempty", children: [
       /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-oempty-icon", "aria-hidden": "true", children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-sitemap" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 589,
+        lineNumber: 666,
         columnNumber: 93
       }) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 589,
+        lineNumber: 666,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("p", { className: "local-dimensions-hubv2-oempty-title", children: labels.nocompetencies }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 590,
+        lineNumber: 667,
         columnNumber: 21
       }),
       framework.canmanage && moving === null ? /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-primary btn-sm", onClick: actions.add, children: [
         /* @__PURE__ */ jsxDEV("i", { className: "fa fa-plus me-1", "aria-hidden": "true" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-          lineNumber: 593,
+          lineNumber: 670,
           columnNumber: 29
         }),
         labels.managecompetencies_addcompetency
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-        lineNumber: 592,
+        lineNumber: 669,
         columnNumber: 25
       }) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-      lineNumber: 588,
+      lineNumber: 665,
       columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Outline.tsx",
-    lineNumber: 509,
+    lineNumber: 585,
     columnNumber: 9
   });
 }, "Outline");

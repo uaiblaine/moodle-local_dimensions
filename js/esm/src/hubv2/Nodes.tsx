@@ -29,6 +29,11 @@
  * selecting the node. The "load more" card's button is the same, and so is the selected card's "more"
  * button, which opens its actions' menu (Shift+F10 on the node does it from the keyboard).
  *
+ * For a manager each competency card carries the bulk dock's box (a real check box named "Select <name>", out of the
+ * Tab order: Space on the node toggles it, as Ctrl+click and Cmd+click on the card do); the stylesheet shows it on
+ * hover, on focus and while anything is picked. A picked card says so in its name (graph.ts), and its ground is the
+ * brand's tint.
+ *
  * In a language written right to left the tree grows leftwards: a card's parent edge arrives on its
  * right and its children's leave from its left, and the chevrons point the other way. React Flow's
  * own layer stays left to right (its coordinates need it); each card takes the page's direction back.
@@ -64,6 +69,9 @@ export type CanvasActions = {
     menuFor: number | null,
     menuOpen: number | null,
     openMenu: (id: number, anchor: HTMLElement) => void,
+    // Whether the viewer may pick competencies for the bulk dock (a manager), and picking or releasing one.
+    multiselect: boolean,
+    pick: (id: number) => void,
 };
 
 /** The canvas's actions, provided by Hub. */
@@ -222,16 +230,20 @@ const Elsewhere = ({labels, mark}: {labels: Labels, mark: ItemMark | null}): Rea
 ) : null);
 
 /**
- * A competency card's classes: selected, being moved, the lens's mark, touched by a change being confirmed.
+ * A competency card's classes: selected, being moved, the lens's mark, touched by a change being confirmed, picked.
  *
  * @param {boolean} selected Whether it is selected.
  * @param {boolean} moving Whether it is being moved.
  * @param {object|null} mark The lens's mark.
  * @param {boolean} impact Whether a change being confirmed touches it.
+ * @param {boolean} picked Whether it is picked for the bulk dock.
  * @returns {Array} The classes.
  */
-const cardClasses = (selected: boolean, moving: boolean, mark: ItemMark | null, impact: boolean): string[] => {
+const cardClasses = (selected: boolean, moving: boolean, mark: ItemMark | null, impact: boolean, picked: boolean): string[] => {
     const classes = ['local-dimensions-hubv2-card'];
+    if (picked) {
+        classes.push('local-dimensions-hubv2-card-picked');
+    }
     if (selected) {
         classes.push('local-dimensions-hubv2-selected');
     }
@@ -275,8 +287,8 @@ const CardLine = ({data}: {data: CompetencyData}): ReactNode => {
  * @returns {ReactNode} The card.
  */
 export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
-    const {labels, rtl, toggle, menuFor, menuOpen, openMenu} = useCanvas();
-    const {node, expanded, childcount, depth, moving, mark, findings, impact} = data as CompetencyData;
+    const {labels, rtl, toggle, menuFor, menuOpen, openMenu, multiselect, pick} = useCanvas();
+    const {node, expanded, childcount, depth, moving, mark, findings, impact, picked} = data as CompetencyData;
     // The admin's colours go straight into the style, never through the stylesheet: only a hex value passes.
     const tilestyle = isHexColour(node.bgcolor)
         ? {backgroundColor: node.bgcolor, color: isHexColour(node.textcolor) ? node.textcolor : undefined}
@@ -286,7 +298,7 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
     const glyph = !tilestyle || tilestyle.color ? <i className="fa fa-bullseye" /> : null;
     const shown = cardCount(node, childcount);
     const countlabel = shown ? fillCount(labels, shown.kind === 'children' ? 'hubv2_children' : 'hubv2_courses', shown.count) : '';
-    const classes = cardClasses(!!selected, moving, mark, impact);
+    const classes = cardClasses(!!selected, moving, mark, impact, picked);
     /**
      * Open or close the children, without selecting the node.
      *
@@ -300,6 +312,15 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
     return (
         <div className={classes.join(' ')} dir={rtl ? 'rtl' : undefined}>
             <Handles />
+            {multiselect ? (
+                // The label stops its click from also selecting the node; the box's change picks it.
+                <label className="local-dimensions-hubv2-cardpick nodrag nopan"
+                    onClick={(event: MouseEvent) => event.stopPropagation()}>
+                    <input type="checkbox" className="local-dimensions-hubv2-pickbox" tabIndex={-1} checked={picked}
+                        onChange={() => pick(node.id)} onKeyDown={keepKeys} />
+                    <span className="visually-hidden">{fill(labels.hubv2_bulk_select, node.shortname)}</span>
+                </label>
+            ) : null}
             <ImpactMark on={impact} />
             <span className={`local-dimensions-hubv2-tile ${tileclass}`} style={tilestyle} aria-hidden="true">{glyph}</span>
             <span className="local-dimensions-hubv2-card-text">

@@ -64,7 +64,7 @@ Feature: Read a framework through the Competency hub's lenses and check its stru
     Then I should see "No description" in the "[data-region='checker']" "css_element"
     And I should see "Bare leaf" in the "[data-region='checker']" "css_element"
     When I click on "Reveal" "button" in the "//li[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-finding ')][contains(., 'No description')][contains(., 'Bare leaf')]" "xpath_element"
-    Then the "aria-selected" attribute of "//li[@role='treeitem'][.//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Bare leaf']]" "xpath_element" should contain "true"
+    Then the "aria-current" attribute of "//li[@role='treeitem'][.//span[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-oname ')][.='Bare leaf']]" "xpath_element" should contain "true"
     And the "aria-current" attribute of "//div[contains(concat(' ', @class, ' '), ' react-flow__node ')][starts-with(@aria-label, 'Bare leaf,')]" "xpath_element" should contain "true"
     # The checker stays open on the finding it revealed, marked in its list.
     And the "aria-current" attribute of "//li[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-finding ')][contains(., 'No description')][contains(., 'Bare leaf')]" "xpath_element" should contain "true"

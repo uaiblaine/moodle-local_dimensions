@@ -49,6 +49,16 @@
  * everything the server says of it is fresh; the opened branches and the selection survive the reload
  * (carry.ts). Above the map's columns, the taxonomy term of each level (ColumnHeads.tsx).
  *
+ * Beside the one competency the panel shows, a manager picks several for the bulk dock (multiselect.ts): Space on an
+ * item, Shift+Up and Shift+Down from the anchor, Ctrl+A (Cmd+A) for the item's level, a box on each row and card,
+ * Ctrl+click (Cmd+click) on a card; Escape releases them. The picks survive opening and closing branches and lose the
+ * competencies that leave the tree. The dock (Dock.tsx) sits after the panes and acts on them through the registry's
+ * `bulk` scope: "Set appearance…" (BulkDialogs.tsx, one all-or-nothing call of
+ * local_dimensions_set_competencies_appearance), "Move under…" ("Move to" with every topmost pick, then core's
+ * set_parent_competency once per competency, in the tree's order, stopping at the first refusal) and "Delete…" (core's
+ * refusal reasons first, then core's delete for the competencies it allows). Each then reads the touched branches and
+ * the insights again, says the outcome in the polite region, and keeps picked only what failed.
+ *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -61,6 +71,10 @@ import {
     specOf,
 } from './commands';
 import type {ActionContext, ActionId, ActionState, ActionView, KeyCommand, Shortcut} from './commands';
+import {AppearanceDialog, DeleteDialog} from './BulkDialogs';
+import {APPEARANCE_FIELDS, appearanceOutcome, deleteOutcome, deletionSummary, moveOutcome, movePlan, topmost} from './bulk';
+import type {AppearanceName, DeletionSummary, FieldEntry, MoveResult} from './bulk';
+import Dock from './Dock';
 import Editor from './Editor';
 import {codeTitle, findingCounts, orderFindings, stepFinding} from './findings';
 import {NO_IMPACT, deleteImpact, moveImpact, sameImpact} from './impact';
@@ -99,6 +113,8 @@ import {editorSlot, outlineRows} from './outlinerows';
 import type {OutlineRow} from './outlinerows';
 import {useRoving} from './roving';
 import type {Roving} from './roving';
+import {NONE, extend, keepOnly, pickGesture, pickLevel, prune, toggle as togglePicked} from './multiselect';
+import type {Picked} from './multiselect';
 import {LAYOUT_EVENT, activation, isLayout, panesOf} from './selection';
 import type {Layout} from './selection';
 import Splitter from './Splitter';
@@ -116,8 +132,8 @@ import Panel from './Panel';
 import type {PanelActions} from './Panel';
 import {track} from './pending';
 import {
-    allChildren, browse, countCompetencies, createCompetency, deleteCheck, deleteCompetency, getNode, getNodes,
-    insights as readInsights, moveOne, moveUpTimes, renameCompetency, selectionData, setParent, updateRule,
+    allChildren, browse, countCompetencies, createCompetency, deleteCheck, deleteChecks, deleteCompetency, getNode, getNodes,
+    insights as readInsights, moveOne, moveUpTimes, renameCompetency, selectionData, setAppearance, setParent, updateRule,
 } from './repository';
 import type {NodeAnswer} from './repository';
 import Search from './Search';
@@ -187,6 +203,9 @@ const TYPE_AHEAD_PAUSE = 500;
 
 /** How many first pages "Expand all" asks for at once. */
 const EXPAND_ALL_PARALLEL = 4;
+
+/** The bulk dock's dialogue while one is open; a delete holds the competencies checked and, once read, what core says. */
+type BulkLayer = {kind: 'appearance'} | {kind: 'move'} | {kind: 'delete', ids: number[], summary: DeletionSummary | null};
 
 /** The inline editor of the outline: a rename in place, or a new competency after a sibling (null: first child). */
 type EditorState = {mode: 'rename', id: number} | {mode: 'create', parent: number, after: number | null, serial: number};
@@ -335,6 +354,13 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const [impact, setImpactState] = useState<Set<number>>(NO_IMPACT);
     const moveDialogRef = useRef<number | null>(null);
     moveDialogRef.current = moveDialog;
+    // The competencies picked for the bulk dock, for a manager only (the selection variant, Design System D129), and
+    // the dock's dialogue.
+    const multiselect = framework.canmanage;
+    const [picked, setPicked] = useState<Picked>(NONE);
+    const pickedRef = useRef<Picked>(picked);
+    pickedRef.current = picked;
+    const [bulk, setBulk] = useState<BulkLayer | null>(null);
 
     /**
      * Change the tree; the ref is what asynchronous work reads between renders.
@@ -1235,6 +1261,235 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
+     * Change the picks; the ref is what keys read between renders.
+     *
+     * @param {Function} update From the current picks to the next.
+     * @returns {void}
+     */
+    const updatePicked = (update: (current: Picked) => Picked): void => {
+        pickedRef.current = update(pickedRef.current);
+        setPicked(pickedRef.current);
+    };
+
+    /**
+     * Pick a competency for the bulk dock, or release it: its box, Space on its item, Ctrl+click on its card. A
+     * manager's only, outside the move mode.
+     *
+     * @param {number} id The competency.
+     * @returns {void}
+     */
+    const pick = (id: number): void => {
+        if (!multiselect || movingRef.current !== null || !treeRef.current.nodes[id]) {
+            return;
+        }
+        updatePicked((current) => togglePicked(current, id));
+    };
+
+    /**
+     * Release every pick, and say so.
+     *
+     * @returns {void}
+     */
+    const clearPicked = (): void => {
+        updatePicked(() => NONE);
+        announce(labels.hubv2_bulk_cleared);
+    };
+
+    /**
+     * Read what core says of deleting each topmost pick, then show the confirmation with it.
+     *
+     * @returns {void}
+     */
+    const checkDeletion = (): void => {
+        const ids = topmost(treeRef.current, pickedRef.current.ids);
+        setBulk({kind: 'delete', ids, summary: null});
+        track('bulk', deleteChecks(ids)).then((checks) => {
+            const summary = deletionSummary(labels, ids.map((id, index) => ({
+                id,
+                name: treeRef.current.nodes[id]?.shortname ?? '',
+                check: checks[index] ?? null,
+            })));
+            setBulk((current) => (current && current.kind === 'delete' && current.ids === ids ? {...current, summary} : current));
+            setImpact(new Set(summary.allowed));
+            return null;
+        }).catch((error: unknown) => {
+            setBulk(null);
+            notifyError(error);
+        });
+    };
+
+    /**
+     * Close the bulk dock's dialogue without acting.
+     *
+     * @returns {void}
+     */
+    const closeBulk = (): void => {
+        setBulk(null);
+        setImpact(NO_IMPACT);
+    };
+
+    /**
+     * Read a parent's children and its own fields again after competencies left or joined it.
+     *
+     * @param {number} parent The parent, ROOT for the top level.
+     * @param {number} atleast How many children must be loaded at least.
+     * @returns {Promise} Resolves once in the tree.
+     */
+    const rereadParent = async(parent: number, atleast: number = 1): Promise<void> => {
+        if (hasBranch(treeRef.current, parent)) {
+            await reloadBranch(parent, atleast);
+        }
+        await refreshParent(parent);
+    };
+
+    /**
+     * Set the appearance of every pick in one call, all or nothing, and put the answer's values on the loaded nodes.
+     *
+     * @param {Array} fields The fields not left as they are.
+     * @returns {Promise} Resolves with the server's refusal in words, or null once applied.
+     */
+    const commitAppearance = async(fields: FieldEntry[]): Promise<string | null> => {
+        const ids = pickedRef.current.ids;
+        try {
+            const answer = await track('bulk', setAppearance(framework.id, ids, fields));
+            const names = APPEARANCE_FIELDS as readonly string[];
+            commit((current) => answer.competencies.reduce((next, item) => {
+                const known = next.nodes[item.id];
+                if (!known) {
+                    return next;
+                }
+                const fresh = {...known};
+                item.fields.filter((field) => names.includes(field.name)).forEach((field) => {
+                    fresh[field.name as AppearanceName] = field.value;
+                });
+                return replaceNode(next, fresh);
+            }, current));
+            setBulk(null);
+            updatePicked(() => NONE);
+            announce(appearanceOutcome(labels, answer.changed.length));
+            settled('bulkappearance');
+            return null;
+        } catch (error) {
+            return messageOf(error);
+        }
+    };
+
+    /**
+     * Move every topmost pick under one parent, one core call each in the tree's order, saying the progress; the
+     * first refusal stops the run. The branches they left and the new parent's are read again; what did not move
+     * stays picked.
+     *
+     * @param {number} target The new parent, ROOT for the top level.
+     * @returns {void}
+     */
+    const bulkMove = (target: number): void => {
+        closeBulk();
+        const plan = movePlan(treeRef.current, pickedRef.current.ids, target);
+        track('bulk', (async() => {
+            const result: MoveResult = {moved: 0, skipped: plan.skipped.length, refused: null, left: 0};
+            const moved: number[] = [];
+            const parents = new Set<number>();
+            let failed: number | null = null;
+            for (let index = 0; index < plan.move.length; index++) {
+                const id = plan.move[index];
+                const node = treeRef.current.nodes[id];
+                announce(fillObject(labels.hubv2_bulk_move_progress, {
+                    position: String(index + 1),
+                    total: String(plan.move.length),
+                }));
+                try {
+                    await setParent(id, target);
+                } catch (error) {
+                    failed = id;
+                    result.refused = {name: node?.shortname ?? '', reason: messageOf(error)};
+                    result.left = plan.move.length - index - 1;
+                    break;
+                }
+                moved.push(id);
+                parents.add(node?.parentid ?? ROOT);
+            }
+            result.moved = moved.length;
+            // Their children's depth, and so their taxonomy, changed: they are read again when opened.
+            moved.forEach((id) => commit((current) => forgetBranch(current, id)));
+            for (const parent of parents) {
+                await rereadParent(parent);
+            }
+            if (moved.length > 0) {
+                await rereadParent(target, (treeRef.current.branches[target]?.ids.length ?? 0) + moved.length);
+                if (hasBranch(treeRef.current, target)) {
+                    commit((current) => setExpanded(current, target, true));
+                }
+            }
+            if (selectedRef.current !== null && !treeRef.current.nodes[selectedRef.current]) {
+                choose(null);
+            }
+            const stopped = failed;
+            updatePicked((current) => (stopped === null ? NONE : keepOnly(current, plan.move.slice(plan.move.indexOf(stopped)))));
+            announce(moveOutcome(labels, result));
+            if (moved.length > 0) {
+                settled('bulkmove');
+            }
+        })()).catch(notifyError);
+    };
+
+    /**
+     * Delete the picks the check allowed, one core call each; one core refuses at the commit is kept and named, as
+     * every one the check refused. A competency the check refused is never attempted.
+     *
+     * @param {object} summary What the check said.
+     * @returns {void}
+     */
+    const bulkDelete = (summary: DeletionSummary): void => {
+        closeBulk();
+        track('bulk', (async() => {
+            const deleted: number[] = [];
+            const failed: number[] = [];
+            const parents = new Set<number>();
+            for (const id of summary.allowed) {
+                const node = treeRef.current.nodes[id];
+                const done = await deleteCompetency(id).catch(() => false);
+                if (done === false) {
+                    failed.push(id);
+                    continue;
+                }
+                deleted.push(id);
+                parents.add(node?.parentid ?? ROOT);
+                commit((current) => removeNode(current, id));
+            }
+            for (const parent of parents) {
+                await rereadParent(parent);
+            }
+            setCount(await countCompetencies(framework.id));
+            if (selectedRef.current !== null && !treeRef.current.nodes[selectedRef.current]) {
+                choose(null);
+            }
+            const kept = [...summary.refused.map((item) => item.id), ...failed];
+            const names = kept.map((id) => treeRef.current.nodes[id]?.shortname
+                ?? summary.refused.find((item) => item.id === id)?.name ?? '');
+            updatePicked((current) => (kept.length === 0 ? NONE : keepOnly(current, kept)));
+            announce(deleteOutcome(labels, deleted.length, names));
+            if (deleted.length > 0) {
+                settled('bulkdelete');
+            }
+        })()).catch(notifyError);
+    };
+
+    /**
+     * Run one of the bulk dock's actions: each opens its dialogue, a delete once core's reasons are asked for.
+     *
+     * @param {string} id The action.
+     * @returns {void}
+     */
+    const runBulkAction = (id: ActionId): void => {
+        setMenu(null);
+        if (id === 'bulkappearance' || id === 'bulkmove') {
+            setBulk({kind: id === 'bulkappearance' ? 'appearance' : 'move'});
+        } else if (id === 'bulkdelete') {
+            checkDeletion();
+        }
+    };
+
+    /**
      * Reveal, select and centre a competency named by a search hit or a relation.
      *
      * @param {object} item The competency and its path.
@@ -1525,6 +1780,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             lens: lensRef.current,
             usagelevel: indexRef.current ? indexRef.current.answer.usagelevel : null,
             findings: indexRef.current ? indexRef.current.answer.checks.length : null,
+            picked: pickedRef.current.ids.length,
         };
     };
 
@@ -1885,6 +2141,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             runNodeAction(id, context.node);
         } else if (scope === 'framework' || scope === 'structures') {
             runFrameworkAction(id);
+        } else if (scope === 'bulk') {
+            runBulkAction(id);
         } else {
             runWorkspaceAction(id);
         }
@@ -2053,8 +2311,15 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      * @returns {void}
      */
     const onRootKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
+        // Escape releases the picks when there are some and no layer, editor or move has the key.
+        if (event.key === 'Escape' && pickedRef.current.ids.length > 0 && menu === null && !palette && moveDialog === null
+            && bulk === null && editorRef.current === null && movingRef.current === null) {
+            event.preventDefault();
+            clearPicked();
+            return;
+        }
         const command = shortcutAction(event, 'map');
-        if (palette || moveDialog !== null) {
+        if (palette || moveDialog !== null || bulk !== null) {
             return;
         }
         if (command === 'nextfinding' || command === 'prevfinding') {
@@ -2100,6 +2365,80 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
+     * The multi-selection's keys on an item of a pane, a manager's outside the move mode: Space picks or releases a
+     * competency (on the framework and a "load more" item it keeps its own work), Shift+Up and Shift+Down move the
+     * focus and extend the picks from the anchor, Ctrl+A (Cmd+A) picks the drawn competencies of the item's level.
+     *
+     * @param {object} event The key event.
+     * @param {object} stop The pane's Tab stop.
+     * @returns {boolean} Whether the key was used.
+     */
+    const pickKey = (event: ReactKeyboardEvent<HTMLElement>, stop: Roving): boolean => {
+        if (!multiselect || movingRef.current !== null) {
+            return false;
+        }
+        const key = stop.activeRef.current;
+        const id = competencyOf(key);
+        const gesture = pickGesture(event);
+        if (gesture === 'toggle' && id !== null) {
+            pick(id);
+            return true;
+        }
+        if (gesture === 'up' || gesture === 'down') {
+            extendTo(stop, key, id, gesture === 'down');
+            return true;
+        }
+        if (gesture === 'level') {
+            updatePicked((current) => pickLevel(current, navOrder(treeRef.current), key));
+            return true;
+        }
+        return false;
+    };
+
+    /**
+     * Move a pane's focus one item up or down and extend the picks from the anchor to it, when it is a competency.
+     *
+     * @param {object} stop The pane's Tab stop.
+     * @param {string} key The item the focus leaves.
+     * @param {number|null} from Its competency, or null for the framework or a "load more" item.
+     * @param {boolean} down Down when true.
+     * @returns {void}
+     */
+    const extendTo = (stop: Roving, key: string, from: number | null, down: boolean): void => {
+        const order = navOrder(treeRef.current);
+        const index = order.findIndex((item) => item.key === key);
+        const next = index < 0 ? undefined : order[index + (down ? 1 : -1)];
+        if (!next) {
+            return;
+        }
+        stop.focusKey(next.key);
+        const to = competencyOf(next.key);
+        if (to !== null) {
+            updatePicked((current) => extend(current, order, from, to));
+        }
+    };
+
+    /**
+     * Whether a key on an item is the item's own business, ahead of the walk: Enter or Space on a button inside the
+     * item (focused by a click) is the button's, and a key of the multi-selection is done here.
+     *
+     * @param {object} event The key event.
+     * @param {HTMLElement} element The item.
+     * @param {object} stop The pane's Tab stop.
+     * @returns {boolean} Whether the walk leaves the key alone.
+     */
+    const ownKey = (event: ReactKeyboardEvent<HTMLElement>, element: HTMLElement, stop: Roving): boolean => {
+        if (element !== event.target && (event.key === 'Enter' || event.key === ' ')) {
+            return true;
+        }
+        if (pickKey(event, stop)) {
+            event.preventDefault();
+            return true;
+        }
+        return false;
+    };
+
+    /**
      * Walk the tree with the keyboard in either pane (keynav.keyAction).
      *
      * The item the key acts on is the pane's Tab stop, which moves at once, and the walk is read from
@@ -2118,8 +2457,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         if (!element || !event.currentTarget.contains(element)) {
             return;
         }
-        // Enter and Space on an item's own button (focused by a click) are the button's.
-        if (element !== target && (event.key === 'Enter' || event.key === ' ')) {
+        // Enter and Space on an item's own button are the button's; the multi-selection's keys are done there.
+        if (ownKey(event, element, stop)) {
             return;
         }
         const command = shortcutAction(event, from);
@@ -2357,16 +2696,29 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }), [marks, findingsmarked, findingwords, impact, lens, index, mappairs]);
 
     const relatedids = useMemo(() => related.map((item) => item.id), [related]);
+    const pickedset = useMemo(() => new Set(picked.ids), [picked]);
     const graph = useMemo(() => buildGraph({
         tree,
         framework: {...framework, competencycount: count},
         selected,
         related: relatedids,
         moving,
-        labels: {roledescription: labels.hubv2_noderole, more: moreLabel, name: nameOf, framework: frameworkName},
+        labels: {
+            roledescription: labels.hubv2_noderole,
+            more: moreLabel,
+            name: nameOf,
+            framework: frameworkName,
+            picked: labels.hubv2_bulk_picked,
+        },
         rtl,
         decor,
-    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl, decor]);
+        picked: pickedset,
+    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl, decor, pickedset]);
+
+    // A pick that left the tree (deleted, or forgotten with a branch after a move) leaves the picks.
+    useEffect(() => {
+        updatePicked((current) => prune(current, tree));
+    }, [tree]);
     const graphRef = useRef(graph);
     graphRef.current = graph;
 
@@ -2567,9 +2919,21 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      */
     const editLevels = (): void => runAction('fwedit', null);
 
+    const pickRef = useRef(pick);
+    pickRef.current = pick;
+    /**
+     * Pick a card's competency from its box; stable, so the cards are not drawn again for it.
+     *
+     * @param {number} id The competency.
+     * @returns {void}
+     */
+    const pickOnMap = useCallback((id: number): void => pickRef.current(id), []);
     const canvasActions: CanvasActions = useMemo(
-        () => ({labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu}),
-        [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu]
+        () => ({
+            labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu, multiselect,
+            pick: pickOnMap,
+        }),
+        [labels, pagesize, rtl, toggleOnMap, loadMore, menuFor, menuOpen, openMapMenu, multiselect, pickOnMap]
     );
 
     const outlineActions: OutlineActions = {
@@ -2629,6 +2993,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             openMenu(id, anchor, 'outline');
         },
         toggleDisplay,
+        pick,
     };
 
     /**
@@ -2768,13 +3133,14 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         (id === ROOT ? framework.shortname : tree.nodes[id]?.shortname);
 
     /**
-     * The layers over the workspace: a node's menu, the command palette, the "Move to" dialogue.
+     * The layers over the workspace: a node's menu, the command palette, the "Move to" dialogue, the bulk dock's
+     * dialogues.
      *
      * @returns {object} The layers that are open.
      */
     const overlays = (): ReactNode => {
         const menuname = menu ? nameOfItem(menu.id) : undefined;
-        const movingnode = moveDialog !== null ? tree.nodes[moveDialog] : undefined;
+        const movingnode = moveto;
         const offered = palette ? actionsFor(['node', 'framework', 'move', 'workspace', 'structures'], selectedcontext) : [];
         /**
          * Whether an action belongs to the selected item (a competency or the framework).
@@ -2825,7 +3191,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                     <MoveDialog
                         labels={labels}
                         tree={tree}
-                        moving={movingnode}
+                        subjects={movesubjects}
                         frameworkid={framework.id}
                         frameworkname={framework.shortname}
                         rtl={rtl}
@@ -2851,11 +3217,61 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                         onTarget={onMoveTarget}
                     />
                 ) : null}
+                {bulksubjects.length > 0 ? (
+                    <MoveDialog
+                        labels={labels}
+                        tree={tree}
+                        subjects={bulksubjects}
+                        frameworkid={framework.id}
+                        frameworkname={framework.shortname}
+                        rtl={rtl}
+                        pagesize={pagesize}
+                        canpick={false}
+                        loadBranch={(parent, more) => track('children', loadPage(parent, more))}
+                        freshParent={freshParent}
+                        onPick={closeBulk}
+                        onCommit={bulkMove}
+                        onClose={closeBulk}
+                        onLostFocus={restoreFocus}
+                    />
+                ) : null}
+                {bulk !== null && bulk.kind === 'appearance' ? (
+                    <AppearanceDialog
+                        labels={labels}
+                        names={picked.ids.map((id) => tree.nodes[id]?.shortname ?? '')}
+                        options={props.appearance ?? {tag1: [], tag2: [], type: []}}
+                        onCommit={commitAppearance}
+                        onClose={closeBulk}
+                        onLostFocus={restoreFocus}
+                    />
+                ) : null}
+                {bulk !== null && bulk.kind === 'delete' ? (
+                    <DeleteDialog
+                        labels={labels}
+                        names={bulk.ids.map((id) => tree.nodes[id]?.shortname ?? '')}
+                        summary={bulk.summary}
+                        onCommit={() => {
+                            if (bulk.summary) {
+                                bulkDelete(bulk.summary);
+                            }
+                        }}
+                        onClose={closeBulk}
+                        onLostFocus={restoreFocus}
+                    />
+                ) : null}
             </>
         );
     };
 
     const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
+    // The subjects of "Move to": the competency of a node's menu, or the topmost picks of the bulk dock.
+    const moveto = moveDialog !== null ? tree.nodes[moveDialog] : undefined;
+    const movesubjects = useMemo(() => (moveto ? [moveto] : []), [moveto]);
+    const bulkmoving = bulk !== null && bulk.kind === 'move';
+    const bulksubjects = useMemo(
+        () => (bulkmoving ? topmost(tree, picked.ids).map((id) => tree.nodes[id]) : []),
+        [bulkmoving, tree, picked]
+    );
 
     // Usage is offered unless the viewer is told none; while it is the lens shown, its cell stays, pressed.
     const offeredlenses = LENSES.filter((value) => value !== 'usage' || lens === 'usage' || index?.answer.usagelevel !== 'none');
@@ -2903,6 +3319,9 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const rootclasses = ['local-dimensions-hubv2-layout', LAYOUT_CLASSES[layout]];
     if (moving !== null) {
         rootclasses.push('local-dimensions-hubv2-picking');
+    }
+    if (picked.ids.length > 0) {
+        rootclasses.push('local-dimensions-hubv2-haspicks');
     }
 
     return (
@@ -2962,6 +3381,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             findings={findingsmarked}
                             findingwords={findingwords}
                             impact={impact}
+                            multiselect={multiselect}
+                            picked={pickedset}
                         />
                     ) : null}
                     {layout === 'both' ? (
@@ -2988,6 +3409,16 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                                 mapStop.onFocus(event);
                             }}
                             onBlur={mapStop.onBlur}
+                            onClickCapture={(event) => {
+                                // Ctrl+click (Cmd+click) on a card picks it, before React Flow selects the node.
+                                const card = (event.target as HTMLElement).closest<HTMLElement>(NODE_SELECTOR);
+                                const id = card && (event.ctrlKey || event.metaKey) ? competencyOf(card.dataset.id ?? '') : null;
+                                if (multiselect && id !== null) {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    pick(id);
+                                }
+                            }}
                         >
                             <ColumnHeads
                                 labels={labels}
@@ -3042,6 +3473,14 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                         </div>
                     ) : null}
                 </div>
+                <Dock
+                    labels={labels}
+                    count={picked.ids.length}
+                    hidden={picked.ids.filter((id) => !drawn.has(id)).length}
+                    actions={actionsFor(['bulk'], selectedcontext)}
+                    onRun={(id) => runAction(id, null)}
+                    onClear={clearPicked}
+                />
             </div>
             <Panel
                 labels={labels}

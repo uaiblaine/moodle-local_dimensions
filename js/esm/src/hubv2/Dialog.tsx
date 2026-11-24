@@ -35,7 +35,7 @@ import type {KeyboardEvent, MouseEvent, ReactNode, RefObject} from 'react';
 import {createPortal} from 'react-dom';
 
 /** What can take the focus inside the dialogue, in the page's order. */
-const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex="0"], a[href]';
+const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex="0"], a[href]';
 
 /** The dialogue's props. */
 export type DialogProps = {

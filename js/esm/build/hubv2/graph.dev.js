@@ -134,6 +134,10 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
     };
     const decorated = cardDecor(decor, item.id);
     addWords(info, decorated.mark ? decorated.mark.said : "", said(decorated.findings));
+    const picked = !!input.picked?.has(item.id);
+    if (picked && labels.picked) {
+      info.picked = labels.picked;
+    }
     nodes.push({
       id: key,
       type: "competency",
@@ -145,7 +149,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
         childcount: branch ? branch.total : null,
         depth: item.depth,
         moving: moving === item.id,
-        ...decorated
+        ...decorated,
+        picked
       },
       ...CARD,
       selected: selected === item.id,
