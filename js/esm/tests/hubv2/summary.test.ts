@@ -96,3 +96,20 @@ describe('summaryLines', () => {
         ]);
     });
 });
+
+describe('summaryLines with the framework\'s insights', () => {
+    it('replaces the loaded part\'s counts with the framework\'s own, relations and findings included', () => {
+        const server = {competencies: 40, maxdepth: 4, withrule: 7, relations: 3, findings: 12};
+        const all = {...labels, 'hubv2_summary_relations': 'PAIRS', 'hubv2_summary_findings': 'FINDINGS'};
+        expect(summaryLines(all, summaryFacts(sample(), 40), server)).toEqual([
+            {label: 'TOTAL', value: '40'},
+            {label: 'LEVELS', value: '4'},
+            {label: 'RULES', value: '7'},
+            {label: 'PAIRS', value: '3'},
+            {label: 'FINDINGS', value: '12'},
+            {label: 'OPEN', value: '1'},
+        ]);
+        // The control: without them, the same partly loaded tree says its loaded part's counts.
+        expect(summaryLines(all, summaryFacts(sample(), 40)).map((line) => line.label)).toContain('LEVELS LOADED');
+    });
+});

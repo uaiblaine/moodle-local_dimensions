@@ -81,7 +81,10 @@ describe('a reader', () => {
         const reader = context({node: null, frameworkcanmanage: false});
         expect(actionState('addtop', reader)).toBe('hidden');
         expect(actionState('addtop', context({node: null}))).toBe('enabled');
-        expect(offered(['workspace'], reader)).toEqual(['viewoutline', 'viewmap', 'expandall', 'collapseall', 'summary']);
+        expect(offered(['workspace'], reader)).toEqual([
+            'viewoutline', 'viewmap', 'expandall', 'collapseall', 'summary',
+            'lensusage', 'lensrules', 'lensrelations', 'check', 'nextfinding', 'prevfinding',
+        ]);
     });
 
     it('reaches no write through a key: every key command is refused by the same decision', () => {
@@ -277,5 +280,40 @@ describe('the framework on the root', () => {
         expect(last.spec.id).toBe('fwdelete');
         expect(last.spec.danger).toBe(true);
         expect(last.spec.group).toBeGreaterThan(views[views.length - 2].spec.group);
+    });
+});
+
+describe('the lenses and the checker in the registry', () => {
+    it('offer the lenses other than the one shown, usage only when the viewer is told usage', () => {
+        const lensids = (given: ActionContext): ActionId[] => offered(['workspace'], given).filter((id) => id.startsWith('lens'));
+        expect(lensids(context())).toEqual(['lensusage', 'lensrules', 'lensrelations']);
+        expect(lensids(context({lens: 'rules'}))).toEqual(['lensnone', 'lensusage', 'lensrelations']);
+        expect(lensids(context({usagelevel: 'none'}))).toEqual(['lensrules', 'lensrelations']);
+        expect(lensids(context({usagelevel: 'presence'}))).toContain('lensusage');
+    });
+
+    it('offer "Check structure" always, and the walk unless the checker found nothing', () => {
+        expect(actionState('check', context())).toBe('enabled');
+        expect(actionState('nextfinding', context({findings: null}))).toBe('enabled');
+        expect(actionState('prevfinding', context({findings: 3}))).toBe('enabled');
+        expect(actionState('nextfinding', context({findings: 0}))).toBe('hidden');
+        expect(actionState('prevfinding', context({findings: 0}))).toBe('hidden');
+    });
+
+    it('name F8 and Shift+F8 in both panes, and leave F8 with Ctrl or Alt to the browser', () => {
+        expect(shortcutAction({key: 'F8'}, 'outline')).toBe('nextfinding');
+        expect(shortcutAction({key: 'F8', shiftKey: true}, 'map')).toBe('prevfinding');
+        expect(shortcutAction({key: 'F8', ctrlKey: true}, 'outline')).toBeNull();
+        expect(shortcutAction({key: 'F8', altKey: true}, 'map')).toBeNull();
+    });
+
+    it('mark as changing the insights exactly the actions that write a competency, a rule, a link or a relation', () => {
+        expect(ACTIONS.filter((spec) => spec.changes).map((spec) => spec.id)).toEqual([
+            'edit', 'addchild', 'quicksibling', 'quickchild', 'moveto', 'movepick', 'rule', 'links', 'relate', 'delete',
+            'moveroot', 'addtop',
+        ]);
+        // The control: a rename and a reorder change nothing the insights say.
+        expect(ACTIONS.find((spec) => spec.id === 'rename')?.changes).toBeUndefined();
+        expect(ACTIONS.find((spec) => spec.id === 'moveup')?.changes).toBeUndefined();
     });
 });

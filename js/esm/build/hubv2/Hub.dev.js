@@ -43,6 +43,7 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  LENS_ACTIONS,
   PALETTE_SHORTCUT,
   VIEW_ACTIONS,
   actionState,
@@ -54,6 +55,11 @@ import {
   specOf
 } from "./commands";
 import Editor from "./Editor";
+import { codeTitle, findingCounts, orderFindings, stepFinding } from "./findings";
+import { NO_IMPACT, deleteImpact, moveImpact, sameImpact } from "./impact";
+import { IDLE, LENSES, indexInsights, insightFacts, latest, lensOf } from "./insights";
+import { countsChild, drawnSet, lensMarks, pairsOnMap } from "./lenses";
+import { CheckButton, Checker, LensSection, LensSwitch } from "./LensPanel";
 import { focusReturn } from "./focusreturn";
 import { suggestIdnumber } from "./idnumber";
 import Menu from "./Menu";
@@ -82,7 +88,7 @@ import { useRoving } from "./roving";
 import { LAYOUT_EVENT, activation, isLayout, panesOf } from "./selection";
 import Splitter from "./Splitter";
 import { OUTLINE_WIDTH, clampWidth, storeWidth, storedWidth } from "./outlinewidth";
-import { rememberSelection } from "./deeplink";
+import { rememberLens, rememberSelection } from "./deeplink";
 import { blockedBody, confirmBody } from "./deletion";
 import { escapeHtml } from "./html";
 import { motionDuration } from "./motion";
@@ -98,6 +104,8 @@ import {
   deleteCheck,
   deleteCompetency,
   getNode,
+  getNodes,
+  insights as readInsights,
   moveOne,
   moveUpTimes,
   renameCompetency,
@@ -153,6 +161,10 @@ const LAYOUT_CLASSES = {
   both: "local-dimensions-hubv2-layout-both"
 };
 const WIDTH_PROPERTY = "--local-dimensions-hubv2-outline-width";
+const INSIGHTS_DELAY = 800;
+const NAME_BATCH = 50;
+const NO_MARKS = /* @__PURE__ */ new Map();
+const NO_FINDINGS = /* @__PURE__ */ new Map();
 const Workspace = /* @__PURE__ */ __name((props) => {
   const { labels, framework, pagesize, rtl } = props;
   const flow = useReactFlow();
@@ -210,6 +222,27 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     revealed.current?.();
     revealed.current = null;
   }, "settleReveal");
+  const [lens, setLens] = useState(() => lensOf(props.lens));
+  const lensRef = useRef(lens);
+  lensRef.current = lens;
+  const [measure, setMeasure] = useState("courses");
+  const [insightsState, setInsights] = useState(IDLE);
+  const insightsStatus = useRef("idle");
+  const indexRef = useRef(null);
+  const insightsAsk = useMemo(latest, []);
+  const [names, setNames] = useState({});
+  const naming = useRef(/* @__PURE__ */ new Set());
+  const namedPaths = useRef({});
+  const [checker, setChecker] = useState(false);
+  const [findingAt, setFindingAt] = useState(null);
+  const findingAtRef = useRef(null);
+  const holdChecker = useRef(false);
+  const checkButton = useRef(null);
+  const checkerHeading = useRef(null);
+  const relating = useRef(null);
+  const [impact, setImpactState] = useState(NO_IMPACT);
+  const moveDialogRef = useRef(null);
+  moveDialogRef.current = moveDialog;
   const commit = useCallback((update) => {
     treeRef.current = update(treeRef.current);
     setTree(treeRef.current);
@@ -244,9 +277,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   }, [commit]);
   const ensureVisible = useCallback(async (id, pathids) => {
     const chain = [ROOT, ...pathids];
-    for (let index = 0; index < chain.length; index++) {
-      const parent = chain[index];
-      const child = index + 1 < chain.length ? chain[index + 1] : id;
+    for (let index2 = 0; index2 < chain.length; index2++) {
+      const parent = chain[index2];
+      const child = index2 + 1 < chain.length ? chain[index2 + 1] : id;
       if (!hasBranch(treeRef.current, parent)) {
         await loadPage(parent, false);
       }
@@ -273,6 +306,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const choose = useCallback((id) => {
     selectedRef.current = id;
     setSelected(id);
+    if (!holdChecker.current) {
+      setChecker(false);
+    }
     rememberSelection(id);
     setUsage(null);
     setRelated([]);
@@ -373,6 +409,62 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       setAnnouncement(labels.hubv2_movecancelled);
     }
   }, [labels]);
+  const loadInsights = useCallback(() => {
+    const ticket = insightsAsk.begin();
+    insightsStatus.current = "loading";
+    setInsights((current) => ({ status: "loading", index: current.index }));
+    return track("insights", readInsights(framework.id)).then((answer) => {
+      if (!insightsAsk.current(ticket)) {
+        return void 0;
+      }
+      const index2 = indexInsights(answer);
+      indexRef.current = index2;
+      insightsStatus.current = "ready";
+      setInsights({ status: "ready", index: index2 });
+      findingAtRef.current = null;
+      setFindingAt(null);
+      return void 0;
+    }, () => {
+      if (insightsAsk.current(ticket)) {
+        insightsStatus.current = "failed";
+        setInsights((current) => ({ status: "failed", index: current.index }));
+      }
+      return void 0;
+    });
+  }, [framework.id, insightsAsk]);
+  const ensureInsights = useCallback(() => {
+    const status = insightsStatus.current;
+    return status === "idle" || status === "failed" ? loadInsights() : Promise.resolve();
+  }, [loadInsights]);
+  const settled = useCallback((id) => {
+    if (specOf(id).changes && insightsStatus.current !== "idle") {
+      loadInsights().catch(notifyError);
+    }
+  }, [loadInsights]);
+  const need = useCallback((ids) => {
+    const missing = ids.filter((id) => id > 0 && !treeRef.current.nodes[id] && !naming.current.has(id) && namedPaths.current[id] === void 0);
+    for (let start = 0; start < missing.length; start += NAME_BATCH) {
+      const batch = missing.slice(start, start + NAME_BATCH);
+      batch.forEach((id) => naming.current.add(id));
+      track("names", getNodes(batch)).then((answers) => {
+        const found = {};
+        answers.forEach((answer, position) => {
+          const id = batch[position];
+          found[id] = answer.found && answer.node ? answer.node.shortname : "-";
+          namedPaths.current[id] = answer.pathids ?? [];
+        });
+        setNames((current) => ({ ...current, ...found }));
+        return null;
+      }).finally(() => batch.forEach((id) => naming.current.delete(id))).catch(notifyError);
+    }
+  }, []);
+  const setImpact = useCallback((next) => {
+    setImpactState((current) => sameImpact(current, next) ? current : next);
+  }, []);
+  const onMoveTarget = useCallback((target) => {
+    const source = moveDialogRef.current !== null ? treeRef.current.nodes[moveDialogRef.current] : void 0;
+    setImpact(source && target !== null ? moveImpact(source.parentid, target) : NO_IMPACT);
+  }, [setImpact]);
   const panTo = /* @__PURE__ */ __name((key) => {
     const position = graphRef.current?.positions[key];
     const canvas = measureCanvas();
@@ -483,7 +575,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         const known = target === ROOT ? null : { shortname: treeRef.current.nodes[target]?.shortname ?? "", ruletype: null };
         const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
         const notification = await load("core/notification");
-        const confirmed = await notification.saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move).then(() => true, () => false);
+        setImpact(moveImpact(source.parentid, target));
+        const confirmed = await notification.saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move).then(() => true, () => false).finally(() => setImpact(NO_IMPACT));
         if (!confirmed) {
           return;
         }
@@ -496,6 +589,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           await relocate(source.id, source.parentid, answer);
         }
         announce(fill(labels.hubv2_moved, source.shortname));
+        settled("moveto");
       })());
     })().catch(notifyError);
   }, "moveUnder");
@@ -559,7 +653,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       const form = new ModalForm({ formClass: FORM_CLASS, args, modalConfig: { title } });
       form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
         if (node2) {
-          track("refresh", refreshNode(node2.id)).catch(notifyError);
+          track("refresh", refreshNode(node2.id)).then(() => settled("edit")).catch(notifyError);
           return;
         }
         const newid = Number(event.detail?.competencyid) || 0;
@@ -574,12 +668,17 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           if (answer.found) {
             await reveal(newid, answer.pathids ?? []);
           }
+          settled("addchild");
         })()).catch(notifyError);
       });
       await form.show();
     })().catch(notifyError);
   }, "openForm");
-  const storeRule = /* @__PURE__ */ __name((node2, config) => track("refresh", updateRule(node2.id, config).then(() => refreshNode(node2.id))).then(() => announce(labels["core:changessaved"])), "storeRule");
+  const storeRule = /* @__PURE__ */ __name((node2, config) => track("refresh", updateRule(node2.id, config).then(() => refreshNode(node2.id))).then(() => {
+    announce(labels["core:changessaved"]);
+    settled("rule");
+    return void 0;
+  }), "storeRule");
   const editRule = /* @__PURE__ */ __name((node2) => {
     (async () => {
       const children = await track("rule", allChildren(framework.id, node2.id, pagesize));
@@ -597,7 +696,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   }, "editRule");
   const openLinks = /* @__PURE__ */ __name((node2) => {
     const onClose = /* @__PURE__ */ __name(() => {
-      track("refresh", refreshNode(node2.id)).catch(notifyError);
+      track("refresh", refreshNode(node2.id)).then(() => settled("links")).catch(notifyError);
     }, "onClose");
     load("local_dimensions/central/competency_links").then((module) => module.open({
       competencyid: node2.id,
@@ -608,6 +707,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     })).catch(notifyError);
   }, "openLinks");
   const openRelated = /* @__PURE__ */ __name((node2) => {
+    relating.current = node2.id;
     load("local_dimensions/central/related_competencies").then((module) => module.open({ competencyid: node2.id, competencyname: node2.shortname, frameworkid: framework.id })).catch(notifyError);
   }, "openRelated");
   const startMove = /* @__PURE__ */ __name((node2) => {
@@ -619,8 +719,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const stepMove = /* @__PURE__ */ __name((node2, up) => {
     track("refresh", (async () => {
       await moveOne(node2.id, up);
-      const index = treeRef.current.branches[node2.parentid]?.ids.indexOf(node2.id) ?? -1;
-      await reloadBranch(node2.parentid, index + (up ? 1 : 2));
+      const index2 = treeRef.current.branches[node2.parentid]?.ids.indexOf(node2.id) ?? -1;
+      await reloadBranch(node2.parentid, index2 + (up ? 1 : 2));
       const branch = treeRef.current.branches[node2.parentid];
       const values = {
         name: node2.shortname,
@@ -646,7 +746,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         await showBlocked(check);
         return;
       }
-      const confirmed = await notification.deleteCancelPromise(labels.hubv2_delete, confirmBody(labels, node2.shortname, check)).then(() => true, () => false);
+      setImpact(deleteImpact(treeRef.current, node2.id));
+      const confirmed = await notification.deleteCancelPromise(labels.hubv2_delete, confirmBody(labels, node2.shortname, check)).then(() => true, () => false).finally(() => setImpact(NO_IMPACT));
       if (!confirmed) {
         removing.current = null;
         return;
@@ -674,12 +775,112 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         await reloadBranch(node2.parentid);
         await refreshParent(node2.parentid);
         setCount(await countCompetencies(framework.id));
+        settled("delete");
       })());
     })().catch(notifyError);
   }, "remove");
   const revealItem = /* @__PURE__ */ __name((item) => {
     track("reveal", reveal(item.id, item.pathids)).catch(notifyError);
   }, "revealItem");
+  const revealId = /* @__PURE__ */ __name((id) => {
+    if (id === ROOT) {
+      choose(null);
+      focusItem(FRAMEWORK_ID);
+      return Promise.resolve();
+    }
+    let path;
+    if (treeRef.current.nodes[id]) {
+      path = Promise.resolve(ancestors(treeRef.current, id));
+    } else if (namedPaths.current[id] !== void 0) {
+      path = Promise.resolve(namedPaths.current[id]);
+    } else {
+      path = getNode(id).then((answer) => answer.found ? answer.pathids ?? [] : null);
+    }
+    return track("reveal", path.then((pathids) => pathids === null ? void 0 : reveal(id, pathids)));
+  }, "revealId");
+  const revealListed = /* @__PURE__ */ __name((id) => {
+    revealId(id).catch(notifyError);
+  }, "revealListed");
+  const revealFinding = /* @__PURE__ */ __name(async (position, ordered) => {
+    const check = ordered[position];
+    if (!check) {
+      return;
+    }
+    findingAtRef.current = position;
+    setFindingAt(position);
+    holdChecker.current = true;
+    try {
+      await revealId(check.competencyid);
+    } finally {
+      holdChecker.current = false;
+    }
+    const name = check.competencyid === ROOT ? framework.shortname : treeRef.current.nodes[check.competencyid]?.shortname ?? "";
+    announce(fillObject(labels.hubv2_checker_position, {
+      position: String(position + 1),
+      total: String(ordered.length),
+      title: codeTitle(labels, check.code),
+      name
+    }));
+  }, "revealFinding");
+  const openChecker = /* @__PURE__ */ __name(() => {
+    setMenu(null);
+    setChecker(true);
+    ensureInsights().catch(notifyError);
+    window.requestAnimationFrame(() => checkerHeading.current?.focus());
+  }, "openChecker");
+  const closeChecker = /* @__PURE__ */ __name(() => {
+    setChecker(false);
+    checkButton.current?.focus();
+  }, "closeChecker");
+  const stepToFinding = /* @__PURE__ */ __name((forward) => {
+    track("finding", (async () => {
+      setMenu(null);
+      setChecker(true);
+      if (!indexRef.current) {
+        await ensureInsights();
+      }
+      const index2 = indexRef.current;
+      if (!index2) {
+        return;
+      }
+      const ordered = orderFindings(index2.answer.checks);
+      const next = stepFinding(ordered.length, findingAtRef.current, forward);
+      if (next === null) {
+        announce(labels.hubv2_checker_none);
+        return;
+      }
+      await revealFinding(next, ordered);
+    })()).catch(notifyError);
+  }, "stepToFinding");
+  const changeLens = /* @__PURE__ */ __name((next) => {
+    setLens(next);
+    lensRef.current = next;
+    rememberLens(next);
+    const pane = rootRef.current?.closest("[data-tab-content]");
+    if (pane) {
+      pane.dataset.lens = next;
+    }
+    load("local_dimensions/central/preferences").then((preferences) => {
+      preferences.saveDisplay({ structure: { lens: next } });
+      return null;
+    }).catch(notifyError);
+    if (next !== "none") {
+      ensureInsights().catch(notifyError);
+    }
+  }, "changeLens");
+  const runOn = /* @__PURE__ */ __name((action, id) => {
+    const run = /* @__PURE__ */ __name(() => {
+      runAction(action, id);
+    }, "run");
+    if (treeRef.current.nodes[id]) {
+      run();
+      return;
+    }
+    holdChecker.current = true;
+    revealId(id).then(run).finally(() => {
+      holdChecker.current = false;
+    }).catch(notifyError);
+  }, "runOn");
   const loadMoreAndFocus = /* @__PURE__ */ __name((parent, stop) => {
     nextPage(parent).then((first) => {
       if (first !== null) {
@@ -707,8 +908,8 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       for (let round = 0; round < 100 && run === expandRun.current; round++) {
         const step = expandStep(treeRef.current, EXPAND_ALL_BOUND, pagesize);
         capped = step.capped;
-        for (let index = 0; index < step.load.length && run === expandRun.current; index += EXPAND_ALL_PARALLEL) {
-          const batch = step.load.slice(index, index + EXPAND_ALL_PARALLEL).filter((id) => !hasBranch(treeRef.current, id));
+        for (let index2 = 0; index2 < step.load.length && run === expandRun.current; index2 += EXPAND_ALL_PARALLEL) {
+          const batch = step.load.slice(index2, index2 + EXPAND_ALL_PARALLEL).filter((id) => !hasBranch(treeRef.current, id));
           await Promise.all(batch.map((id) => loadPage(id, false)));
         }
         if (run !== expandRun.current) {
@@ -741,18 +942,21 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     const current = treeRef.current;
     const target = id !== null && id !== ROOT ? current.nodes[id] ?? null : null;
     const siblings = target ? current.branches[target.parentid] : void 0;
-    const index = target && siblings ? siblings.ids.indexOf(target.id) : -1;
+    const index2 = target && siblings ? siblings.ids.indexOf(target.id) : -1;
     return {
       node: target,
       frameworkcanmanage: framework.canmanage,
       moving: movingRef.current !== null ? current.nodes[movingRef.current] ?? null : null,
-      first: index <= 0,
-      last: !siblings || index < 0 || index === siblings.ids.length - 1 && siblings.ids.length >= siblings.total,
+      first: index2 <= 0,
+      last: !siblings || index2 < 0 || index2 === siblings.ids.length - 1 && siblings.ids.length >= siblings.total,
       layout: layoutRef.current,
       empty: countRef.current === 0,
       expanding: expandingRef.current,
       frameworkvisible: framework.visible,
-      cancreate: props.structures.cancreate
+      cancreate: props.structures.cancreate,
+      lens: lensRef.current,
+      usagelevel: indexRef.current ? indexRef.current.answer.usagelevel : null,
+      findings: indexRef.current ? indexRef.current.answer.checks.length : null
     };
   }, "contextFor");
   const switchLayout = /* @__PURE__ */ __name((next) => {
@@ -814,6 +1018,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         commit((current) => setExpanded(current, parent, true));
         setCount(await countCompetencies(framework.id));
         announce(fill(labels.hubv2_editor_created, name));
+        settled("quicksibling");
         return id;
       })());
       editorSerial.current++;
@@ -952,7 +1157,19 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       switchLayout(view);
       return;
     }
+    const chosen = LENS_ACTIONS[id];
+    if (chosen) {
+      changeLens(chosen);
+      return;
+    }
     switch (id) {
+      case "check":
+        openChecker();
+        break;
+      case "nextfinding":
+      case "prevfinding":
+        stepToFinding(id === "nextfinding");
+        break;
       case "moveroot":
         pickParent(ROOT);
         break;
@@ -1074,7 +1291,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     return true;
   }, "keyCommand");
   const onRootKeyDown = /* @__PURE__ */ __name((event) => {
-    if (shortcutAction(event, "map") !== "palette" || palette || moveDialog !== null) {
+    const command = shortcutAction(event, "map");
+    if (palette || moveDialog !== null) {
+      return;
+    }
+    if (command === "nextfinding" || command === "prevfinding") {
+      if (menu === null) {
+        event.preventDefault();
+        stepToFinding(command === "nextfinding");
+      }
+      return;
+    }
+    if (command !== "palette") {
       return;
     }
     event.preventDefault();
@@ -1102,7 +1330,10 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       return;
     }
     const command = shortcutAction(event, from);
-    if (command !== null && command !== "palette") {
+    if (command === "palette" || command === "nextfinding" || command === "prevfinding") {
+      return;
+    }
+    if (command !== null) {
       if (keyCommand(command, stop.activeRef.current, element, from)) {
         event.preventDefault();
       }
@@ -1187,6 +1418,10 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         if (selectedRef.current !== null && selectedRef.current !== removing.current) {
           loadSelection(selectedRef.current);
         }
+        if (relating.current !== null) {
+          relating.current = null;
+          settled("relate");
+        }
       }, "onHidden");
       $(document).on(MODAL_HIDDEN, onHidden);
       off = /* @__PURE__ */ __name(() => {
@@ -1195,10 +1430,59 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       return null;
     }).catch(notifyError);
     return () => off();
-  }, [loadSelection]);
+  }, [loadSelection, settled]);
   const moreLabel = useCallback((remaining) => fill(labels.hubv2_loadmore, String(Math.min(remaining, pagesize))), [labels, pagesize]);
   const nameOf = useCallback((info) => nodeName(labels, info), [labels]);
   const frameworkName = useCallback((total) => `${framework.shortname}, ${fillCount(labels, "hubv2_competencies", total)}`, [framework.shortname, labels]);
+  useEffect(() => {
+    if (lensRef.current !== "none") {
+      ensureInsights().catch(notifyError);
+      return void 0;
+    }
+    const timer = window.setTimeout(() => {
+      ensureInsights().catch(notifyError);
+    }, INSIGHTS_DELAY);
+    return () => window.clearTimeout(timer);
+  }, [ensureInsights]);
+  useEffect(() => () => insightsAsk.drop(), [insightsAsk]);
+  const index = insightsState.index;
+  const drawn = useMemo(() => drawnSet(tree), [tree]);
+  const mappairs = useMemo(
+    () => index && lens === "relations" ? pairsOnMap(index.answer.pairs, drawn) : null,
+    [index, lens, drawn]
+  );
+  const nameById = /* @__PURE__ */ __name((id) => {
+    if (id === ROOT) {
+      return framework.shortname;
+    }
+    return tree.nodes[id]?.shortname ?? names[id] ?? null;
+  }, "nameById");
+  const marks = useMemo(() => index ? lensMarks(lens, [...drawn], {
+    labels,
+    index,
+    measure,
+    elsewhere: mappairs ? mappairs.elsewhere : /* @__PURE__ */ new Map(),
+    /**
+     * The name of the parent a child's points belong to.
+     *
+     * @param {number} id The parent.
+     * @returns {string} Its name, empty while unknown.
+     */
+    nameOf: /* @__PURE__ */ __name((id) => tree.nodes[id]?.shortname ?? names[id] ?? "", "nameOf")
+  }) : NO_MARKS, [index, lens, drawn, labels, measure, mappairs, tree, names]);
+  const findingsmarked = useMemo(
+    () => checker && index ? findingCounts(index.answer.checks) : NO_FINDINGS,
+    [checker, index]
+  );
+  const findingwords = useCallback((total) => fillCount(labels, "hubv2_findings", total), [labels]);
+  const decor = useMemo(() => ({
+    marks,
+    findings: findingsmarked,
+    findingwords,
+    impact,
+    counts: lens === "rules" && index ? (parent, child) => countsChild(index, parent, child) : void 0,
+    pairs: mappairs ? mappairs.edges : void 0
+  }), [marks, findingsmarked, findingwords, impact, lens, index, mappairs]);
   const relatedids = useMemo(() => related.map((item) => item.id), [related]);
   const graph = useMemo(() => buildGraph({
     tree,
@@ -1207,8 +1491,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     related: relatedids,
     moving,
     labels: { roledescription: labels.hubv2_noderole, more: moreLabel, name: nameOf, framework: frameworkName },
-    rtl
-  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl]);
+    rtl,
+    decor
+  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, nameOf, frameworkName, rtl, decor]);
   const graphRef = useRef(graph);
   graphRef.current = graph;
   const nodes = useMemo(() => graph.nodes.map((node2) => {
@@ -1419,6 +1704,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       keys.forEach(([shortcut, label]) => hints.push({ shortcut, label }));
     }
     hints.push({ shortcut: PALETTE_SHORTCUT, label: labels.hubv2_commands });
+    if (insightsState.index && insightsState.index.answer.checks.length > 0) {
+      hints.push({ shortcut: { key: "F8" }, label: labels.hubv2_cmd_nextfinding });
+    }
     return hints;
   }, "outlineHints");
   const outlineEditor = /* @__PURE__ */ __name(() => {
@@ -1443,7 +1731,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2228,
+            lineNumber: 2672,
             columnNumber: 21
           }
         ) };
@@ -1472,7 +1760,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2243,
+            lineNumber: 2687,
             columnNumber: 21
           }
         ) };
@@ -1481,14 +1769,14 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     return null;
   }, "outlineEditor");
   const entryOf = /* @__PURE__ */ __name((view) => ({ id: view.spec.id, label: labels[view.spec.label], icon: view.spec.icon, shortcut: view.spec.shortcut }), "entryOf");
-  const menuItems = /* @__PURE__ */ __name((id) => menuActions(id).map((view, index, all) => ({
+  const menuItems = /* @__PURE__ */ __name((id) => menuActions(id).map((view, index2, all) => ({
     id: view.spec.id,
     label: labels[view.spec.label],
     icon: view.spec.icon,
     shortcut: view.spec.shortcut,
     disabled: view.state === "disabled",
     danger: view.spec.danger,
-    separator: index > 0 && all[index - 1].spec.group !== view.spec.group
+    separator: index2 > 0 && all[index2 - 1].spec.group !== view.spec.group
   })), "menuItems");
   const silent = /* @__PURE__ */ __name(() => "", "silent");
   const aria = useMemo(() => ({
@@ -1540,7 +1828,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2346,
+          lineNumber: 2790,
           columnNumber: 21
         }
       ) : null,
@@ -1568,7 +1856,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2361,
+          lineNumber: 2805,
           columnNumber: 21
         }
       ) : null,
@@ -1587,30 +1875,71 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           freshParent,
           onPick: () => {
             setMoveDialog(null);
+            setImpact(NO_IMPACT);
             startMove(movingnode2);
           },
           onCommit: (target) => {
             setMoveDialog(null);
+            setImpact(NO_IMPACT);
             moveUnder(movingnode2, target, false);
           },
-          onClose: () => setMoveDialog(null),
-          onLostFocus: restoreFocus
+          onClose: () => {
+            setMoveDialog(null);
+            setImpact(NO_IMPACT);
+          },
+          onLostFocus: restoreFocus,
+          onTarget: onMoveTarget
         },
         void 0,
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2381,
+          lineNumber: 2825,
           columnNumber: 21
         }
       ) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2344,
+      lineNumber: 2788,
       columnNumber: 13
     });
   }, "overlays");
   const movingnode = moving !== null ? tree.nodes[moving] ?? null : null;
+  const offeredlenses = LENSES.filter((value) => value !== "usage" || lens === "usage" || index?.answer.usagelevel !== "none");
+  const facts = insightFacts(index);
+  const orderedfindings = orderFindings(facts.checks);
+  const loadedids = Object.keys(tree.nodes).map(Number);
+  const fallbackState = /* @__PURE__ */ __name(() => framework.canmanage && moving === null ? "enabled" : "hidden", "fallbackState");
+  const checkerPanel = /* @__PURE__ */ __name(() => checker ? /* @__PURE__ */ jsxDEV(
+    Checker,
+    {
+      labels,
+      state: insightsState,
+      findings: orderedfindings,
+      current: findingAt,
+      frameworkname: framework.shortname,
+      canmanage: framework.canmanage,
+      nameOf: nameById,
+      need,
+      actionFor: (action, id) => tree.nodes[id] ? actionState(action, contextFor(id)) : fallbackState(),
+      onReveal: (position) => {
+        revealFinding(position, orderedfindings).catch(notifyError);
+      },
+      onFix: runOn,
+      onAgain: () => {
+        loadInsights().catch(notifyError);
+      },
+      onClose: closeChecker,
+      headingRef: checkerHeading
+    },
+    void 0,
+    false,
+    {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+      lineNumber: 2879,
+      columnNumber: 9
+    }
+  ) : null, "checkerPanel");
   const relatedcount = node && usage !== null ? related.length : null;
   const widthstyle = { [WIDTH_PROPERTY]: `${outlineWidth}px` };
   const rootclasses = ["local-dimensions-hubv2-layout", LAYOUT_CLASSES[layout]];
@@ -1620,23 +1949,45 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   return /* @__PURE__ */ jsxDEV("div", { className: rootclasses.join(" "), style: widthstyle, ref: rootRef, onKeyDown: onRootKeyDown, children: [
     /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-main", children: [
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
+        /* @__PURE__ */ jsxDEV(LensSwitch, { labels, lens, offered: offeredlenses, onChange: changeLens }, void 0, false, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+          lineNumber: 2912,
+          columnNumber: 21
+        }),
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2421,
+          lineNumber: 2913,
           columnNumber: 21
         }),
         panes.map ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2424,
+            lineNumber: 2916,
             columnNumber: 29
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 2423,
+          lineNumber: 2915,
           columnNumber: 25
         }) : null,
+        /* @__PURE__ */ jsxDEV(
+          CheckButton,
+          {
+            labels,
+            findings: facts.findings,
+            open: checker,
+            buttonRef: checkButton,
+            onToggle: () => checker ? closeChecker() : openChecker()
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 2919,
+            columnNumber: 21
+          }
+        ),
         /* @__PURE__ */ jsxDEV(
           "button",
           {
@@ -1652,11 +2003,11 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               labels.hubv2_commands,
               /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-keys", "aria-hidden": "true", children: shortcutCaps(PALETTE_SHORTCUT, mac).map((cap) => /* @__PURE__ */ jsxDEV("kbd", { children: cap }, cap, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2439,
+                lineNumber: 2933,
                 columnNumber: 79
               })) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2438,
+                lineNumber: 2932,
                 columnNumber: 25
               })
             ]
@@ -1665,13 +2016,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2427,
+            lineNumber: 2921,
             columnNumber: 21
           }
         )
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2420,
+        lineNumber: 2911,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-panes", ref: panesBox, children: [
@@ -1698,13 +2049,17 @@ const Workspace = /* @__PURE__ */ __name((props) => {
             menuOpen,
             editor: outlineEditor(),
             hints: outlineHints(),
-            mac
+            mac,
+            marks,
+            findings: findingsmarked,
+            findingwords,
+            impact
           },
           void 0,
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2445,
+            lineNumber: 2939,
             columnNumber: 25
           }
         ) : null,
@@ -1723,7 +2078,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2470,
+            lineNumber: 2968,
             columnNumber: 25
           }
         ) : null,
@@ -1758,7 +2113,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                 false,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                  lineNumber: 2494,
+                  lineNumber: 2992,
                   columnNumber: 29
                 }
               ),
@@ -1805,18 +2160,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                       false,
                       {
                         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                        lineNumber: 2538,
+                        lineNumber: 3036,
                         columnNumber: 37
                       }
                     ),
                     /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 2540,
+                      lineNumber: 3038,
                       columnNumber: 37
                     }),
                     /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 2541,
+                      lineNumber: 3039,
                       columnNumber: 37
                     })
                   ]
@@ -1825,12 +2180,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                 true,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                  lineNumber: 2505,
+                  lineNumber: 3003,
                   columnNumber: 33
                 }
               ) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 2504,
+                lineNumber: 3002,
                 columnNumber: 29
               })
             ]
@@ -1839,18 +2194,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 2481,
+            lineNumber: 2979,
             columnNumber: 25
           }
         ) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2443,
+        lineNumber: 2937,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2419,
+      lineNumber: 2910,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -1869,27 +2224,54 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         moveactions: actionsFor(["move"], selectedcontext),
         topactions: actionsFor(["workspace"], selectedcontext).filter((view) => view.spec.id === "addtop"),
         frameworkactions,
-        summary: summaryLines(labels, summaryFacts(tree, count)),
+        summary: summaryLines(labels, summaryFacts(tree, count), facts.summary),
         summaryRef,
-        actions
+        actions,
+        lens: /* @__PURE__ */ jsxDEV(
+          LensSection,
+          {
+            labels,
+            lens,
+            state: insightsState,
+            measure,
+            loaded: loadedids,
+            nameOf: nameById,
+            need,
+            reveal: revealListed,
+            ruleState: (id) => tree.nodes[id] ? actionState("rule", contextFor(id)) : fallbackState(),
+            runOn,
+            onMeasure: setMeasure,
+            onRetry: () => {
+              loadInsights().catch(notifyError);
+            }
+          },
+          void 0,
+          false,
+          {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
+            lineNumber: 3064,
+            columnNumber: 21
+          }
+        ),
+        checker: checkerPanel()
       },
       void 0,
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 2548,
+        lineNumber: 3046,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2566,
+      lineNumber: 3083,
       columnNumber: 13
     }),
     overlays()
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2418,
+    lineNumber: 2909,
     columnNumber: 9
   });
 }, "Workspace");
@@ -1901,21 +2283,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 2584,
+      lineNumber: 3101,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Workspace, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2589,
+    lineNumber: 3106,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2588,
+    lineNumber: 3105,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 2587,
+    lineNumber: 3104,
     columnNumber: 9
   });
 }, "Hub");

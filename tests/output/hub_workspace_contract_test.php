@@ -82,6 +82,26 @@ final class hub_workspace_contract_test extends \basic_testcase {
     }
 
     /**
+     * The server, the saved preference and the workspace know the same lenses, and the page passes the address's
+     * lens to the tab's pane.
+     *
+     * Change that must make it fail: drop 'relations' from STRUCTURE_LENSES in amd/src/central/preferences.js.
+     *
+     * @return void
+     */
+    public function test_every_side_knows_the_same_lenses(): void {
+        $this->assertSame(['none', 'usage', 'rules', 'relations'], hub_map::LENSES);
+        $this->assertSame(hub_map::LENSES, $this->list_of($this->source('js/esm/src/hubv2/insights.ts'), 'LENSES'));
+        $this->assertSame(hub_map::LENSES, $this->list_of($this->source('amd/src/central/preferences.js'), 'STRUCTURE_LENSES'));
+        $central = $this->source('central.php');
+        $this->assertStringContainsString("optional_param('lens', '', PARAM_ALPHA)", $central);
+        $this->assertStringContainsString("['name' => 'lens', 'value' => \$lens]", $central);
+        $this->assertStringContainsString("'lens' => \$lens,", $central);
+        // The workspace keeps the pane's data in step, so a reload of the pane opens the lens shown last.
+        $this->assertStringContainsString('pane.dataset.lens = next;', $this->source('js/esm/src/hubv2/Hub.tsx'));
+    }
+
+    /**
      * The switch tells the workspace its layout by the event the workspace listens for.
      *
      * Change that must make it fail: rename LAYOUT_EVENT in js/esm/src/hubv2/selection.ts.

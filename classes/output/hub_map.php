@@ -43,6 +43,16 @@ use local_dimensions\helper;
  */
 final class hub_map {
     /**
+     * @var string[] The workspace's lenses, in its switch's order; 'none' draws the tree as it is. Kept in step with
+     * LENSES in js/esm/src/hubv2/insights.ts and STRUCTURE_LENSES in amd/src/central/preferences.js
+     * (hub_workspace_contract_test).
+     */
+    public const array LENSES = ['none', 'usage', 'rules', 'relations'];
+
+    /** @var string The lens shown when neither the address nor the saved preference names a known one. */
+    public const string DEFAULT_LENS = 'none';
+
+    /**
      * Every local_dimensions string the canvas reads, handed to the page with strings_for_js().
      *
      * Kept in step with KEYS in js/esm/src/hubv2/strings.ts, which reads them in one call at mount;
@@ -74,11 +84,42 @@ final class hub_map {
         'hubv2_appearance',
         'hubv2_assessment',
         'hubv2_canvas',
+        'hubv2_check_colour_contrast',
+        'hubv2_check_colour_contrast_desc',
+        'hubv2_check_description_empty',
+        'hubv2_check_description_empty_desc',
+        'hubv2_check_idnumber_empty',
+        'hubv2_check_idnumber_empty_desc',
+        'hubv2_check_rule_cannot_fire',
+        'hubv2_check_rule_cannot_fire_desc',
+        'hubv2_check_rule_single_child',
+        'hubv2_check_rule_single_child_desc',
+        'hubv2_check_rule_without_children',
+        'hubv2_check_rule_without_children_desc',
+        'hubv2_check_unused',
+        'hubv2_check_unused_desc',
+        'hubv2_checker',
+        'hubv2_checker_again',
+        'hubv2_checker_clean',
+        'hubv2_checker_close',
+        'hubv2_checker_intro',
+        'hubv2_checker_none',
+        'hubv2_checker_position',
+        'hubv2_checker_reveal',
+        'hubv2_checker_revealname',
+        'hubv2_checker_title',
         'hubv2_children',
         'hubv2_children_one',
+        'hubv2_cmd_check',
+        'hubv2_cmd_lensnone',
+        'hubv2_cmd_lensrelations',
+        'hubv2_cmd_lensrules',
+        'hubv2_cmd_lensusage',
         'hubv2_cmd_links',
         'hubv2_cmd_movepick',
         'hubv2_cmd_moveto',
+        'hubv2_cmd_nextfinding',
+        'hubv2_cmd_prevfinding',
         'hubv2_cmd_quickchild',
         'hubv2_cmd_quicksibling',
         'hubv2_cmd_relate',
@@ -129,6 +170,8 @@ final class hub_map {
         'hubv2_editor_rename',
         'hubv2_expand',
         'hubv2_expandall_capped',
+        'hubv2_findings',
+        'hubv2_findings_one',
         'hubv2_fitview',
         'hubv2_fw_context',
         'hubv2_fw_delete',
@@ -140,6 +183,65 @@ final class hub_map {
         'hubv2_fw_visibility',
         'hubv2_hint_actions',
         'hubv2_hint_reorder',
+        'hubv2_insights_failed',
+        'hubv2_insights_loading',
+        'hubv2_insights_retry',
+        'hubv2_lens',
+        'hubv2_lens_bucket_high',
+        'hubv2_lens_bucket_low',
+        'hubv2_lens_bucket_mid',
+        'hubv2_lens_bucket_unused',
+        'hubv2_lens_bucket_used',
+        'hubv2_lens_count_courses',
+        'hubv2_lens_count_courses_one',
+        'hubv2_lens_count_modules',
+        'hubv2_lens_count_modules_one',
+        'hubv2_lens_count_plans',
+        'hubv2_lens_count_plans_one',
+        'hubv2_lens_count_templates',
+        'hubv2_lens_count_templates_one',
+        'hubv2_lens_elsewhere',
+        'hubv2_lens_elsewhere_said',
+        'hubv2_lens_elsewhere_said_one',
+        'hubv2_lens_legend',
+        'hubv2_lens_measure',
+        'hubv2_lens_measure_courses',
+        'hubv2_lens_measure_modules',
+        'hubv2_lens_measure_plans',
+        'hubv2_lens_measure_templates',
+        'hubv2_lens_none',
+        'hubv2_lens_pair',
+        'hubv2_lens_pairs',
+        'hubv2_lens_pairs_empty',
+        'hubv2_lens_related',
+        'hubv2_lens_relations',
+        'hubv2_lens_relations_desc',
+        'hubv2_lens_rule_asks',
+        'hubv2_lens_rule_asks_all',
+        'hubv2_lens_rule_available',
+        'hubv2_lens_rule_cannotfire',
+        'hubv2_lens_rule_childpoints',
+        'hubv2_lens_rule_childpoints_one',
+        'hubv2_lens_rule_childsaid',
+        'hubv2_lens_rule_points',
+        'hubv2_lens_rule_required',
+        'hubv2_lens_rule_requiredchildren',
+        'hubv2_lens_rule_type',
+        'hubv2_lens_rule_with',
+        'hubv2_lens_rule_without',
+        'hubv2_lens_rules',
+        'hubv2_lens_rules_desc',
+        'hubv2_lens_rules_empty',
+        'hubv2_lens_unrelated',
+        'hubv2_lens_unused_empty',
+        'hubv2_lens_unused_partial',
+        'hubv2_lens_unused_said',
+        'hubv2_lens_unusedlist',
+        'hubv2_lens_usage',
+        'hubv2_lens_usage_desc',
+        'hubv2_lens_usage_none',
+        'hubv2_lens_usage_presence',
+        'hubv2_lens_used_said',
         'hubv2_loading',
         'hubv2_loadmore',
         'hubv2_minimap',
@@ -197,10 +299,13 @@ final class hub_map {
         'hubv2_searchresults',
         'hubv2_searchresults_one',
         'hubv2_seeusage',
+        'hubv2_showmore',
+        'hubv2_summary_findings',
         'hubv2_summary_levels',
         'hubv2_summary_levels_loaded',
         'hubv2_summary_loaded',
         'hubv2_summary_opened',
+        'hubv2_summary_relations',
         'hubv2_summary_rules',
         'hubv2_summary_rules_loaded',
         'hubv2_summary_title',
@@ -239,9 +344,14 @@ final class hub_map {
         'tool_lp' => [
             'addcompetency',
             'competencycannotbedeleted',
+            'competencyoutcome_complete',
+            'competencyoutcome_evidence',
+            'competencyoutcome_none',
+            'competencyoutcome_recommend',
             'deletecompetency',
             'editcompetency',
             'hidden',
+            'outcome',
             'taxonomies',
             'visible',
         ],
@@ -292,6 +402,63 @@ final class hub_map {
     }
 
     /**
+     * The lens the workspace opens with: the one the pane names (the address's, or the one the workspace last
+     * chose), else the viewer's saved one, else none.
+     *
+     * Each value is only a word: anything but a lens of LENSES counts as none named, so a mistyped link opens the
+     * saved lens. The saved value is sanitised on read (helper::get_central_prefs()) and checked again here, so
+     * this method alone decides.
+     *
+     * @param string $requested The pane's lens value, '' when it names none.
+     * @param string $saved The viewer's saved lens, '' when none.
+     * @return string One of LENSES.
+     */
+    public static function resolve_lens(string $requested, string $saved): string {
+        if (in_array($requested, self::LENSES, true)) {
+            return $requested;
+        }
+        if (in_array($saved, self::LENSES, true)) {
+            return $saved;
+        }
+        return self::DEFAULT_LENS;
+    }
+
+    /**
+     * Clean a client write of the display preference (core_user's preference services call it, lib.php): the hub's
+     * mode is the stored one ({@see \local_dimensions\local\hub_mode::clean_display()}), and so is the lens unless
+     * the write carries a lens of LENSES.
+     *
+     * The client sends the lens only in the write that follows its choice (amd/src/central/preferences.js), so a
+     * page left open since an earlier visit, saving another display choice, never writes back the lens it loaded
+     * with over one chosen since. The preference is writable by its owner only, so the stored value read here is the
+     * writer's own.
+     *
+     * @param mixed $value The value the client sent (JSON), or null.
+     * @param string $name The preference's name.
+     * @return string|null The value to store.
+     */
+    public static function clean_display($value, string $name): ?string {
+        $cleaned = \local_dimensions\local\hub_mode::clean_display($value, $name);
+        if ($cleaned === null) {
+            return null;
+        }
+        $decoded = json_decode($cleaned, true);
+        $display = is_array($decoded) ? $decoded : [];
+        $structure = is_array($display['structure'] ?? null) ? $display['structure'] : [];
+        if (!in_array($structure['lens'] ?? null, self::LENSES, true)) {
+            unset($structure['lens']);
+            $stored = (string) helper::get_central_prefs()['display']['structure']['lens'];
+            if ($stored !== '') {
+                $structure['lens'] = $stored;
+            }
+        }
+        if ($structure !== [] || array_key_exists('structure', $display)) {
+            $display['structure'] = $structure;
+        }
+        return (string) json_encode($display);
+    }
+
+    /**
      * The canvas's props, from what the tab resolved for the selected framework.
      *
      * @param competency_framework $framework The framework shown.
@@ -302,8 +469,9 @@ final class hub_map {
      * @param array|null $reveal The deep link's target ({@see reveal_target()}), or null.
      * @param string $layout The view shown, one of structure::WORKSPACE_VIEWS; anything else is the map.
      * @param array $structures The commands not about one framework (structure::structures_commands()).
+     * @param string $lens The lens to open with ({@see resolve_lens()}); anything else is none.
      * @return array Keys: framework, roots, pagesize, rulesmodules, courseoutcomes, moduleoutcomes, rtl, reveal,
-     *     layout, structures.
+     *     layout, structures, lens.
      */
     public static function props(
         competency_framework $framework,
@@ -313,7 +481,8 @@ final class hub_map {
         bool $canmanage,
         ?array $reveal,
         string $layout,
-        array $structures
+        array $structures,
+        string $lens = self::DEFAULT_LENS
     ): array {
         return [
             'framework' => self::framework_facts($framework, $competencycount, $canmanage),
@@ -336,6 +505,8 @@ final class hub_map {
                 'cancreate' => !empty($structures['cancreate']),
                 'canscalespage' => !empty($structures['canscalespage']),
             ],
+            // The workspace's first lens; it then keeps the address, the pane and the preference in step itself.
+            'lens' => in_array($lens, self::LENSES, true) ? $lens : self::DEFAULT_LENS,
         ];
     }
 

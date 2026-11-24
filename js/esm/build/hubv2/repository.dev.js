@@ -24,6 +24,12 @@ const allChildren = /* @__PURE__ */ __name(async (frameworkid, parentid, limitnu
   }
 }, "allChildren");
 const getNode = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_get_structure_node", { competencyid }), "getNode");
+const getNodes = /* @__PURE__ */ __name((ids) => ids.length === 0 ? Promise.resolve([]) : callMany(ids.map((competencyid) => ({ methodname: "local_dimensions_get_structure_node", args: { competencyid } }))).then((answers) => answers), "getNodes");
+const insights = /* @__PURE__ */ __name((frameworkid) => call("local_dimensions_get_framework_insights", { frameworkid }).then((answer) => ({
+  ...answer,
+  // The pairs list is the newest field of the answer: an older server sends none.
+  pairs: answer.pairs ?? []
+})), "insights");
 const search = /* @__PURE__ */ __name((frameworkid, query) => call("local_dimensions_search_structure", { frameworkid, query, limitfrom: 0, limitnum: 25 }), "search");
 const selectionData = /* @__PURE__ */ __name((competencyid) => callMany([
   { methodname: "local_dimensions_competency_usage", args: { competencyid } },
@@ -52,6 +58,8 @@ export {
   deleteCheck,
   deleteCompetency,
   getNode,
+  getNodes,
+  insights,
   moveOne,
   moveUpTimes,
   renameCompetency,

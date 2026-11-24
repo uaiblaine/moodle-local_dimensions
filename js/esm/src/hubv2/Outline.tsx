@@ -21,7 +21,9 @@
  * and this component only draws the rows and reports clicks. A row's click selects it, or picks the
  * new parent in the move mode; its chevron only opens or closes. Each row is named by the competency
  * alone and described by its meta in words (children, rule, related competencies), so the state a
- * screen reader already reads from aria-expanded and aria-level is not said twice.
+ * screen reader already reads from aria-expanded and aria-level is not said twice. A lens adds its short meta
+ * (a count, a mark) and its words to the description; while the checker is open a row with findings carries a
+ * warning mark and their count, said in the description too.
  *
  * @module     local_dimensions/hubv2/Outline
  * @copyright  2026 Anderson Blaine
@@ -34,6 +36,8 @@ import {levelTerm} from './columns';
 import {shortcutCaps} from './commands';
 import type {Shortcut} from './commands';
 import {isHexColour} from './html';
+import {markWords} from './lenses';
+import type {ItemMark} from './lenses';
 import Menu from './Menu';
 import {rowMeta, scrollToShow} from './outlinerows';
 import type {OutlineRow} from './outlinerows';
@@ -111,6 +115,13 @@ export type OutlineProps = {
     editor: OutlineEditor | null,
     hints: OutlineHint[],
     mac: boolean,
+    // What the lens shown puts on each competency's row (lenses.ts); empty without a lens.
+    marks: Map<number, ItemMark>,
+    // Findings by competency (0 the framework) while the checker is open, and their count in words.
+    findings: Map<number, number>,
+    findingwords: (count: number) => string,
+    // The competencies a change being confirmed touches, ROOT for the framework.
+    impact: Set<number>,
 };
 
 /**
@@ -221,6 +232,55 @@ const RowMenuButton = (props: {labels: Labels, row: OutlineRow, open: boolean, a
 };
 
 /**
+ * A competency row's classes: selected, being moved, touched by a change being confirmed.
+ *
+ * @param {boolean} selected Whether it is selected.
+ * @param {boolean} moving Whether it is being moved.
+ * @param {boolean} impact Whether a change being confirmed touches it.
+ * @returns {Array} The classes.
+ */
+const rowClasses = (selected: boolean, moving: boolean, impact: boolean): string[] => {
+    const classes = ['local-dimensions-hubv2-orow'];
+    if (selected) {
+        classes.push('local-dimensions-hubv2-orow-selected');
+    }
+    if (moving) {
+        classes.push('local-dimensions-hubv2-orow-moving');
+    }
+    if (impact) {
+        classes.push('local-dimensions-hubv2-impact');
+    }
+    return classes;
+};
+
+/**
+ * What a lens and the checker show at a row's end, hidden from assistive technology (the row's description says
+ * it): the lens's quiet counter, icon or dashed mark, then the findings' warning mark and count.
+ *
+ * @param {object} props The props.
+ * @returns {ReactNode} The marks, or nothing.
+ */
+const LensMeta = ({mark, findings}: {mark: ItemMark | null, findings: number}): ReactNode => {
+    const meta = mark ? mark.meta : null;
+    return (
+        <>
+            {meta ? (
+                <span className="local-dimensions-hubv2-ometa local-dimensions-hubv2-olens" aria-hidden="true">
+                    {meta.dashed ? <span className="local-dimensions-hubv2-ometa-unused" /> : null}
+                    {meta.icon ? <i className={`fa ${meta.icon}`} /> : null}
+                    {meta.text}
+                </span>
+            ) : null}
+            {findings > 0 ? (
+                <span className="local-dimensions-hubv2-findmark" aria-hidden="true">
+                    <i className="fa fa-triangle-exclamation" />{findings}
+                </span>
+            ) : null}
+        </>
+    );
+};
+
+/**
  * One row.
  *
  * @param {object} props The props.
@@ -242,8 +302,13 @@ const Row = (props: {
     menuopen: boolean,
     // The taxonomy term of the row's level.
     term: string,
+    mark: ItemMark | null,
+    findings: number,
+    findingwords: (count: number) => string,
+    impact: boolean,
 }): ReactNode => {
-    const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions, display, menu, menuopen, term} = props;
+    const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions, display, menu, menuopen, term, mark,
+        findings, findingwords, impact} = props;
     // The level's indent, written on the start side, so a right-to-left page indents from the right.
     const indent = {paddingInlineStart: `${0.25 + (row.level - 1) * 1.25}rem`};
     const common = {
@@ -279,7 +344,8 @@ const Row = (props: {
     const {shown, said: metasaid} = meta(labels, row, count, related);
     const node = row.node;
     const extras = displayed(labels, node, display, term);
-    const said = [...extras.map((extra) => extra.said), metasaid].filter((part) => part !== '').join(', ');
+    const said = [...extras.map((extra) => extra.said), metasaid, ...markWords(mark, findings, findingwords)]
+        .filter((part) => part !== '').join(', ');
     let markclass = 'local-dimensions-hubv2-mark local-dimensions-hubv2-mark-framework';
     let markstyle;
     if (node) {
@@ -288,13 +354,7 @@ const Row = (props: {
             ? 'local-dimensions-hubv2-mark'
             : `local-dimensions-hubv2-mark ${DEPTH_MARKS[Math.min(row.level - 1, DEPTH_MARKS.length) - 1]}`;
     }
-    const classes = ['local-dimensions-hubv2-orow'];
-    if (selected) {
-        classes.push('local-dimensions-hubv2-orow-selected');
-    }
-    if (moving) {
-        classes.push('local-dimensions-hubv2-orow-moving');
-    }
+    const classes = rowClasses(selected, moving, impact);
     /**
      * Open or close the row, without selecting it.
      *
@@ -332,6 +392,7 @@ const Row = (props: {
                 </span>
             ) : null}
             {shown.length > 0 ? <span className="local-dimensions-hubv2-ometa" aria-hidden="true">{shown}</span> : null}
+            <LensMeta mark={mark} findings={findings} />
             {menu ? <RowMenuButton labels={labels} row={row} open={menuopen} actions={actions} /> : null}
             {said ? <span id={`${ID}-${row.key}-desc`} className="visually-hidden">{said}</span> : null}
         </li>
@@ -366,7 +427,7 @@ const SkeletonRows = ({level, parent}: {level: number, parent: string}): ReactNo
  */
 const Outline = (props: OutlineProps): ReactNode => {
     const {labels, framework, count, rows, selected, moving, relatedcount, active, loading, expanding, notice, rtl, pagesize,
-        listRef, actions, display, menuFor, menuOpen, editor, hints, mac} = props;
+        listRef, actions, display, menuFor, menuOpen, editor, hints, mac, marks, findings, findingwords, impact} = props;
     const scrolled = useRef<string | null>(null);
     const optionsButton = useRef<HTMLButtonElement>(null);
     const [options, setOptions] = useState(false);
@@ -416,6 +477,10 @@ const Outline = (props: OutlineProps): ReactNode => {
                 menu={row.kind !== 'more' && row.key === selectedkey && menuFor === row.id}
                 menuopen={menuOpen === row.id}
                 term={row.kind === 'competency' ? levelTerm(framework.taxonomies, framework.taxonomyfallback, row.level - 1) : ''}
+                mark={row.kind === 'competency' ? marks.get(row.id) ?? null : null}
+                findings={row.kind === 'more' ? 0 : findings.get(row.id) ?? 0}
+                findingwords={findingwords}
+                impact={row.kind !== 'more' && impact.has(row.id)}
             />
         );
         if (row.kind === 'competency' && !row.expanded && loading.includes(row.id)) {

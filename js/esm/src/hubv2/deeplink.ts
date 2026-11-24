@@ -14,10 +14,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The canvas's deep link: the selected competency kept in the hub's address.
+ * The canvas's deep link: the selected competency and the lens kept in the hub's address.
  *
  * The address is rewritten in place (history.replaceState: selecting never adds a history entry), and
- * only its competencyid parameter changes; the path, the other parameters and the fragment that names
+ * only its competencyid (or lens) parameter changes; the path, the other parameters and the fragment that names
  * the hub's open tab stay. What the link reveals on the next visit is decided by the server, which
  * reveals it only when the competency belongs to the framework the map shows. The list view's AMD
  * twin is amd/src/central/deeplink.js; keep the two in step.
@@ -55,6 +55,39 @@ export const withCompetency = (href: string, id: number | null): string => {
  */
 export const rememberSelection = (id: number | null): void => {
     const next = withCompetency(window.location.href, id);
+    if (next !== window.location.href) {
+        window.history.replaceState(window.history.state, '', next);
+    }
+};
+
+/** The address parameter that names the lens. */
+export const LENS_PARAM = 'lens';
+
+/**
+ * An address naming a lens, or none: "No lens" is the default, so it is named by no parameter.
+ *
+ * @param {string} href The address.
+ * @param {string} lens The lens.
+ * @returns {string} The address with only its lens parameter changed.
+ */
+export const withLens = (href: string, lens: string): string => {
+    const url = new URL(href);
+    if (lens && lens !== 'none') {
+        url.searchParams.set(LENS_PARAM, lens);
+    } else {
+        url.searchParams.delete(LENS_PARAM);
+    }
+    return url.href;
+};
+
+/**
+ * Keep the lens in the current address, without a new history entry, as the selection is kept.
+ *
+ * @param {string} lens The lens.
+ * @returns {void}
+ */
+export const rememberLens = (lens: string): void => {
+    const next = withLens(window.location.href, lens);
     if (next !== window.location.href) {
         window.history.replaceState(window.history.state, '', next);
     }

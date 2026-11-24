@@ -36,6 +36,7 @@ use local_dimensions\output\central\contextbar;
 use local_dimensions\output\dynamictabs\frameworks;
 use local_dimensions\output\dynamictabs\plans;
 use local_dimensions\output\dynamictabs\structure;
+use local_dimensions\output\hub_map;
 
 /*
  * Two entries, one page. Site administration links here with no context: the hub reopens in the
@@ -119,6 +120,11 @@ if (!in_array($view, structure::VIEWS, true)) {
     $view = '';
 }
 $competencyid = max(0, optional_param('competencyid', 0, PARAM_INT));
+// The workspace's lens, when the link names one; without it the workspace opens the viewer's saved lens.
+$lens = optional_param('lens', '', PARAM_ALPHA);
+if (!in_array($lens, hub_map::LENSES, true)) {
+    $lens = '';
+}
 
 
 // Resolve the shared context once so the page-level selector and every tab agree.
@@ -144,6 +150,7 @@ $tabinstances = [
         'frameworkid' => $frameworkid,
         'view' => $view,
         'competencyid' => $competencyid,
+        'lens' => $lens,
         'classic' => (int) $classic,
     ]),
     'plans' => new plans([
@@ -245,6 +252,7 @@ $tabsdata = [
         ['name' => 'templateid', 'value' => $templateid],
         ['name' => 'view', 'value' => $view],
         ['name' => 'competencyid', 'value' => $competencyid],
+        ['name' => 'lens', 'value' => $lens],
         ['name' => 'classic', 'value' => (int) $classic],
     ],
     'tabs' => $tabs,

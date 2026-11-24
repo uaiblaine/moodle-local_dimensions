@@ -33,6 +33,7 @@
 
 import type {Edge, Node} from '../../vendor/xyflow/xyflow.js';
 import type {NameInfo} from './keynav';
+import type {ItemMark} from './lenses';
 import {layoutTree, mirrorLayout} from './layout';
 import type {LayoutInput, Point} from './layout';
 import {ROOT, isExpanded, visibleItems} from './tree';
@@ -52,8 +53,8 @@ export const FRAMEWORK_ID = 'f';
  */
 export const EDGE_A11Y = {ariaRole: 'presentation', ariaLabel: null, domAttributes: {'aria-hidden': true}} as const;
 
-/** Data of the framework node. */
-export type FrameworkData = {kind: 'framework', framework: Framework, count: number};
+/** Data of the framework node: with its findings while the checker is open, and whether a change touches it. */
+export type FrameworkData = {kind: 'framework', framework: Framework, count: number, findings: number, impact: boolean};
 
 /** Data of a competency node. */
 export type CompetencyData = {
@@ -63,6 +64,12 @@ export type CompetencyData = {
     childcount: number | null,
     depth: number,
     moving: boolean,
+    // What the lens shown puts on it, or null.
+    mark: ItemMark | null,
+    // Its findings while the checker is open, 0 otherwise.
+    findings: number,
+    // Whether the change a dialogue is confirming touches it.
+    impact: boolean,
 };
 
 /** Data of a "load more" node. */
@@ -157,7 +164,83 @@ export type GraphInput = {
     },
     /** Whether the tree grows right to left (the page's language is written so). */
     rtl?: boolean,
+    /** What the lenses, the checker and an impact preview put on the map; nothing when absent. */
+    decor?: Decor,
 };
+
+/**
+ * What the map shows on top of the tree: the lens's marks, the findings, the competencies a change touches,
+ * the edges the rules lens draws in the rule's style, and the related pairs the relations lens draws.
+ */
+export type Decor = {
+    marks?: Map<number, ItemMark>,
+    // The words of a count of findings ("2 findings"), for the names.
+    findingwords?: (count: number) => string,
+    // Findings by competency, 0 for the framework.
+    findings?: Map<number, number>,
+    // The competencies a change touches, ROOT for the framework.
+    impact?: Set<number>,
+    // Under the rules lens: whether a parent's rule counts a child (lenses.countsChild).
+    counts?: (parent: number, child: number) => boolean,
+    // Under the relations lens: the related pairs with both ends drawn.
+    pairs?: [number, number][],
+};
+
+/**
+ * Add what the lens and the checker say of a competency to its name's facts, only when they say something.
+ *
+ * @param {object} info The name's facts, changed in place.
+ * @param {string} lens The lens's words.
+ * @param {string} findings The findings' words.
+ * @returns {void}
+ */
+const addWords = (info: NameInfo, lens: string, findings: string): void => {
+    if (lens) {
+        info.lens = lens;
+    }
+    if (findings) {
+        info.findings = findings;
+    }
+};
+
+/**
+ * The framework node's accessible name: its own, then its findings while the checker is open.
+ *
+ * @param {object} input The graph's input.
+ * @param {string} findings The findings' words.
+ * @returns {string} The name.
+ */
+const frameworkLabel = (input: GraphInput, findings: string): string => {
+    const {framework, labels} = input;
+    const name = labels.framework ? labels.framework(framework.competencycount) : framework.shortname;
+    return findings ? `${name}, ${findings}` : name;
+};
+
+/**
+ * What the lens, the checker and an impact preview put on one competency's card.
+ *
+ * @param {object} decor What the map shows on top of the tree.
+ * @param {number} id The competency.
+ * @returns {object} Its mark, its findings and whether a change touches it.
+ */
+const cardDecor = (decor: Decor, id: number): {mark: ItemMark | null, findings: number, impact: boolean} => ({
+    mark: decor.marks?.get(id) ?? null,
+    findings: decor.findings?.get(id) ?? 0,
+    impact: !!decor.impact?.has(id),
+});
+
+/**
+ * Whether the edge from a parent to a child takes the rule's style: the parent has a rule and, under the rules
+ * lens, that rule counts the child.
+ *
+ * @param {object|null} parent The parent, null for the framework.
+ * @param {object} decor What the map shows on top of the tree.
+ * @param {number} parentid The parent's id.
+ * @param {number} child The child.
+ * @returns {boolean} Whether it does.
+ */
+const ruleStyled = (parent: StructureNode | null, decor: Decor, parentid: number, child: number): boolean =>
+    !!(parent && parent.ruletype) && (!decor.counts || decor.counts(parentid, child));
 
 /** The graph: nodes, edges, and every position by node id. */
 export type Graph = {nodes: CanvasNode[], edges: CanvasEdge[], positions: Record<string, Point>};
@@ -170,6 +253,21 @@ export type Graph = {nodes: CanvasNode[], edges: CanvasEdge[], positions: Record
  */
 export const buildGraph = (input: GraphInput): Graph => {
     const {tree, framework, selected, related, moving, labels} = input;
+    const decor: Decor = input.decor ?? {};
+    /**
+     * How many findings an item carries while the checker is open.
+     *
+     * @param {number} id The competency, ROOT for the framework.
+     * @returns {number} The count.
+     */
+    const findingsOf = (id: number): number => decor.findings?.get(id) ?? 0;
+    /**
+     * A count of findings in words, for a name; nothing for none.
+     *
+     * @param {number} count The count.
+     * @returns {string} The words.
+     */
+    const said = (count: number): string => (count > 0 && decor.findingwords ? decor.findingwords(count) : '');
     const items = visibleItems(tree);
     const layoutinput: LayoutInput[] = [{key: FRAMEWORK_ID, parent: null}];
     items.forEach((item) => {
@@ -189,10 +287,11 @@ export const buildGraph = (input: GraphInput): Graph => {
         id: FRAMEWORK_ID,
         type: 'framework',
         position: positions[FRAMEWORK_ID],
-        data: {kind: 'framework', framework, count: framework.competencycount},
+        data: {kind: 'framework', framework, count: framework.competencycount, findings: findingsOf(ROOT),
+            impact: !!decor.impact?.has(ROOT)},
         ...CARD,
         selected: selected === null,
-        ariaLabel: labels.framework ? labels.framework(framework.competencycount) : framework.shortname,
+        ariaLabel: frameworkLabel(input, said(findingsOf(ROOT))),
         ariaRole: 'group',
         domAttributes: {...NODE_ATTRIBUTES, 'aria-current': selected === null ? 'true' : undefined},
     }];
@@ -233,6 +332,8 @@ export const buildGraph = (input: GraphInput): Graph => {
             rule: node.ruletype ? node.rulelabel : '',
             relatedto: relatedset.has(item.id) ? relatedto : null,
         };
+        const decorated = cardDecor(decor, item.id);
+        addWords(info, decorated.mark ? decorated.mark.said : '', said(decorated.findings));
         nodes.push({
             id: key,
             type: 'competency',
@@ -244,6 +345,7 @@ export const buildGraph = (input: GraphInput): Graph => {
                 childcount: branch ? branch.total : null,
                 depth: item.depth,
                 moving: moving === item.id,
+                ...decorated,
             },
             ...CARD,
             selected: selected === item.id,
@@ -256,7 +358,7 @@ export const buildGraph = (input: GraphInput): Graph => {
             },
         });
         const parent = item.parent === ROOT ? null : tree.nodes[item.parent];
-        const hasrule = !!(parent && parent.ruletype);
+        const hasrule = ruleStyled(parent, decor, item.parent, item.id);
         // The rule's label is drawn once, on the first child's edge, near the parent.
         const first = hasrule && !ruled.has(item.parent);
         if (first) {
@@ -273,8 +375,30 @@ export const buildGraph = (input: GraphInput): Graph => {
         });
     });
 
+    // The relations lens draws every pair whose two ends are drawn, as the selection's own relations are drawn.
+    const paired = new Set<string>();
+    (decor.pairs ?? []).forEach(([a, b]) => {
+        paired.add(`${a}-${b}`);
+        edges.push({
+            id: `p-${a}-${b}`,
+            source: competencyKey(a),
+            target: competencyKey(b),
+            type: 'default',
+            className: 'local-dimensions-hubv2-edge-related',
+            zIndex: 1,
+            ...EDGE_A11Y,
+        });
+    });
+
     if (selected !== null && drawn.has(selected)) {
-        related.filter((id) => id !== selected && drawn.has(id)).forEach((id) => {
+        /**
+         * The key of the pair a relation of the selection makes, lower id first, as the lens's pairs are keyed.
+         *
+         * @param {number} id The related competency.
+         * @returns {string} The key.
+         */
+        const pairKey = (id: number): string => `${Math.min(id, selected)}-${Math.max(id, selected)}`;
+        related.filter((id) => id !== selected && drawn.has(id) && !paired.has(pairKey(id))).forEach((id) => {
             edges.push({
                 id: `r-${selected}-${id}`,
                 source: competencyKey(selected),

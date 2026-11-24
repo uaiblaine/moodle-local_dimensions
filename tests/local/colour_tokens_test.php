@@ -304,6 +304,10 @@ final class colour_tokens_test extends \basic_testcase {
         ['danger-ink', 'danger-tint', 4.5],
         ['info-ink', 'info-tint', 4.5],
         ['neutral-ink', 'neutral-tint', 4.5],
+        // The hub's usage lens: a single-hue ramp of the brand's tint, edge and fill, each under its declared ink
+        // (on-brand-fill on brand-fill is above). Moving a step's ink or ground must keep these.
+        ['ink-strong', 'brand-tint', 4.5],
+        ['ink-strong', 'brand-edge', 4.5],
     ];
 
     /**
