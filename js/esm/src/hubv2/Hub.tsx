@@ -14,15 +14,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Competency hub v2: a framework's tree as a canvas of nodes, with a detail panel beside it.
+ * The map view of the hub's Competencies tab: a framework's tree as a canvas of nodes, with a detail
+ * panel beside it.
  *
- * The entry of the bundle (js/esm/bundle.json), mounted by templates/hubv2.mustache with the props
- * classes/output/hubv2_page.php builds. The tree is lazy: the first page of roots arrives as props,
+ * The entry of the bundle (js/esm/bundle.json), mounted by templates/central/structure.mustache in the
+ * map view with the props classes/output/hub_map.php builds; the tab around it owns the context, the
+ * framework choice and the view switch. The tree is lazy: the first page of roots arrives as props,
  * each branch is loaded when it is first opened (local_dimensions_browse_structure), and a node is
  * refreshed from the server after every change. Nothing is persisted: the layout is recomputed from
  * the tree on every change (layout.ts), and nodes cannot be dragged. Every action reuses the hub's
  * own dialogues and core's competency services, called as the list view (amd/src/central/structure.js)
- * calls them.
+ * calls them. The selected competency is kept in the address (deeplink.ts), and a competency the link
+ * named is revealed at mount when the server found it in this framework (props.reveal).
  *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
@@ -39,8 +42,12 @@ import {load, notifyError} from './amd';
 import type {RuleConfig} from './amd';
 import {CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf} from './graph';
 import type {CanvasEdge, CanvasNode} from './graph';
+import {rememberSelection} from './deeplink';
 import {blockedBody, confirmBody} from './deletion';
 import {escapeHtml} from './html';
+import {motionDuration} from './motion';
+import {moveBody} from './move';
+import type {MoveParent} from './move';
 import {CanvasContext, CompetencyNode, FrameworkNode, MoreNode, RuleEdge} from './Nodes';
 import type {CanvasActions} from './Nodes';
 import Panel from './Panel';
@@ -52,7 +59,7 @@ import {
 } from './repository';
 import type {NodeAnswer} from './repository';
 import Search from './Search';
-import {fill, fillObject, loadLabels} from './strings';
+import {fill, loadLabels} from './strings';
 import type {Labels} from './strings';
 import {
     ROOT, ancestors, branchHas, createTree, expandPath, forgetBranch, hasBranch, insertChildren, isExpanded, isWithin,
@@ -220,7 +227,7 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     }, []);
 
     /**
-     * Select a competency, or the framework with null.
+     * Select a competency, or the framework with null, and keep it in the address.
      *
      * @param {number|null} id The competency.
      * @returns {void}
@@ -228,6 +235,7 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
     const choose = useCallback((id: number | null): void => {
         selectedRef.current = id;
         setSelected(id);
+        rememberSelection(id);
         setUsage(null);
         setRelated([]);
         if (id === null) {
@@ -380,11 +388,24 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
             endMove(true);
             return;
         }
-        const name = escapeHtml(source.shortname);
-        const question = target === ROOT
-            ? fill(labels.hubv2_moveconfirmroot, name)
-            : fillObject(labels.hubv2_moveconfirm, {name, parent: escapeHtml(treeRef.current.nodes[target]?.shortname ?? '')});
+        /**
+         * A parent as it is now: read again, since whether it has a rule is what the dialogue says.
+         *
+         * @param {number} id The parent, ROOT for the top level.
+         * @returns {Promise} Resolves with the parent, or null for the top level or one gone.
+         */
+        const freshParent = async(id: number): Promise<MoveParent | null> => {
+            if (id === ROOT) {
+                return null;
+            }
+            const answer = await getNode(id);
+            return answer.found && answer.node ? answer.node : null;
+        };
         (async() => {
+            const [oldparent, newparent] = await track('move', Promise.all([freshParent(source.parentid), freshParent(target)]));
+            // A new parent gone meanwhile is named as the canvas knew it; core refuses the move then.
+            const known = target === ROOT ? null : {shortname: treeRef.current.nodes[target]?.shortname ?? '', ruletype: null};
+            const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
             const notification = await load('core/notification');
             const confirmed = await notification
                 .saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move)
@@ -763,12 +784,30 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
         related: relatedids,
         moving,
         labels: {roledescription: labels.hubv2_noderole, more: moreLabel},
-    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel]);
+        rtl: props.rtl,
+    }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, props.rtl]);
 
     const nodes = useMemo((): CanvasNode[] => graph.nodes.map((node) =>
         (measured[node.id] ? {...node, measured: measured[node.id]} : node)), [graph, measured]);
 
     const oncanvas = useMemo(() => new Set(graph.nodes.map((node) => node.id)), [graph]);
+
+    // Reveal the competency the address named, once, when the server found it in this framework.
+    const linked = useRef(false);
+    useEffect(() => {
+        const target = props.reveal;
+        if (linked.current || !target) {
+            return;
+        }
+        linked.current = true;
+        track('reveal', ensureVisible(target.id, target.pathids).then(() => {
+            if (treeRef.current.nodes[target.id]) {
+                centreOn.current = competencyKey(target.id);
+                choose(target.id);
+            }
+            return undefined;
+        })).catch(notifyError);
+    }, [props.reveal, ensureVisible, choose]);
 
     // Centre on a competency just revealed, once the layout has placed it.
     useEffect(() => {
@@ -779,13 +818,14 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
         }
         centreOn.current = null;
         const zoom = Math.max(flow.getZoom(), 0.8);
-        flow.setCenter(position.x + CARD.width / 2, position.y + CARD.height / 2, {zoom, duration: 300}).catch(() => null);
+        flow.setCenter(position.x + CARD.width / 2, position.y + CARD.height / 2, {zoom, duration: motionDuration(300)})
+            .catch(() => null);
         focusNode(key);
     }, [graph, flow]);
 
     const canvasActions: CanvasActions = useMemo(
-        () => ({labels, pagesize, toggle, loadMore}),
-        [labels, pagesize, toggle, loadMore]
+        () => ({labels, pagesize, rtl: props.rtl, toggle, loadMore}),
+        [labels, pagesize, props.rtl, toggle, loadMore]
     );
 
     /**
@@ -851,6 +891,8 @@ const Canvas = (props: HubProps & {labels: Labels}): ReactNode => {
                             minZoom={0.2}
                             maxZoom={1.5}
                             ariaLabelConfig={aria}
+                            // The library's wrapper is an application; it is named after the framework it draws.
+                            aria-label={framework.shortname}
                             proOptions={{hideAttribution: true}}
                         >
                             <Background variant={BackgroundVariant.Dots} gap={18} size={1}

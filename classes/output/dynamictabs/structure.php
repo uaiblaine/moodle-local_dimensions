@@ -29,18 +29,47 @@ use core_competency\competency;
 use core_competency\competency_framework;
 use local_dimensions\helper;
 use local_dimensions\local\unlisted_categories;
+use local_dimensions\output\hub_map;
 
 /**
  * Structure tab: navigate frameworks and their competencies without reloading.
  *
  * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, frameworkid,
- * showhidden.
+ * showhidden, view ('list' or 'map'), competencyid (the map's deep link).
+ *
+ * Both views share everything this class resolves (the context, the framework list with its
+ * unlisted-category filter, the selected framework, canmanage); only the body differs: the classic
+ * tree and detail panes, or the React canvas ({@see hub_map}).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class structure extends \core\output\dynamic_tabs\base {
+    /** @var string[] The tab's views; the first is the default. */
+    public const array VIEWS = ['list', 'map'];
+
+    /**
+     * The view the tab shows: the one the pane names, else the viewer's saved one, else the list.
+     *
+     * The pane names a view when the URL or the view switch did; any other value counts as none, so a
+     * mistyped link opens what the viewer last chose. The saved value is sanitised on read, and is
+     * checked again here so that this method alone decides.
+     *
+     * @param string $requested The pane's view value, '' when it names none.
+     * @param string $saved The viewer's saved view (helper::get_central_prefs()).
+     * @return string One of VIEWS.
+     */
+    public static function resolve_view(string $requested, string $saved): string {
+        if (in_array($requested, self::VIEWS, true)) {
+            return $requested;
+        }
+        if (in_array($saved, self::VIEWS, true)) {
+            return $saved;
+        }
+        return self::VIEWS[0];
+    }
+
     /**
      * The label shown on the tab.
      *
@@ -106,6 +135,11 @@ class structure extends \core\output\dynamic_tabs\base {
         $pagecontext = $resolved['context'];
         $frameworkid = (int) ($data['frameworkid'] ?? 0);
         $showhidden = (bool) ($data['showhidden'] ?? false);
+        $view = self::resolve_view(
+            (string) ($data['view'] ?? ''),
+            (string) helper::get_central_prefs()['display']['structure']['view']
+        );
+        $ismap = $view === 'map';
 
         // Frameworks readable in the resolved context. All (including hidden) are sent so the
         // "show hidden" toggle can reveal them client-side without reloading the tab; the default
@@ -182,8 +216,33 @@ class structure extends \core\output\dynamic_tabs\base {
 
         $jsonoptions = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
 
+        // The map draws the selected framework even when it holds no competency yet: its panel adds the first.
+        $mapprops = '';
+        if ($ismap && $selected) {
+            hub_map::require_strings($PAGE);
+            $props = hub_map::props(
+                $selected,
+                $count,
+                $rootnodes,
+                $roottotal,
+                $canmanage,
+                hub_map::reveal_target($selected, (int) ($data['competencyid'] ?? 0))
+            );
+            // Read back by core's React helper with JSON.parse; the hex flags keep the markup inert, and a
+            // stray invalid byte in admin text must not empty the whole props, and the mount with them.
+            $mapprops = (string) json_encode(
+                $props,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_INVALID_UTF8_SUBSTITUTE
+            );
+        }
+
         return [
             'contexttype' => $contexttype,
+            'view' => $view,
+            'ismap' => $mapprops !== '',
+            'islistview' => $view === 'list',
+            'ismapview' => $ismap,
+            'mapprops' => $mapprops,
             'selectedcategoryid' => $categoryid,
             // Flags for the shared detail partial: the inline pane has clickable usage
             // counters and the referenced-competencies section (the referenced-competency

@@ -190,6 +190,35 @@ final class hub_unlisted_children_test extends advanced_testcase {
     }
 
     /**
+     * The map draws only what the list lists: asked for the unlisted child's framework, an unrelated
+     * viewer's map falls back to the parent's, as the administrator's (the control) does not.
+     *
+     * @return void
+     */
+    public function test_the_map_withholds_the_unlisted_child_framework(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $childfw = \core_competency\competency_framework::get_record(['shortname' => 'Framework in child']);
+        $parentfw = \core_competency\competency_framework::get_record(['shortname' => 'Framework in parent']);
+        $mapped = function () use ($f, $childfw, $PAGE): int {
+            $tab = new structure([
+                'contexttype' => 'coursecat',
+                'categoryid' => (int) $f['parent']->id,
+                'locked' => 1,
+                'frameworkid' => (int) $childfw->get('id'),
+                'view' => 'map',
+            ]);
+            $data = $tab->export_for_template($PAGE->get_renderer('core'));
+            return (int) json_decode($data['mapprops'], true)['framework']['id'];
+        };
+
+        $this->assertSame((int) $childfw->get('id'), $mapped(), 'Control: the administrator');
+        $this->setUser($f['user']);
+        $this->assertSame((int) $parentfw->get('id'), $mapped());
+    }
+
+    /**
      * A role in the unlisted child is the plugin's relationship: its holder keeps the child's framework.
      *
      * @return void

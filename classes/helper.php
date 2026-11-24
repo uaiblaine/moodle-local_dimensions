@@ -2630,6 +2630,10 @@ class helper {
                 'id' => $dispbool($structsrc, 'id', false),
                 'rule' => $dispbool($structsrc, 'rule', true),
                 'showhidden' => $dispbool($structsrc, 'showhidden', false),
+                // The Competencies tab's view; anything but a known one reads as the list.
+                'view' => in_array($structsrc['view'] ?? null, \local_dimensions\output\dynamictabs\structure::VIEWS, true)
+                    ? (string) $structsrc['view']
+                    : \local_dimensions\output\dynamictabs\structure::VIEWS[0],
             ],
             'planslist' => [
                 'id' => $dispbool($listsrc, 'id', false),

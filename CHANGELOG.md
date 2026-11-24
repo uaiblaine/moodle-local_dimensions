@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The competency map becomes the Competencies tab's map view
+
+Version `2026100534`. The canvas leaves its own page for the hub's Competencies tab, where a **List**
+/ **Map** switch beside the framework select chooses the view; the list stays the default.
+
+- **One tab, two views.** The map is drawn from what the tab already resolves (the context, the
+  framework list with the `local_unlistedcourses` rules, the selected framework, whether the viewer
+  manages it), so it lists exactly what the list lists, and a course category's manager reaches it
+  from the category's menu, locked to the category and its subcategories. The page's own context
+  form, its *List view* link and the canvas's `listurl` prop go.
+- **Remembered and linkable.** The view is kept under `structure` in
+  `local_dimensions_central_display` and in the address (`view=map`), which beats the saved choice;
+  an unknown value reads as none. `competencyid=M` reveals and selects that competency on the map
+  when the server finds it in the framework shown, and is ignored otherwise. Selecting a competency
+  rewrites the address in place, with no history entry; a framework or context change drops it.
+- **`hubv2.php` redirects** to `central.php?tab=structure&view=map`, carrying `contexttype`,
+  `categoryid` and `frameworkid` when given, behind the hub's own Site administration gate, so a
+  viewer the old page refused is refused the same way. The admin tree entry
+  `local_dimensions_centralv2`, `hubv2_page`, the `hubv2` template and the `hubv2_toolbar` module
+  are removed, with the strings `hubv2`, `hubv2_apply` and `hubv2_listview`.
+- **The canvas's strings** are listed once, in `output\hub_map::STRINGS`, which the tab hands to the
+  page in the map view; `hub_map_test` keeps it equal to `js/esm/src/hubv2/strings.ts`.
+- **Reduced motion**: the centring on a revealed competency is instant when the system asks for
+  reduced motion; the canvas animates nothing in CSS.
+- **Right to left**: in a language written right to left the tree grows leftwards (the layout
+  mirrored, the edge handles and the expand chevrons swapped, each card in the page's direction).
+- **Edges leave the accessibility tree** (hidden, no role, no "Edge from f to c198" name), and React
+  Flow's application wrapper is named after the framework.
+- **The move confirmation names the rules core resets**: `set_parent_competency()` resets the rule
+  of the current and of the new parent, and the dialogue says which of them has one, read fresh
+  before asking (`hubv2_moverule_oldparent`, `hubv2_moverule_newparent`).
+- **Design System**: the view switch is the segmented control (as a view switch, `aria-pressed`);
+  the canvas's radii come from the new `--local-dimensions-radius-*` scale tokens (a counter alone is
+  round: the expand button and the rule label lose their pill), and its two 0.6875rem sizes become
+  0.75rem.
+
 ### Competency hub v2 on React Flow 13
 
 Version `2026100533`. The canvas looks and behaves as before, on the new library.

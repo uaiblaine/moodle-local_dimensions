@@ -5,7 +5,8 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
  *
  * Every leaf takes the next row, in the order given, and every parent sits level with the middle
  * of its first and last child, so subtrees never overlap and siblings keep the server's order. A
- * gap after each top-level subtree that has children keeps the framework's areas apart. Pure: no
+ * gap after each top-level subtree that has children keeps the framework's areas apart. In a language
+ * written right to left the same tree is mirrored, root at the right ({@see mirrorLayout()}). Pure: no
  * library and no DOM, so Jest pins it; positions are the top-left corners React Flow places nodes by.
  *
  * @module     local_dimensions/hubv2/layout
@@ -46,8 +47,16 @@ const layoutTree = /* @__PURE__ */ __name((items, options = GRID) => {
   roots.forEach((root) => place(root, 0));
   return positions;
 }, "layoutTree");
+const mirrorLayout = /* @__PURE__ */ __name((positions) => {
+  const mirrored = {};
+  Object.entries(positions).forEach(([key, point]) => {
+    mirrored[key] = { x: 0 - point.x, y: point.y };
+  });
+  return mirrored;
+}, "mirrorLayout");
 export {
   GRID,
-  layoutTree
+  layoutTree,
+  mirrorLayout
 };
 //# sourceMappingURL=layout.dev.js.map

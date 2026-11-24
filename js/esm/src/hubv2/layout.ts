@@ -18,7 +18,8 @@
  *
  * Every leaf takes the next row, in the order given, and every parent sits level with the middle
  * of its first and last child, so subtrees never overlap and siblings keep the server's order. A
- * gap after each top-level subtree that has children keeps the framework's areas apart. Pure: no
+ * gap after each top-level subtree that has children keeps the framework's areas apart. In a language
+ * written right to left the same tree is mirrored, root at the right ({@see mirrorLayout()}). Pure: no
  * library and no DOM, so Jest pins it; positions are the top-left corners React Flow places nodes by.
  *
  * @module     local_dimensions/hubv2/layout
@@ -88,4 +89,23 @@ export const layoutTree = (items: LayoutInput[], options: LayoutOptions = GRID):
     };
     roots.forEach((root) => place(root, 0));
     return positions;
+};
+
+/**
+ * Mirror a placed tree for a language written right to left: the root at the right, each depth one
+ * column further left, every row where it was.
+ *
+ * Positions are top-left corners and every card has the same width, so negating x mirrors the whole
+ * tree about the root's column and keeps every gap between columns; the root stays at the origin.
+ *
+ * @param {object} positions Map of key to position, from layoutTree().
+ * @returns {object} The mirrored map.
+ */
+export const mirrorLayout = (positions: Record<string, Point>): Record<string, Point> => {
+    const mirrored: Record<string, Point> = {};
+    Object.entries(positions).forEach(([key, point]) => {
+        // 0 - x, not -x: the root column stays at +0, never -0.
+        mirrored[key] = {x: 0 - point.x, y: point.y};
+    });
+    return mirrored;
 };

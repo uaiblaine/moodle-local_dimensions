@@ -3,9 +3,10 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
 /**
  * The canvas's strings: read once at mount, then filled in place.
  *
- * The page hands every one of them to core's string cache (hubv2_page::STRINGS and OTHER_STRINGS,
- * through strings_for_js), so {@see loadLabels()} resolves without a request. hubv2_page_test holds
- * these lists equal to the server's and every key present in both languages.
+ * The Competencies tab hands every one of them to core's string cache in its map view
+ * (hub_map::STRINGS and OTHER_STRINGS, through strings_for_js), so {@see loadLabels()} resolves
+ * without a request. hub_map_test holds these lists equal to the server's and every key present in
+ * both languages.
  *
  * @module     local_dimensions/hubv2/strings
  * @copyright  2026 Anderson Blaine
@@ -75,6 +76,8 @@ const KEYS = [
   "hubv2_moveinvalid",
   "hubv2_movepick",
   "hubv2_moveroot",
+  "hubv2_moverule_newparent",
+  "hubv2_moverule_oldparent",
   "hubv2_movetitle",
   "hubv2_moveup",
   "hubv2_nocolour",

@@ -46,6 +46,7 @@ import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
 import * as Preferences from 'local_dimensions/central/preferences';
+import {setUrlParams, urlCompetencyId} from 'local_dimensions/central/deeplink';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
 const PAGE_SIZE = 25;
@@ -87,7 +88,11 @@ const SELECTORS = {
     childLoadMore: '[data-region="child-loadmore"]',
     structureBody: '[data-region="structure-body"]',
     structureResizer: '[data-region="structure-resizer"]',
+    switchView: '[data-action="switch-view"]',
 };
+
+/** @type {String[]} The tab's views (structure::VIEWS); the first is the default. */
+const VIEWS = ['list', 'map'];
 
 /** @type {HTMLElement|null} */
 let activeRow = null;
@@ -1365,7 +1370,73 @@ const initStructureResize = (region) => {
 };
 
 /**
+ * Wire what both views share: the framework select, its "show hidden" filter and the view switch.
+ *
+ * Each re-renders the pane from its dataset, the tab's single source of truth for its arguments. The
+ * map's deep link is carried by the dataset too: a framework change drops it (it names a competency
+ * of the framework left behind), the list has no use for it, and a switch to the map takes the one
+ * the address holds, which the canvas keeps on the competency selected last.
+ *
+ * @param {HTMLElement} region
+ * @param {HTMLElement|null} pane
+ * @param {String} view The view shown.
+ */
+const initSharedControls = (region, pane, view) => {
+    const select = region.querySelector(SELECTORS.frameworkSelect);
+    if (select && pane) {
+        select.addEventListener('change', () => {
+            window.clearTimeout(searchDebounce);
+            pane.dataset.frameworkid = select.value;
+            pane.dataset.competencyid = 0;
+            setUrlParams({competencyid: null});
+            Preferences.saveNav({frameworkid: Number(select.value) || 0});
+            reloadPane(pane).catch(notifyError);
+        });
+    }
+
+    // Snapshot every framework option so "show hidden" filters the dropdown client-side
+    // (no pane reload -> no re-apply of display prefs -> no toggle flash).
+    if (select) {
+        frameworkOptions = Array.from(select.options).map((option) => ({
+            value: option.value,
+            label: option.textContent,
+            hidden: option.dataset.hidden === '1',
+        }));
+    }
+    const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
+    if (toggleHidden) {
+        const showhidden = Boolean(Preferences.getDisplay().structure.showhidden);
+        toggleHidden.checked = showhidden;
+        applyShowHidden(region, showhidden);
+        toggleHidden.addEventListener('change', () => {
+            Preferences.saveDisplay({structure: {showhidden: toggleHidden.checked}});
+            applyShowHidden(region, toggleHidden.checked);
+        });
+    }
+
+    region.querySelectorAll(SELECTORS.switchView).forEach((button) => {
+        button.addEventListener('click', () => {
+            const next = button.dataset.view;
+            if (!pane || !VIEWS.includes(next) || next === view) {
+                return;
+            }
+            window.clearTimeout(searchDebounce);
+            pane.dataset.view = next;
+            const competencyid = next === 'map' ? urlCompetencyId() : 0;
+            pane.dataset.competencyid = competencyid;
+            // The address names the view too, so a reload keeps it before the debounced preference lands.
+            setUrlParams({view: next, competencyid: competencyid || null});
+            Preferences.saveDisplay({structure: {view: next}});
+            reloadPane(pane).catch(notifyError);
+        });
+    });
+};
+
+/**
  * Initialise the Structure tab. Re-runs after each tab refresh.
+ *
+ * In the map view only the shared controls are wired: the canvas owns its tree, its selection and
+ * its actions, and the list's footer stays hidden with no row to act on.
  */
 export const init = () => {
     const region = document.querySelector(SELECTORS.region);
@@ -1384,10 +1455,19 @@ export const init = () => {
         ActionFooter.hide();
     }
 
+    const view = VIEWS.includes(region.dataset.view) ? region.dataset.view : VIEWS[0];
     if (pane) {
         // Keep the pane dataset in sync with the framework the server actually resolved: when the
         // requested one is not listed in the context, it falls back to the first visible framework.
+        // The view likewise: a pane that named none shows the saved one, which later reloads keep.
         pane.dataset.frameworkid = frameworkid;
+        pane.dataset.view = view;
+    }
+
+    initSharedControls(region, pane, view);
+    if (view === 'map') {
+        activeRow = null;
+        return;
     }
 
     rulesModules = readJson(region, 'rules-modules', []);
@@ -1498,38 +1578,6 @@ export const init = () => {
             searchDebounce = window.setTimeout(() => {
                 runSearch(region, query).catch(notifyError);
             }, 250);
-        });
-    }
-
-    const select = region.querySelector(SELECTORS.frameworkSelect);
-    if (select && pane) {
-        select.addEventListener('change', () => {
-            window.clearTimeout(searchDebounce);
-            // The pane dataset is the single source of truth for the tab's arguments.
-            pane.dataset.frameworkid = select.value;
-            Preferences.saveNav({frameworkid: Number(select.value) || 0});
-            reloadPane(pane).catch(notifyError);
-        });
-    }
-
-    // Snapshot every framework option so "show hidden" filters the dropdown client-side
-    // (no pane reload -> no re-apply of display prefs -> no toggle flash).
-    const frameworkselect = region.querySelector(SELECTORS.frameworkSelect);
-    if (frameworkselect) {
-        frameworkOptions = Array.from(frameworkselect.options).map((option) => ({
-            value: option.value,
-            label: option.textContent,
-            hidden: option.dataset.hidden === '1',
-        }));
-    }
-    const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
-    if (toggleHidden) {
-        const showhidden = Boolean(Preferences.getDisplay().structure.showhidden);
-        toggleHidden.checked = showhidden;
-        applyShowHidden(region, showhidden);
-        toggleHidden.addEventListener('change', () => {
-            Preferences.saveDisplay({structure: {showhidden: toggleHidden.checked}});
-            applyShowHidden(region, toggleHidden.checked);
         });
     }
 

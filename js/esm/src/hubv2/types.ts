@@ -83,7 +83,10 @@ export type DeleteCheck = {
     blockedcompetencies: number,
 };
 
-/** The component's props, built by classes/output/hubv2_page.php props(). */
+/** A competency the canvas reveals at mount: the deep link, checked by the server against the framework shown. */
+export type RevealTarget = {id: number, pathids: number[]};
+
+/** The component's props, built by classes/output/hub_map.php props(). */
 export type HubProps = {
     framework: Framework,
     roots: NodePage,
@@ -91,5 +94,7 @@ export type HubProps = {
     rulesmodules: {type: string, name: string}[],
     courseoutcomes: {value: number, label: string}[],
     moduleoutcomes: {value: number, label: string}[],
-    listurl: string,
+    /** Whether the page's language is written right to left: the tree then grows leftwards. */
+    rtl: boolean,
+    reveal: RevealTarget | null,
 };
