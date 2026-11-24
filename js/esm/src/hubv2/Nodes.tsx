@@ -41,6 +41,7 @@ import type {CanvasEdge, CanvasNode, CompetencyData, FrameworkData, MoreData} fr
 import {isHexColour} from './html';
 import {fill, fillCount} from './strings';
 import type {Labels} from './strings';
+import {ROOT} from './tree';
 
 /** What the cards need from the canvas. */
 export type CanvasActions = {
@@ -50,8 +51,8 @@ export type CanvasActions = {
     rtl: boolean,
     toggle: (id: number) => void,
     loadMore: (parent: number) => void,
-    // The competency whose card carries the "more" button (the selected one, when it has actions), the one
-    // whose menu is open, and opening it under the button.
+    // The competency whose card carries the "more" button (the selected one, when it has actions; ROOT for the
+    // framework's card), the one whose menu is open, and opening it under the button.
     menuFor: number | null,
     menuOpen: number | null,
     openMenu: (id: number, anchor: HTMLElement) => void,
@@ -137,7 +138,7 @@ export const chevron = (expanded: boolean, rtl: boolean): string =>
  * @returns {ReactNode} The card.
  */
 export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
-    const {labels, rtl} = useCanvas();
+    const {labels, rtl, menuFor, menuOpen, openMenu} = useCanvas();
     const {framework, count} = data as FrameworkData;
     return (
         <div className={`local-dimensions-hubv2-card local-dimensions-hubv2-card-framework${selected ? SELECTED : ''}`}
@@ -149,6 +150,23 @@ export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNod
                 <span className="local-dimensions-hubv2-card-title">{framework.shortname}</span>
                 <span className="local-dimensions-hubv2-card-sub">{fillCount(labels, 'hubv2_competencies', count)}</span>
             </span>
+            {menuFor === ROOT ? (
+                <button
+                    type="button"
+                    className="local-dimensions-hubv2-iconbtn local-dimensions-hubv2-cardmenu nodrag nopan"
+                    aria-label={fill(labels.hubv2_actionsof, framework.shortname)}
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen === ROOT}
+                    tabIndex={-1}
+                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                        event.stopPropagation();
+                        openMenu(ROOT, event.currentTarget);
+                    }}
+                    onKeyDown={keepKeys}
+                >
+                    <i className="fa fa-ellipsis-vertical" aria-hidden="true" />
+                </button>
+            ) : null}
             <Handles target={false} />
         </div>
     );

@@ -1,4 +1,8 @@
 {
+  "hubv2/ColumnHeads": {
+    "eject": "risky",
+    "wrap": "risky"
+  },
   "hubv2/Dialog": {
     "eject": "risky",
     "wrap": "risky"

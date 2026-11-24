@@ -22,6 +22,11 @@
  * decision is a courtesy: every write goes through a core competency service that checks
  * moodle/competency:competencymanage in the competency's own context, whatever the client offered.
  *
+ * The framework is the tree's root: its own actions (the Structures tab's, run by the same AMD functions) have
+ * the `framework` scope and are offered on the root alone; creating and importing a framework, which are not
+ * about the one shown, have the `structures` scope. Their forms and services check the capability again, in the
+ * framework's context or in the context the tab lists.
+ *
  * Pure: Jest pins the availability matrix and the key map without a DOM.
  *
  * @module     local_dimensions/hubv2/commands
@@ -41,14 +46,17 @@ export type ActionId =
     | 'rule' | 'links' | 'relate'
     | 'delete'
     | 'moveroot' | 'movecancel'
-    | 'viewoutline' | 'viewmap' | 'viewboth' | 'expandall' | 'collapseall' | 'addtop' | 'summary';
+    | 'viewoutline' | 'viewmap' | 'viewboth' | 'expandall' | 'collapseall' | 'addtop' | 'summary'
+    | 'fwedit' | 'fwscale' | 'fwhide' | 'fwshow' | 'fwduplicate' | 'fwexport' | 'fwdelete'
+    | 'fwnew' | 'fwimport';
 
 /**
  * Where an action applies: to one competency (the panel, its menu and the palette's first group), to
- * the move in progress (the panel's move section and the palette), or to the workspace (the palette's
- * last group).
+ * the move in progress (the panel's move section and the palette), to the workspace (the palette's
+ * last group), to the framework on the root (the root's panel, its menu and the palette's first group), or to
+ * the tab's structures as a whole (the tab's Structures menu and the palette's last group).
  */
-export type Scope = 'node' | 'move' | 'workspace';
+export type Scope = 'node' | 'move' | 'workspace' | 'framework' | 'structures';
 
 /** A key and its modifiers; mod is Ctrl, or Cmd on a Mac. */
 export type Shortcut = {key: string, mod?: boolean, shift?: boolean, alt?: boolean};
@@ -89,6 +97,10 @@ export type ActionContext = {
     // Whether the framework holds no competency, and whether "Expand all" is running.
     empty: boolean,
     expanding: boolean,
+    // Whether the framework is visible (Hide or Show is offered); visible when not said.
+    frameworkvisible?: boolean,
+    // Whether the viewer may create or import a framework in the tab's context.
+    cancreate?: boolean,
 };
 
 /** Every action, in the menu's order. */
@@ -111,6 +123,13 @@ export const ACTIONS: ActionSpec[] = [
     {id: 'links', scope: 'node', group: 3, label: 'hubv2_cmd_links', icon: 'fa-link'},
     {id: 'relate', scope: 'node', group: 3, label: 'hubv2_cmd_relate', icon: 'fa-share-nodes'},
     {id: 'delete', scope: 'node', group: 4, label: 'hubv2_delete', icon: 'fa-trash', shortcut: {key: 'Delete'}, danger: true},
+    {id: 'fwedit', scope: 'framework', group: 1, label: 'central_frameworks_edit', icon: 'fa-pen'},
+    {id: 'fwscale', scope: 'framework', group: 1, label: 'central_frameworks_configurescale', icon: 'fa-scale-balanced'},
+    {id: 'fwhide', scope: 'framework', group: 2, label: 'hubv2_fw_hide', icon: 'fa-eye-slash'},
+    {id: 'fwshow', scope: 'framework', group: 2, label: 'hubv2_fw_show', icon: 'fa-eye'},
+    {id: 'fwduplicate', scope: 'framework', group: 2, label: 'central_frameworks_duplicate', icon: 'fa-copy'},
+    {id: 'fwexport', scope: 'framework', group: 2, label: 'hubv2_fw_export', icon: 'fa-download'},
+    {id: 'fwdelete', scope: 'framework', group: 3, label: 'hubv2_fw_delete', icon: 'fa-trash', danger: true},
     {id: 'moveroot', scope: 'move', group: 1, label: 'hubv2_moveroot', icon: 'fa-turn-up'},
     {id: 'movecancel', scope: 'move', group: 1, label: 'hubv2_movecancel', icon: 'fa-xmark'},
     {id: 'viewoutline', scope: 'workspace', group: 1, label: 'hubv2_cmd_viewoutline', icon: 'fa-list'},
@@ -120,6 +139,8 @@ export const ACTIONS: ActionSpec[] = [
     {id: 'collapseall', scope: 'workspace', group: 2, label: 'managecompetencies_collapseall', icon: 'fa-angles-up'},
     {id: 'addtop', scope: 'workspace', group: 3, label: 'managecompetencies_addcompetency', icon: 'fa-plus'},
     {id: 'summary', scope: 'workspace', group: 3, label: 'hubv2_cmd_summary', icon: 'fa-chart-simple'},
+    {id: 'fwnew', scope: 'structures', group: 1, label: 'central_frameworks_new', icon: 'fa-plus'},
+    {id: 'fwimport', scope: 'structures', group: 1, label: 'central_frameworks_import_title', icon: 'fa-upload'},
 ];
 
 /** The views the palette switches to, by action. */
@@ -194,6 +215,28 @@ const workspaceState = (spec: ActionSpec, context: ActionContext): ActionState =
 };
 
 /**
+ * Whether an action on the framework is offered: on the root alone (nothing selected), for whoever manages
+ * competencies in the framework's context, outside the move mode; Hide while it is visible, Show while it is not.
+ *
+ * @param {object} spec The action.
+ * @param {object} context What the decision reads.
+ * @returns {string} The state.
+ */
+const frameworkState = (spec: ActionSpec, context: ActionContext): ActionState => {
+    if (context.node || !context.frameworkcanmanage || context.moving) {
+        return 'hidden';
+    }
+    const visible = context.frameworkvisible !== false;
+    if (spec.id === 'fwhide') {
+        return visible ? 'enabled' : 'hidden';
+    }
+    if (spec.id === 'fwshow') {
+        return visible ? 'hidden' : 'enabled';
+    }
+    return 'enabled';
+};
+
+/**
  * Whether an action is offered, and whether now: the one decision the panel, the menu, the palette
  * and the keys read.
  *
@@ -205,6 +248,12 @@ export const actionState = (id: ActionId, context: ActionContext): ActionState =
     const spec = specOf(id);
     if (spec.scope === 'node') {
         return nodeState(spec, context);
+    }
+    if (spec.scope === 'framework') {
+        return frameworkState(spec, context);
+    }
+    if (spec.scope === 'structures') {
+        return context.cancreate && !context.moving ? 'enabled' : 'hidden';
     }
     if (spec.scope === 'move') {
         if (!context.moving) {

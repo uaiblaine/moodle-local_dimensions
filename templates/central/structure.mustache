@@ -35,12 +35,22 @@
     competency", which knows the selection, so the sub-header's is left out there. The mount's inner
     content shows until React commits, and stays when the client cannot load.
 
+    The Structures menu beside the framework select carries what is not about one framework: New structure
+    and Import from CSV (the Structures tab's own dialogues, for whoever manages competencies in the tab's
+    context), "Show hidden structures" (a menuitemcheckbox over the tab's saved toggle) and the scales page.
+    Outside classic mode it replaces the Structures tab, so it is drawn with no framework at all, too; in
+    classic mode the workspace's views carry it and the list keeps the standalone toggle. A Bootstrap dropdown:
+    its keys (arrows, Escape back to the button) are Bootstrap's; amd/src/central/structure.js runs the items.
+
     The System / Course category context selector is rendered once at page level
     (local_dimensions/central/contextbar); this tab receives the resolved context via its
     data attributes and shows the guided empty state when a category is still needed.
 
     Context variables required:
-    * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
+    * contexttype (string) · contextid (int) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
+    * classic (bool) · the hub's mode for the visit
+    * structuresmenu (object|null) {cancreate, canscalespage, scalesurl, hashidden, showhidden, sepbeforehidden,
+      sepbeforescales} · the Structures menu
     * view (string: list, outline, map or both) · views (array) {value, label, icon, pressed} · the view switch
     * isworkspace (bool) · mapprops (string json) · whether the workspace is drawn, and its props
     * hashiddenframeworks (bool)
@@ -58,6 +68,12 @@
     Example context (json):
     {
         "contexttype": "system",
+        "contextid": 1,
+        "classic": true,
+        "structuresmenu": {
+            "cancreate": true, "canscalespage": true, "scalesurl": "https://example.com/grade/edit/scale/index.php",
+            "hashidden": true, "showhidden": false, "sepbeforehidden": true, "sepbeforescales": true
+        },
         "view": "list",
         "views": [
             {"value": "list", "label": "Classic", "icon": "fa-list", "pressed": true},
@@ -110,7 +126,8 @@
 }}
 <div class="local-dimensions-central-structure" data-region="structure"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}"
-     data-canmanage="{{canmanage}}" data-view="{{view}}">
+     data-contextid="{{contextid}}" data-canmanage="{{canmanage}}" data-view="{{view}}"
+     data-canscalespage="{{#structuresmenu}}{{#canscalespage}}1{{/canscalespage}}{{/structuresmenu}}">
     <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
     <script type="application/json" data-region="course-outcomes">{{{courseoutcomesjson}}}</script>
     <script type="application/json" data-region="module-outcomes">{{{moduleoutcomesjson}}}</script>
@@ -137,6 +154,7 @@
                     {{/frameworks}}
                 </select>
             </div>
+            {{> local_dimensions/central/structures_menu }}
             <span class="local-dimensions-central-structure-fwcount">
                 {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
             </span>
@@ -270,6 +288,13 @@
     {{/hasframeworks}}
 
     {{^hasframeworks}}
+    {{#structuresmenu}}
+    <div class="local-dimensions-central-structure-subheader">
+        <div class="local-dimensions-central-structure-subheader-main">
+            {{> local_dimensions/central/structures_menu }}
+        </div>
+    </div>
+    {{/structuresmenu}}
     <div class="alert alert-info" role="status">{{#str}}noframeworks, local_dimensions{{/str}}</div>
     {{/hasframeworks}}
     {{/needscategoryselection}}

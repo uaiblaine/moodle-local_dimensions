@@ -6,6 +6,53 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The framework on the root: the workspace replaces the Structures tab and the classic list
+
+Version `2026100538`. Owner's decisions H2 and H3 of the hub v2 record: on 5.3 the workspace is the
+Competencies tab, and the hub's Structures tab and the tab's classic list stay one release behind a
+link. No web service was added: every write is the Structures tab's own form or service
+(`framework_dynamic_form`, `import_framework_dynamic_form`, `local_dimensions_set_framework_visibility`,
+`local_dimensions_export_framework`, core's `core_competency_duplicate_competency_framework` and
+`core_competency_delete_competency_framework`), each checking the capability in the framework's
+context or in the context the tab lists.
+
+- **The framework is the root node.** Selected in the outline or on the map, the panel shows its name,
+  ID number, context, visibility (a status label), scale with the proficient and default values, the
+  taxonomy term of each level, the competencies' total and the summary; then **Edit structure** and
+  **More actions** (Configure scale, Hide or Show structure, Duplicate, Export to CSV, Delete
+  structure), also the root's menu (its "more" button, Shift+F10) and the palette's actions on it.
+  They run `amd/src/central/frameworks.js`, whose actions are now exported for the Competencies tab
+  without changing them for the Structures tab. After an edit, the scale, the visibility or a
+  duplicate the tab is reloaded on the same framework with the opened branches and the selection
+  kept (`js/esm/src/hubv2/carry.ts`); after a delete it shows the next framework of the select or the
+  empty state.
+- **Taxonomy on the columns**: above each column of the map, the level's term as the framework names
+  it (core's strings, core's fallback past the named levels), following the view sideways, inside the
+  canvas, under no card at rest, hidden from assistive technology, which reads the levels once in the
+  canvas's description; a manager's pencil opens the framework's form. The outline's "Show taxonomy"
+  meta reads the same function (`columns.ts`).
+- **A Structures menu** beside the framework select (core's dropdown): New structure and Import from
+  CSV (each then selects the new framework), Show hidden structures (a `menuitemcheckbox` over the
+  tab's saved toggle) and Manage scales; the first two are palette commands too. It is drawn with no
+  framework at all, so a manager can create the first one.
+- **Classic mode**: a `classic` member of `local_dimensions_central_display` (off by default) and a
+  `classic=1|0` address parameter for the visit (`local\hub_mode`). Off: the strip offers
+  Competencies and Learning plans, `tab=frameworks` opens Competencies, the view switch offers
+  Outline, Map and Both, a saved or requested classic list opens the workspace, and the default view
+  is Both. On: the hub as it was, the classic list the default. The context bar's **Classic view** /
+  **Workspace view** link switches it, saving it because it carries the session key (an address
+  without it changes the visit only), and works without JavaScript. That link is the mode's one writer: a
+  display save from the hub's script never carries it, and the preference's clean callback
+  (`hub_mode::clean_display()`) keeps the stored mode on every client write. Hiding the Structures tab opens
+  and closes nothing: every tab still admits its viewers by its own `is_available()`.
+- Tests: `tests/local/hub_mode_test.php` (the session key refusals first, the strip for a site and a
+  category manager, the dynamic-tabs service still serving and refusing the Structures pane),
+  `structure_view_test` (the default view, the modes, the root's facts, the Structures menu),
+  `preferences_test`; Jest `commands` (the framework scope), `columns`, `carry`; Behat
+  `hub_framework_root.feature`. The features of the classic surfaces (`manage_frameworks`,
+  `configure_scale`, `central_category`, `competency_links`, `related_competencies`, `colour_mode`,
+  `hub_map_view`) switch classic mode on in their Background.
+
 ### Framework insights for the map's lenses and checker (server side)
 
 Version `2026100537`. A new read-only web service, `local_dimensions_get_framework_insights`, answers

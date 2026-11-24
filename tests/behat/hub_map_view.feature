@@ -26,6 +26,10 @@ Feature: Switch the Competency hub's Competencies tab between the classic list a
       | shortname       | idnumber | competencyframework |
       | Circuit design  | CIRC     | ENGFW               |
       | Site competency | SITEC    | SITEFW              |
+    # The classic hub (the Structures tab and the classic list), kept one release behind the context bar's link.
+    And the following "user preferences" exist:
+      | user       | preference                       | value            |
+      | catmanager | local_dimensions_central_display | {"classic":true} |
 
   Scenario: A category manager switches the Competencies tab to the map, and the map survives a reload
     Given I am on the "ENG" "category" page logged in as "catmanager"

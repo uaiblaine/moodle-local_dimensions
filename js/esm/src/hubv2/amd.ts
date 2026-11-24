@@ -104,6 +104,30 @@ export type PreferencesModule = {
     saveDisplay: (partial: {structure: Record<string, boolean>}) => void,
 };
 
+/**
+ * Local_dimensions/central/frameworks: the Structures tab's own framework actions, which the root node runs. Each
+ * write goes through a service or a form that checks moodle/competency:competencymanage in the framework's
+ * context (or, to create or import, in the context the tab lists).
+ */
+export type FrameworksModule = {
+    editFramework: (id: number, options: {onSaved: (id: number) => void, canscalespage: boolean, scale?: boolean}) => Promise<void>,
+    createFramework: (contextid: number, options: {onSaved: (id: number) => void, canscalespage: boolean}) => Promise<void>,
+    importFramework: (contextid: number, onImported: (id: number) => void) => Promise<void>,
+    setVisibility: (id: number, visible: boolean) => Promise<unknown>,
+    duplicate: (id: number) => Promise<unknown>,
+    exportFramework: (id: number) => Promise<void>,
+    confirmDelete: (framework: {id: number, name: string, count: number, deletable: boolean}) => Promise<boolean>,
+};
+
+/** Local_dimensions/central/structure: the Competencies tab, which shows a framework by reloading its pane. */
+export type StructureTabModule = {
+    showFramework: (pane: HTMLElement, frameworkid: number) => Promise<void>,
+    nextFramework: (deletedid: number) => number,
+};
+
+/** Local_dimensions/central/toast: the hub's toasts, in the page's region, which outlives the workspace. */
+export type ToastModule = {add: (message: string, configuration?: Record<string, unknown>) => Promise<void>};
+
 /** Every AMD module the canvas may load, by its RequireJS name. */
 export interface Modules {
     'core/ajax': AjaxModule,
@@ -115,6 +139,9 @@ export interface Modules {
     'local_dimensions/central/related_competencies': RelatedModule,
     'local_dimensions/central/errors': ErrorsModule,
     'local_dimensions/central/preferences': PreferencesModule,
+    'local_dimensions/central/frameworks': FrameworksModule,
+    'local_dimensions/central/structure': StructureTabModule,
+    'local_dimensions/central/toast': ToastModule,
 }
 
 /** The name of an AMD module the canvas may load. */

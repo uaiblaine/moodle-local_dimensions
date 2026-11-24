@@ -79,46 +79,80 @@ final class structure_view_test extends advanced_testcase {
     }
 
     /**
-     * The pane's view beats the saved one, which beats the list; anything else counts as none.
+     * In classic mode the pane's view beats the saved one, which beats the classic list; anything else counts as none.
      *
      * @return void
      */
-    public function test_resolve_view_orders_the_url_the_saved_view_and_the_default(): void {
+    public function test_resolve_view_in_classic_mode_orders_the_url_the_saved_view_and_the_list(): void {
         $this->assertSame(['list', 'outline', 'map', 'both'], structure::VIEWS);
         foreach (structure::VIEWS as $view) {
-            $this->assertSame($view, structure::resolve_view($view, 'list'));
-            $this->assertSame($view, structure::resolve_view('', $view));
-            $this->assertSame($view, structure::resolve_view('garbage', $view));
+            $this->assertSame($view, structure::resolve_view($view, 'list', true));
+            $this->assertSame($view, structure::resolve_view('', $view, true));
+            $this->assertSame($view, structure::resolve_view('garbage', $view, true));
         }
-        $this->assertSame('list', structure::resolve_view('list', 'both'));
-        $this->assertSame('outline', structure::resolve_view('outline', 'map'));
-        $this->assertSame('list', structure::resolve_view('', ''));
+        $this->assertSame('list', structure::resolve_view('list', 'both', true));
+        $this->assertSame('outline', structure::resolve_view('outline', 'map', true));
+        $this->assertSame('list', structure::resolve_view('', '', true));
         // An unknown value is no value: the saved view, else the list.
-        $this->assertSame('map', structure::resolve_view('canvas', 'map'));
-        $this->assertSame('list', structure::resolve_view('canvas', 'garbage'));
-        $this->assertSame('list', structure::resolve_view('MAP', ''));
-        $this->assertSame('list', structure::resolve_view('Both', 'OUTLINE'));
-        $this->assertSame('list', structure::resolve_view('classic', ''));
+        $this->assertSame('map', structure::resolve_view('canvas', 'map', true));
+        $this->assertSame('list', structure::resolve_view('canvas', 'garbage', true));
+        $this->assertSame('list', structure::resolve_view('MAP', '', true));
+        $this->assertSame('list', structure::resolve_view('Both', 'OUTLINE', true));
+        $this->assertSame('list', structure::resolve_view('classic', '', true));
     }
 
     /**
-     * The switch offers the four views in order, the one shown pressed, each with its label and icon.
+     * Outside classic mode the default is Both, and the classic list is no view: a link or a saved choice naming it
+     * counts as none, as a mistyped one does.
+     *
+     * @return void
+     */
+    public function test_resolve_view_outside_classic_mode_never_opens_the_list(): void {
+        $this->assertSame('both', structure::DEFAULT_VIEW);
+        $this->assertSame('both', structure::resolve_view('', '', false));
+        $this->assertSame('both', structure::resolve_view('', ''));
+        foreach (structure::WORKSPACE_VIEWS as $view) {
+            $this->assertSame($view, structure::resolve_view($view, '', false));
+            $this->assertSame($view, structure::resolve_view('', $view, false));
+        }
+        $this->assertSame('both', structure::resolve_view('list', '', false));
+        $this->assertSame('both', structure::resolve_view('', 'list', false));
+        $this->assertSame('both', structure::resolve_view('list', 'list', false));
+        // The saved choice still beats the default, as it does for a mistyped link.
+        $this->assertSame('map', structure::resolve_view('list', 'map', false));
+        $this->assertSame('outline', structure::resolve_view('canvas', 'outline', false));
+    }
+
+    /**
+     * The switch offers the four views in order in classic mode, the one shown pressed, each with its label and icon.
      *
      * @return void
      */
     public function test_the_switch_offers_every_view_and_presses_the_one_shown(): void {
-        $cells = structure::view_cells('both');
+        $cells = structure::view_cells('both', true);
         $this->assertSame(structure::VIEWS, array_column($cells, 'value'));
         $this->assertSame([false, false, false, true], array_column($cells, 'pressed'));
         $this->assertSame(['Classic', 'Outline', 'Map', 'Both'], array_column($cells, 'label'));
         $this->assertSame(['fa-list', 'fa-folder-tree', 'fa-sitemap', 'fa-table-columns'], array_column($cells, 'icon'));
-        $this->assertSame([true, false, false, false], array_column(structure::view_cells('list'), 'pressed'));
+        $this->assertSame([true, false, false, false], array_column(structure::view_cells('list', true), 'pressed'));
         // A value that is no view presses none.
-        $this->assertSame([false, false, false, false], array_column(structure::view_cells('bogus'), 'pressed'));
+        $this->assertSame([false, false, false, false], array_column(structure::view_cells('bogus', true), 'pressed'));
     }
 
     /**
-     * Through the tab: the URL's view wins over the saved one, the saved one over the list.
+     * Outside classic mode the switch has no Classic cell.
+     *
+     * @return void
+     */
+    public function test_the_switch_has_no_classic_cell_outside_classic_mode(): void {
+        $cells = structure::view_cells('both', false);
+        $this->assertSame(['outline', 'map', 'both'], array_column($cells, 'value'));
+        $this->assertSame(['Outline', 'Map', 'Both'], array_column($cells, 'label'));
+        $this->assertSame([false, false, true], array_column($cells, 'pressed'));
+    }
+
+    /**
+     * Through the tab in classic mode: the URL's view wins over the saved one, the saved one over the list.
      *
      * @return void
      */
@@ -126,26 +160,57 @@ final class structure_view_test extends advanced_testcase {
         $this->resetAfterTest();
         $framework = $this->one_framework();
         $frameworkid = (int) $framework->get('id');
+        $classic = ['frameworkid' => $frameworkid, 'classic' => 1];
 
-        $default = $this->export(['frameworkid' => $frameworkid]);
+        $default = $this->export($classic);
         $this->assertSame('list', $default['view']);
         $this->assertFalse($default['isworkspace']);
         $this->assertSame('', $default['mapprops']);
         $this->assertSame([true, false, false, false], array_column($default['views'], 'pressed'));
 
         $this->save_view('map');
-        $saved = $this->export(['frameworkid' => $frameworkid]);
+        $saved = $this->export($classic);
         $this->assertSame('map', $saved['view']);
         $this->assertTrue($saved['isworkspace']);
         $this->assertSame('map', $saved['decoded']['layout']);
         $this->assertSame([false, false, true, false], array_column($saved['views'], 'pressed'));
 
-        $this->assertSame('list', $this->export(['frameworkid' => $frameworkid, 'view' => 'list'])['view']);
-        $this->assertSame('map', $this->export(['frameworkid' => $frameworkid, 'view' => 'bogus'])['view']);
+        $this->assertSame('list', $this->export($classic + ['view' => 'list'])['view']);
+        $this->assertSame('map', $this->export($classic + ['view' => 'bogus'])['view']);
 
         $this->save_view('<script>');
-        $this->assertSame('list', $this->export(['frameworkid' => $frameworkid, 'view' => 'bogus'])['view']);
-        $this->assertSame('map', $this->export(['frameworkid' => $frameworkid, 'view' => 'map'])['view']);
+        $this->assertSame('list', $this->export($classic + ['view' => 'bogus'])['view']);
+        $this->assertSame('map', $this->export($classic + ['view' => 'map'])['view']);
+    }
+
+    /**
+     * Through the tab outside classic mode (the default): Both with nothing saved, the saved view beats it, and a
+     * link or a saved choice naming the classic list opens the workspace; the switch has no Classic cell.
+     *
+     * @return void
+     */
+    public function test_by_default_the_tab_opens_the_workspace_in_both(): void {
+        $this->resetAfterTest();
+        $frameworkid = (int) $this->one_framework()->get('id');
+
+        $default = $this->export(['frameworkid' => $frameworkid]);
+        $this->assertFalse($default['classic']);
+        $this->assertSame('both', $default['view']);
+        $this->assertTrue($default['isworkspace']);
+        $this->assertSame('both', $default['decoded']['layout']);
+        $this->assertSame(['outline', 'map', 'both'], array_column($default['views'], 'value'));
+
+        $this->assertSame('both', $this->export(['frameworkid' => $frameworkid, 'view' => 'list'])['view']);
+        $this->save_view('list');
+        $this->assertSame('both', $this->export(['frameworkid' => $frameworkid])['view']);
+        $this->save_view('outline');
+        $this->assertSame('outline', $this->export(['frameworkid' => $frameworkid, 'view' => 'list'])['view']);
+
+        // The pane's mode beats the saved one, either way.
+        set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['classic' => true]));
+        $this->assertTrue($this->export(['frameworkid' => $frameworkid])['classic']);
+        $this->assertSame('list', $this->export(['frameworkid' => $frameworkid])['view']);
+        $this->assertSame('both', $this->export(['frameworkid' => $frameworkid, 'classic' => '0'])['view']);
     }
 
     /**
@@ -169,8 +234,8 @@ final class structure_view_test extends advanced_testcase {
         $this->assertSame('both', $this->export(['frameworkid' => $frameworkid])['decoded']['layout']);
         $this->save_view('outline');
         $this->assertSame('outline', $this->export(['frameworkid' => $frameworkid])['decoded']['layout']);
-        // The control: the list draws no workspace, whatever was saved.
-        $list = $this->export(['frameworkid' => $frameworkid, 'view' => 'list']);
+        // The control: the list (classic mode) draws no workspace, whatever was saved.
+        $list = $this->export(['frameworkid' => $frameworkid, 'view' => 'list', 'classic' => 1]);
         $this->assertFalse($list['isworkspace']);
         $this->assertNull($list['decoded']);
     }
@@ -199,16 +264,24 @@ final class structure_view_test extends advanced_testcase {
 
         $props = $data['decoded'];
         $this->assertSame(
-            ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal', 'layout'],
+            ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal', 'layout',
+                'structures'],
             array_keys($props)
         );
-        $this->assertSame([
-            'id' => $betaid,
-            'shortname' => 'Beta',
-            'idnumber' => 'BETA',
-            'competencycount' => 28,
-            'canmanage' => true,
-        ], $props['framework']);
+        $this->assertSame(
+            ['id', 'shortname', 'idnumber', 'competencycount', 'canmanage', 'visible', 'contextname', 'scale', 'taxonomies',
+                'taxonomyfallback', 'deletable'],
+            array_keys($props['framework'])
+        );
+        $this->assertSame($betaid, $props['framework']['id']);
+        $this->assertSame('Beta', $props['framework']['shortname']);
+        $this->assertSame('BETA', $props['framework']['idnumber']);
+        $this->assertSame(28, $props['framework']['competencycount']);
+        $this->assertTrue($props['framework']['canmanage']);
+        $this->assertSame(
+            ['contextid' => \context_system::instance()->id, 'cancreate' => true, 'canscalespage' => true],
+            $props['structures']
+        );
         $this->assertSame(27, $props['roots']['total']);
         $this->assertCount(25, $props['roots']['items']);
         $this->assertSame(25, $props['pagesize']);
@@ -292,6 +365,13 @@ final class structure_view_test extends advanced_testcase {
         $this->assertSame([], $data['decoded']['rulesmodules']);
         $this->assertFalse($data['decoded']['roots']['items'][0]['canmanage']);
         $this->assertSame(0, $data['canmanage']);
+        // Nothing to create, import or delete, and no Structures menu: the reader sees no hidden structure either.
+        $this->assertFalse($data['decoded']['framework']['deletable']);
+        $this->assertSame(
+            ['contextid' => \context_system::instance()->id, 'cancreate' => false, 'canscalespage' => false],
+            $data['decoded']['structures']
+        );
+        $this->assertNull($data['structuresmenu']);
     }
 
     /**
@@ -430,7 +510,7 @@ final class structure_view_test extends advanced_testcase {
             return array_map('array_keys', $property->getValue($PAGE->requires));
         };
 
-        $this->export(['frameworkid' => (int) $framework->get('id'), 'view' => 'list']);
+        $this->export(['frameworkid' => (int) $framework->get('id'), 'view' => 'list', 'classic' => 1]);
         $this->assertArrayNotHasKey('hubv2_moverule_oldparent', array_flip($handed()['local_dimensions'] ?? []));
 
         $this->export(['frameworkid' => (int) $framework->get('id'), 'view' => 'outline']);
@@ -438,5 +518,139 @@ final class structure_view_test extends advanced_testcase {
         $this->assertSame([], array_values(array_diff(hub_map::STRINGS, $strings['local_dimensions'] ?? [])));
         $this->assertSame([], array_values(array_diff(hub_map::OTHER_STRINGS['tool_lp'], $strings['tool_lp'] ?? [])));
         $this->assertSame([], array_values(array_diff(hub_map::OTHER_STRINGS['core'], $strings['core'] ?? [])));
+    }
+
+    /**
+     * The root's facts: the framework's name, ID number, context, visibility, scale with the framework's default and
+     * proficient values, the taxonomy term of each level it names with core's fallback past them, and whether core
+     * would delete it.
+     *
+     * @return void
+     */
+    public function test_the_root_says_what_the_framework_is(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enabled', 1, 'core_competency');
+        $generator = $this->getDataGenerator();
+        $ccg = $generator->get_plugin_generator('core_competency');
+        $scale = $generator->create_scale(['name' => 'Three steps', 'scale' => 'Not yet,Nearly,Done']);
+        $category = $generator->create_category(['name' => 'Engineering']);
+        $framework = $ccg->create_framework([
+            'shortname' => 'Rooted',
+            'idnumber' => 'ROOT1',
+            'visible' => 0,
+            'contextid' => context_coursecat::instance((int) $category->id)->id,
+            'scaleid' => $scale->id,
+            'scaleconfiguration' => json_encode([
+                ['scaleid' => (int) $scale->id],
+                ['id' => 2, 'scaledefault' => 1, 'proficient' => 0],
+                ['id' => 3, 'scaledefault' => 0, 'proficient' => 1],
+            ]),
+            'taxonomies' => 'domain,skill',
+        ]);
+        $ccg->create_competency(['competencyframeworkid' => $framework->get('id')]);
+
+        $facts = $this->export([
+            'contexttype' => 'coursecat',
+            'categoryid' => (int) $category->id,
+            'frameworkid' => (int) $framework->get('id'),
+            'view' => 'map',
+        ])['decoded']['framework'];
+
+        $this->assertSame('Rooted', $facts['shortname']);
+        $this->assertSame('ROOT1', $facts['idnumber']);
+        $this->assertFalse($facts['visible']);
+        $this->assertSame('Engineering', $facts['contextname']);
+        $this->assertSame('Three steps', $facts['scale']['name']);
+        $this->assertSame(['Not yet', 'Nearly', 'Done'], array_column($facts['scale']['values'], 'name'));
+        $this->assertSame([1, 2, 3], array_column($facts['scale']['values'], 'id'));
+        $this->assertSame([false, true, false], array_column($facts['scale']['values'], 'isdefault'));
+        $this->assertSame([false, false, true], array_column($facts['scale']['values'], 'proficient'));
+        $this->assertSame(
+            [get_string('taxonomy_domain', 'core_competency'), get_string('taxonomy_skill', 'core_competency')],
+            $facts['taxonomies']
+        );
+        $this->assertSame(get_string('taxonomy_competency', 'core_competency'), $facts['taxonomyfallback']);
+        $this->assertTrue($facts['canmanage']);
+        $this->assertTrue($facts['deletable']);
+
+        // Control: a competency in use makes it not deletable, as the Structures tab says.
+        $course = $generator->create_course();
+        $competency = \core_competency\competency::get_record(['competencyframeworkid' => $framework->get('id')]);
+        $ccg->create_course_competency(['courseid' => (int) $course->id, 'competencyid' => (int) $competency->get('id')]);
+        $again = $this->export([
+            'contexttype' => 'coursecat',
+            'categoryid' => (int) $category->id,
+            'frameworkid' => (int) $framework->get('id'),
+            'view' => 'map',
+        ])['decoded']['framework'];
+        $this->assertFalse($again['deletable']);
+    }
+
+    /**
+     * The Structures menu: outside classic mode a manager gets it with no framework at all, and it carries the "show
+     * hidden" toggle in place of the standalone one; in classic mode the list keeps the standalone toggle.
+     *
+     * @return void
+     */
+    public function test_the_structures_menu_replaces_the_tab_outside_classic_mode(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enabled', 1, 'core_competency');
+
+        $empty = $this->export(['frameworkid' => 0]);
+        $this->assertFalse($empty['hasframeworks']);
+        $this->assertTrue($empty['structuresmenu']['cancreate']);
+        $this->assertFalse($empty['structuresmenu']['hashidden']);
+        $this->assertSame(\context_system::instance()->id, $empty['contextid']);
+        // Control: the classic hub's empty tab has no menu; its Structures tab creates.
+        $this->assertNull($this->export(['frameworkid' => 0, 'classic' => 1])['structuresmenu']);
+
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $ccg->create_framework(['shortname' => 'Shown']);
+        $ccg->create_framework(['shortname' => 'Tucked', 'visible' => 0]);
+        $workspace = $this->export([]);
+        $this->assertTrue($workspace['structuresmenu']['hashidden']);
+        $this->assertNull($workspace['showhiddentoggle']);
+        $list = $this->export(['classic' => 1, 'view' => 'list']);
+        $this->assertNull($list['structuresmenu']);
+        $this->assertNotNull($list['showhiddentoggle']);
+    }
+
+    /**
+     * framework_facts() on the framework shapes the generators make: none, two and four named levels. Its taxonomy
+     * list is read through core's getter, which returns an array; a PHP warning here fails the test (it took the
+     * hub's page down under Behat while the one-level answer was right by accident).
+     *
+     * @return void
+     */
+    public function test_framework_facts_read_every_named_level_without_a_warning(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        set_config('enabled', 1, 'core_competency');
+        $ccg = $this->getDataGenerator()->get_plugin_generator('core_competency');
+        $term = static fn(string $constant): string => get_string('taxonomy_' . $constant, 'core_competency');
+        $cases = [
+            // The generators' default, which every Behat background of the hub creates.
+            [[], [$term('competency')]],
+            [['taxonomies' => 'domain,skill'], [$term('domain'), $term('skill')]],
+            [
+                ['taxonomies' => 'domain,competency,indicator,behaviour'],
+                [$term('domain'), $term('competency'), $term('indicator'), $term('behaviour')],
+            ],
+        ];
+        set_error_handler(static function (int $errno, string $message, string $file, int $line): bool {
+            throw new \ErrorException($message, 0, $errno, $file, $line);
+        });
+        try {
+            foreach ($cases as $index => [$record, $expected]) {
+                $framework = $ccg->create_framework($record + ['shortname' => "Shape {$index}"]);
+                $facts = hub_map::framework_facts($framework, 0, true);
+                $this->assertSame($expected, $facts['taxonomies'], "Shape {$index}");
+                $this->assertSame($term('competency'), $facts['taxonomyfallback']);
+            }
+        } finally {
+            restore_error_handler();
+        }
     }
 }

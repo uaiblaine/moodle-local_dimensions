@@ -43,6 +43,12 @@
  * editor, Editor.tsx) asked for it. A competency moves under a new parent by picking it in a pane or
  * through "Move to" (MoveDialog.tsx); both end in moveUnder.
  *
+ * The framework is the tree's root: selected (nothing else is), the panel shows it and its own actions, the
+ * Structures tab's, run by that tab's AMD functions (amd/src/central/frameworks.js, through amd.ts) from the
+ * root's panel, its menu and the palette. An action that changes the framework reloads the tab's pane, so
+ * everything the server says of it is fresh; the opened branches and the selection survive the reload
+ * (carry.ts). Above the map's columns, the taxonomy term of each level (ColumnHeads.tsx).
+ *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -64,6 +70,10 @@ import MoveDialog from './MoveDialog';
 import Palette from './Palette';
 import type {PaletteEntry} from './paletteitems';
 import {summaryFacts, summaryLines} from './summary';
+import {carryOf, hold, take} from './carry';
+import ColumnHeads from './ColumnHeads';
+import type {Viewport} from './ColumnHeads';
+import {columnHeads, deepestLevel} from './columns';
 import {
     Background, BackgroundVariant, Controls, MiniMap, ReactFlow, ReactFlowProvider, useReactFlow,
 } from '../../vendor/xyflow/xyflow.js';
@@ -128,10 +138,29 @@ const ZOOM_KEYS = ['Control', 'Meta'];
 const MINIMAP = {width: 140, height: 96};
 
 /**
- * How the tree is framed: a margin all round, and below it room for the overview map and the
- * controls so that no fitted node sits under them.
+ * How the tree is framed: a margin all round, above it room for the column headings (ColumnHeads.tsx) and
+ * below it room for the overview map and the controls, so that no fitted node sits under any of them.
  */
-const FIT: FitViewOptions = {padding: {top: '32px', right: '32px', bottom: '140px', left: '32px'}, maxZoom: 1};
+const FIT: FitViewOptions = {padding: {top: '56px', right: '32px', bottom: '140px', left: '32px'}, maxZoom: 1};
+
+/**
+ * The item whose row and card carry the "more" button: the selected competency when it has actions, the root
+ * (ROOT) when nothing is selected and the framework has actions, else none.
+ *
+ * @param {number|null} selected The selected competency, or null for the root.
+ * @param {Array} nodeactions The actions offered on the selected competency.
+ * @param {Array} frameworkactions The actions offered on the framework.
+ * @returns {number|null} The competency, ROOT, or null.
+ */
+const menuTarget = (selected: number | null, nodeactions: ActionView[], frameworkactions: ActionView[]): number | null => {
+    if (selected !== null) {
+        return nodeactions.length > 0 ? selected : null;
+    }
+    return frameworkactions.length > 0 ? ROOT : null;
+};
+
+/** The id of the canvas's description: the levels its columns are, in words. */
+const COLUMNS_ID = 'local-dimensions-hubv2-columns';
 
 /** Edge components by edge type. */
 const EDGE_TYPES = {rule: RuleEdge};
@@ -1159,6 +1188,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
             layout: layoutRef.current,
             empty: countRef.current === 0,
             expanding: expandingRef.current,
+            frameworkvisible: framework.visible,
+            cancreate: props.structures.cancreate,
         };
     };
 
@@ -1356,6 +1387,102 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
+     * Run an action on the framework (the root's) or on the tab's structures, through the Structures tab's own
+     * functions (amd/src/central/frameworks.js), then show the result through the tab (amd/src/central/structure.js
+     * showFramework(), which reloads its pane).
+     *
+     * An edit, the scale, the visibility and a duplicate show the same framework again, keeping the opened
+     * branches and the selection (carry.ts); a duplicate says where the copy is, in the framework select, as the
+     * Structures tab lists it. A delete shows the next framework the select lists (or the empty state), a new or
+     * imported framework itself. Every write is checked again by its form or service.
+     *
+     * @param {string} id The action.
+     * @returns {void}
+     */
+    const runFrameworkAction = (id: ActionId): void => {
+        const pane = rootRef.current?.closest<HTMLElement>('[data-tab-content]') ?? null;
+        track('framework', (async() => {
+            const [frameworks, tab] = await Promise.all([
+                load('local_dimensions/central/frameworks'),
+                load('local_dimensions/central/structure'),
+            ]);
+            /**
+             * Show a framework in the tab, keeping what the viewer opened when it is this one.
+             *
+             * @param {number} frameworkid The framework; 0 lets the server choose.
+             * @param {boolean} keep Whether this framework's branches and selection are kept.
+             * @returns {void}
+             */
+            const show = (frameworkid: number, keep: boolean): void => {
+                if (!pane) {
+                    return;
+                }
+                if (keep) {
+                    hold(carryOf(framework.id, treeRef.current, selectedRef.current));
+                }
+                tab.showFramework(pane, frameworkid).catch(notifyError);
+            };
+            /**
+             * Show this framework again, as the server now has it.
+             *
+             * @returns {void}
+             */
+            const again = (): void => show(framework.id, true);
+            const canscalespage = props.structures.canscalespage;
+            switch (id) {
+                case 'fwedit':
+                case 'fwscale':
+                    await frameworks.editFramework(framework.id, {onSaved: again, canscalespage, scale: id === 'fwscale'});
+                    break;
+                case 'fwhide':
+                case 'fwshow':
+                    await frameworks.setVisibility(framework.id, id === 'fwshow');
+                    again();
+                    break;
+                case 'fwduplicate': {
+                    await frameworks.duplicate(framework.id);
+                    const toast = await load('local_dimensions/central/toast');
+                    toast.add(labels.hubv2_fw_duplicated, {type: 'success'}).catch(notifyError);
+                    again();
+                    break;
+                }
+                case 'fwexport':
+                    await frameworks.exportFramework(framework.id);
+                    break;
+                case 'fwdelete': {
+                    const deleted = await frameworks.confirmDelete({
+                        id: framework.id,
+                        name: framework.shortname,
+                        count: countRef.current,
+                        deletable: framework.deletable,
+                    });
+                    if (deleted) {
+                        show(tab.nextFramework(framework.id), false);
+                    }
+                    break;
+                }
+                case 'fwnew':
+                    await frameworks.createFramework(props.structures.contextid, {
+                        /**
+                         * Shows the framework that was just created.
+                         *
+                         * @param {number} newid The new framework's id.
+                         * @returns {void}
+                         */
+                        onSaved: (newid: number) => show(newid, false),
+                        canscalespage,
+                    });
+                    break;
+                case 'fwimport':
+                    await frameworks.importFramework(props.structures.contextid, (newid: number) => show(newid, false));
+                    break;
+                default:
+                    break;
+            }
+        })()).catch(notifyError);
+    };
+
+    /**
      * Run an action on the move in progress or on the workspace.
      *
      * @param {string} id The action.
@@ -1405,12 +1532,24 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         if (actionState(id, context) !== 'enabled') {
             return;
         }
-        if (specOf(id).scope === 'node' && context.node) {
+        const scope = specOf(id).scope;
+        if (scope === 'node' && context.node) {
             runNodeAction(id, context.node);
+        } else if (scope === 'framework' || scope === 'structures') {
+            runFrameworkAction(id);
         } else {
             runWorkspaceAction(id);
         }
     };
+
+    /**
+     * The actions a menu offers: the competency's, or the framework's on the root (ROOT).
+     *
+     * @param {number} id The competency, or ROOT.
+     * @returns {Array} The offered actions.
+     */
+    const menuActions = (id: number): ActionView[] =>
+        (id === ROOT ? actionsFor(['framework'], contextFor(null)) : actionsFor(['node'], contextFor(id)));
 
     /**
      * Open a competency's menu under an element of a pane, when it has an action to offer.
@@ -1421,7 +1560,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      * @returns {boolean} Whether it opened.
      */
     const openMenu = (id: number, anchor: HTMLElement, origin: Pane | 'panel'): boolean => {
-        if (actionsFor(['node'], contextFor(id)).length === 0) {
+        if (menuActions(id).length === 0) {
             return false;
         }
         setMenu((current) => (current && current.id === id && current.anchor === anchor ? null : {id, anchor, origin}));
@@ -1469,7 +1608,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
          *
          * @returns {void}
          */
-        const back = (): void => giveFocusBack(origin, current.anchor, competencyKey(current.id));
+        const back = (): void =>
+            giveFocusBack(origin, current.anchor, current.id === ROOT ? FRAMEWORK_ID : competencyKey(current.id));
         if (!outside) {
             back();
             return;
@@ -1487,6 +1627,32 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
+     * Act on a command key pressed on the root (the framework's item) of a pane: Ctrl+Shift+Enter in the outline
+     * opens the editor for a new first top-level competency; the menu key opens the framework's menu on it,
+     * selecting the root first.
+     *
+     * @param {string} command The command.
+     * @param {HTMLElement} element The focused item.
+     * @param {string} from The pane.
+     * @returns {boolean} Whether the key was used.
+     */
+    const rootCommand = (command: KeyCommand, element: HTMLElement, from: 'outline' | 'map'): boolean => {
+        const allowed = framework.canmanage && movingRef.current === null && layoutRef.current !== 'map';
+        if (command === 'quickchild' && from === 'outline' && allowed) {
+            startCreate(ROOT, null);
+            return true;
+        }
+        if (command === 'menu' && menuActions(ROOT).length > 0) {
+            if (selectedRef.current !== null) {
+                choose(null);
+            }
+            setMenu({id: ROOT, anchor: element, origin: from});
+            return true;
+        }
+        return false;
+    };
+
+    /**
      * Act on a command key pressed on an item of a pane (commands.shortcutAction).
      *
      * The menu key selects the item and opens its menu on it; a reorder key at an end moves nothing and
@@ -1501,12 +1667,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
      */
     const keyCommand = (command: KeyCommand, key: string, element: HTMLElement, from: 'outline' | 'map'): boolean => {
         if (key === FRAMEWORK_ID) {
-            const allowed = framework.canmanage && movingRef.current === null && layoutRef.current !== 'map';
-            if (command === 'quickchild' && from === 'outline' && allowed) {
-                startCreate(ROOT, null);
-                return true;
-            }
-            return false;
+            return rootCommand(command, element, from);
         }
         const id = competencyOf(key);
         if (id === null || command === 'palette') {
@@ -1646,15 +1807,14 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
          */
         run: (id) => runAction(id, selectedRef.current),
         /**
-         * Open the selected competency's menu under the panel's "More actions" button.
+         * Open the selected competency's menu, or the framework's on the root, under the panel's "More actions"
+         * button.
          *
          * @param {HTMLElement} anchor The button.
          * @returns {void}
          */
         menu: (anchor) => {
-            if (selectedRef.current !== null) {
-                openMenu(selectedRef.current, anchor, 'panel');
-            }
+            openMenu(selectedRef.current ?? ROOT, anchor, 'panel');
         },
         reveal: revealItem,
     };
@@ -1794,6 +1954,39 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         })).catch(notifyError);
     }, [props.reveal, ensureVisible, choose]);
 
+    // After a reload of the pane for this framework (an action on it), open again what the viewer had opened,
+    // as many children loaded as before, and select what was selected (carry.ts). Once, at mount.
+    const carried = useRef(take(framework.id));
+    useEffect(() => {
+        const carry = carried.current;
+        carried.current = null;
+        if (!carry) {
+            return;
+        }
+        track('restore', (async() => {
+            const roots = treeRef.current.branches[ROOT]?.ids.length ?? 0;
+            if ((carry.loaded[ROOT] ?? 0) > roots) {
+                await reloadBranch(ROOT, carry.loaded[ROOT]);
+            }
+            for (const {id, pathids} of carry.expanded) {
+                await ensureVisible(id, pathids);
+                if (!treeRef.current.nodes[id]) {
+                    continue;
+                }
+                await reloadBranch(id, carry.loaded[id] ?? 1);
+                commit((current) => setExpanded(current, id, true));
+            }
+            const picked = carry.selected;
+            if (picked) {
+                await ensureVisible(picked.id, picked.pathids);
+                if (treeRef.current.nodes[picked.id]) {
+                    centreOn.current = competencyKey(picked.id);
+                    choose(picked.id);
+                }
+            }
+        })()).catch(notifyError);
+    }, [choose, commit, ensureVisible, reloadBranch]);
+
     // Centre on a competency just revealed, once the layout has placed it.
     useEffect(() => {
         const key = centreOn.current;
@@ -1896,7 +2089,8 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     // its card carry the "more" button.
     const selectedcontext = contextFor(selected);
     const nodeactions = actionsFor(['node'], selectedcontext);
-    const menuFor = selected !== null && nodeactions.length > 0 ? selected : null;
+    const frameworkactions = actionsFor(['framework'], selectedcontext);
+    const menuFor = menuTarget(selected, nodeactions, frameworkactions);
     const menuOpen = menu ? menu.id : null;
     const openMenuRef = useRef(openMenu);
     openMenuRef.current = openMenu;
@@ -1910,6 +2104,29 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const openMapMenu = useCallback((id: number, anchor: HTMLElement): void => {
         openMenuRef.current(id, anchor, 'map');
     }, []);
+
+    // The map's view, for the column headings: React Flow reports every move, and the headings listen.
+    const viewportListener = useRef<((viewport: Viewport) => void) | null>(null);
+    const subscribeViewport = useCallback((listener: (viewport: Viewport) => void): (() => void) => {
+        viewportListener.current = listener;
+        return () => {
+            if (viewportListener.current === listener) {
+                viewportListener.current = null;
+            }
+        };
+    }, []);
+    const readViewport = useCallback((): Viewport => flow.getViewport(), [flow]);
+    const levels = useMemo(() => deepestLevel(tree), [tree]);
+    const heads = useMemo(
+        () => columnHeads(levels, framework.taxonomies, framework.taxonomyfallback, rtl),
+        [levels, framework.taxonomies, framework.taxonomyfallback, rtl]
+    );
+    /**
+     * Open the framework's form from a column heading, where the level names are edited.
+     *
+     * @returns {void}
+     */
+    const editLevels = (): void => runAction('fwedit', null);
 
     const canvasActions: CanvasActions = useMemo(
         () => ({labels, pagesize, rtl, toggle: toggleOnMap, loadMore, menuFor, menuOpen, openMenu: openMapMenu}),
@@ -2043,12 +2260,13 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         ({id: view.spec.id, label: labels[view.spec.label], icon: view.spec.icon, shortcut: view.spec.shortcut});
 
     /**
-     * The open menu's items: the registry's actions on its competency, a separator between groups.
+     * The open menu's items: the registry's actions on its competency (or on the framework, for ROOT), a
+     * separator between groups.
      *
-     * @param {number} id The competency.
+     * @param {number} id The competency, or ROOT.
      * @returns {Array} The items.
      */
-    const menuItems = (id: number): MenuItem[] => actionsFor(['node'], contextFor(id)).map((view, index, all) => ({
+    const menuItems = (id: number): MenuItem[] => menuActions(id).map((view, index, all) => ({
         id: view.spec.id,
         label: labels[view.spec.label],
         icon: view.spec.icon,
@@ -2097,20 +2315,36 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     };
 
     /**
+     * The name of an item a menu belongs to: the framework's for the root, else the competency's.
+     *
+     * @param {number} id The competency, or ROOT.
+     * @returns {string|undefined} The name, undefined for a competency no longer in the tree.
+     */
+    const nameOfItem = (id: number): string | undefined =>
+        (id === ROOT ? framework.shortname : tree.nodes[id]?.shortname);
+
+    /**
      * The layers over the workspace: a node's menu, the command palette, the "Move to" dialogue.
      *
      * @returns {object} The layers that are open.
      */
     const overlays = (): ReactNode => {
-        const menunode = menu ? tree.nodes[menu.id] : undefined;
+        const menuname = menu ? nameOfItem(menu.id) : undefined;
         const movingnode = moveDialog !== null ? tree.nodes[moveDialog] : undefined;
-        const offered = palette ? actionsFor(['node', 'move', 'workspace'], selectedcontext) : [];
+        const offered = palette ? actionsFor(['node', 'framework', 'move', 'workspace', 'structures'], selectedcontext) : [];
+        /**
+         * Whether an action belongs to the selected item (a competency or the framework).
+         *
+         * @param {ActionView} view The action as offered.
+         * @returns {boolean} True for an action on the selection.
+         */
+        const onthis = (view: ActionView): boolean => view.spec.scope === 'node' || view.spec.scope === 'framework';
         const enabled = offered.filter((view) => view.state === 'enabled');
         return (
             <>
-                {menu && menunode ? (
+                {menu && menuname !== undefined ? (
                     <Menu
-                        label={fill(labels.hubv2_actionsof, menunode.shortname)}
+                        label={fill(labels.hubv2_actionsof, menuname)}
                         items={menuItems(menu.id)}
                         anchor={menu.anchor}
                         pane={paneOf(menu.origin)}
@@ -2118,7 +2352,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                         mac={mac}
                         onRun={(id) => {
                             closeMenu();
-                            runAction(id as ActionId, menu.id);
+                            runAction(id as ActionId, menu.id === ROOT ? null : menu.id);
                         }}
                         onClose={closeMenu}
                     />
@@ -2128,9 +2362,9 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                         labels={labels}
                         mac={mac}
                         frameworkid={framework.id}
-                        actionstitle={node ? fill(labels.hubv2_palette_on, node.shortname) : labels.hubv2_actions}
-                        actions={enabled.filter((view) => view.spec.scope === 'node').map(entryOf)}
-                        commands={enabled.filter((view) => view.spec.scope !== 'node').map(entryOf)}
+                        actionstitle={fill(labels.hubv2_palette_on, node ? node.shortname : framework.shortname)}
+                        actions={enabled.filter(onthis).map(entryOf)}
+                        commands={enabled.filter((view) => !onthis(view)).map(entryOf)}
                         onRun={(id, hit) => {
                             setPalette(false);
                             if (hit) {
@@ -2248,6 +2482,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             className="local-dimensions-hubv2-canvas"
                             role="region"
                             aria-label={labels.hubv2_canvas}
+                            aria-describedby={heads.length > 0 ? COLUMNS_ID : undefined}
                             ref={canvasRef}
                             onKeyDown={(event) => walk(event, mapStop, NODE_SELECTOR, 'map')}
                             onFocus={(event) => {
@@ -2256,6 +2491,16 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                             }}
                             onBlur={mapStop.onBlur}
                         >
+                            <ColumnHeads
+                                labels={labels}
+                                heads={heads}
+                                cardwidth={CARD.width}
+                                read={readViewport}
+                                subscribe={subscribeViewport}
+                                describedby={COLUMNS_ID}
+                                canedit={actionState('fwedit', contextFor(null)) === 'enabled'}
+                                onEdit={editLevels}
+                            />
                             <CanvasContext.Provider value={canvasActions}>
                                 <ReactFlow<CanvasNode, CanvasEdge>
                                     nodes={nodes}
@@ -2263,6 +2508,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                                     nodeTypes={NODE_TYPES}
                                     edgeTypes={EDGE_TYPES}
                                     onNodesChange={onNodesChange}
+                                    onMove={(event, viewport) => viewportListener.current?.(viewport)}
                                     // The workspace's own keyboard (walk) replaces the library's: no tabindex 0 on
                                     // every node, no Enter, Space or Escape of its own, no pan on focus.
                                     nodesFocusable={false}
@@ -2312,6 +2558,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                 menuopen={menu !== null && menu.origin === 'panel'}
                 moveactions={actionsFor(['move'], selectedcontext)}
                 topactions={actionsFor(['workspace'], selectedcontext).filter((view) => view.spec.id === 'addtop')}
+                frameworkactions={frameworkactions}
                 summary={summaryLines(labels, summaryFacts(tree, count))}
                 summaryRef={summaryRef}
                 actions={actions}

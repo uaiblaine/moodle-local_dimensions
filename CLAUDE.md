@@ -92,7 +92,9 @@ settings.php, lib.php, styles.css, version.php
 view-plan.php / view-competency.php   learner views (plan overview; competency tracker)
 central.php                           the Competency hub, the only hub page: admin tree entry and a course
                                       category's More-menu entry (locked to the category; design in
-                                      docs/superpowers/specs/2026-09-02-central-category-context-design.md)
+                                      docs/superpowers/specs/2026-09-02-central-category-context-design.md);
+                                      Competencies (the workspace) and Learning plans, plus the Structures
+                                      tab and the classic list in classic mode (local\hub_mode)
 hubv2.php                             retired map address: the hub's admin gate, then a redirect to the
                                       Competencies tab's map view (output\hub_map::legacy_url())
 classes/
@@ -106,7 +108,8 @@ classes/
   customfield/         competency_handler + lp_handler (singleton create(), two areas)
   event/, external/ (one WS class per file), form/ (dynamic_form), task/, reportbuilder/
   local/               plan_access, plan_status, colour_mode (constants only),
-                       enrolment_provider*, view_events, category_lifecycle
+                       enrolment_provider*, view_events, category_lifecycle, hub_mode (the hub's
+                       workspace / classic mode: which tabs and views are offered, never access)
   output/              renderables: learner pages and hub tabs; hub_map = the Competencies tab's
                        workspace views, Outline, Map, Both (props, its string list, the deep link)
   privacy/             preference-only provider (core_user owns preference deletion)

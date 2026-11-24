@@ -30,6 +30,7 @@
 
 import {useEffect, useRef, useState} from 'react';
 import type {FocusEvent, KeyboardEvent, MouseEvent, ReactNode, RefObject} from 'react';
+import {levelTerm} from './columns';
 import {shortcutCaps} from './commands';
 import type {Shortcut} from './commands';
 import {isHexColour} from './html';
@@ -162,20 +163,27 @@ const meta = (labels: Labels, row: OutlineRow, count: number, related: number | 
 
 /**
  * What a row shows after its name besides its meta: the classic list's display options, the ID number
- * and the taxonomy, each shown short and said in words.
+ * and the taxonomy, each shown short and said in words. The taxonomy is the level's term as the map's column
+ * heading says it (columns.levelTerm()), so both panes name a level alike.
  *
  * @param {object} labels The labels.
  * @param {object|null} node The row's competency, null for the framework.
  * @param {object} display The display options.
+ * @param {string} term The taxonomy term of the row's level.
  * @returns {Array} The parts, each {shown, said}.
  */
-const displayed = (labels: Labels, node: StructureNode | null, display: OutlineDisplay): {shown: string, said: string}[] => {
+const displayed = (
+    labels: Labels,
+    node: StructureNode | null,
+    display: OutlineDisplay,
+    term: string,
+): {shown: string, said: string}[] => {
     const parts: {shown: string, said: string}[] = [];
     if (node && display.idnumber && node.idnumber) {
         parts.push({shown: node.idnumber, said: `${labels['core:idnumber']} ${node.idnumber}`});
     }
-    if (node && display.taxonomy && node.taxonomy) {
-        parts.push({shown: node.taxonomy, said: node.taxonomy});
+    if (node && display.taxonomy && term) {
+        parts.push({shown: term, said: term});
     }
     return parts;
 };
@@ -232,8 +240,10 @@ const Row = (props: {
     display: OutlineDisplay,
     menu: boolean,
     menuopen: boolean,
+    // The taxonomy term of the row's level.
+    term: string,
 }): ReactNode => {
-    const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions, display, menu, menuopen} = props;
+    const {row, labels, count, selected, moving, related, active, rtl, pagesize, actions, display, menu, menuopen, term} = props;
     // The level's indent, written on the start side, so a right-to-left page indents from the right.
     const indent = {paddingInlineStart: `${0.25 + (row.level - 1) * 1.25}rem`};
     const common = {
@@ -268,7 +278,7 @@ const Row = (props: {
 
     const {shown, said: metasaid} = meta(labels, row, count, related);
     const node = row.node;
-    const extras = displayed(labels, node, display);
+    const extras = displayed(labels, node, display, term);
     const said = [...extras.map((extra) => extra.said), metasaid].filter((part) => part !== '').join(', ');
     let markclass = 'local-dimensions-hubv2-mark local-dimensions-hubv2-mark-framework';
     let markstyle;
@@ -403,8 +413,9 @@ const Outline = (props: OutlineProps): ReactNode => {
                 pagesize={pagesize}
                 actions={actions}
                 display={display}
-                menu={row.kind === 'competency' && row.key === selectedkey && menuFor === row.id}
+                menu={row.kind !== 'more' && row.key === selectedkey && menuFor === row.id}
                 menuopen={menuOpen === row.id}
+                term={row.kind === 'competency' ? levelTerm(framework.taxonomies, framework.taxonomyfallback, row.level - 1) : ''}
             />
         );
         if (row.kind === 'competency' && !row.expanded && loading.includes(row.id)) {

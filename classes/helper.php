@@ -2630,10 +2630,11 @@ class helper {
                 'id' => $dispbool($structsrc, 'id', false),
                 'rule' => $dispbool($structsrc, 'rule', true),
                 'showhidden' => $dispbool($structsrc, 'showhidden', false),
-                // The Competencies tab's view; anything but a known one reads as the list.
+                // The Competencies tab's view; anything but a known one is none saved (''), and the tab's
+                // default for the hub's mode applies (structure::resolve_view()).
                 'view' => in_array($structsrc['view'] ?? null, \local_dimensions\output\dynamictabs\structure::VIEWS, true)
                     ? (string) $structsrc['view']
-                    : \local_dimensions\output\dynamictabs\structure::VIEWS[0],
+                    : '',
             ],
             'planslist' => [
                 'id' => $dispbool($listsrc, 'id', false),
@@ -2652,6 +2653,9 @@ class helper {
             'plansshowdisabled' => $dispbool($displayraw, 'plansshowdisabled', false),
             'frameworksshowhidden' => $dispbool($displayraw, 'frameworksshowhidden', false),
             'modalexpanded' => $dispbool($displayraw, 'modalexpanded', false),
+            // The classic hub (the Structures tab and the classic list) instead of the workspace; off by
+            // default ({@see \local_dimensions\local\hub_mode}).
+            'classic' => $dispbool($displayraw, 'classic', false),
         ];
 
         return ['nav' => $nav, 'display' => $display];

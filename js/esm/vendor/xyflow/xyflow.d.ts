@@ -171,6 +171,8 @@ export type ReactFlowProps<NodeType extends Node = Node, EdgeType extends Edge =
     edgeTypes?: Record<string, ComponentType<EdgeProps<EdgeType>>>,
     onNodesChange?: (changes: NodeChangeset<NodeType>) => void,
     onPaneClick?: (event: ReactMouseEvent) => void,
+    // Every change of the view, the fitted view and a programmatic one included.
+    onMove?: (event: unknown, viewport: {x: number, y: number, zoom: number}) => void,
     nodesDraggable?: boolean,
     nodesConnectable?: boolean,
     nodesFocusable?: boolean,

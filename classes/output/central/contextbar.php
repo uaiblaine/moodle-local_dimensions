@@ -60,6 +60,15 @@ class contextbar implements renderable, templatable {
     /** @var bool Whether the page is locked to the category it was entered from (no switching). */
     private readonly bool $locked;
 
+    /** @var \moodle_url|null The link to the other mode of the hub, null for none. */
+    private ?\moodle_url $modeurl = null;
+
+    /** @var string The link's words. */
+    private string $modelabel = '';
+
+    /** @var bool Whether the page is in classic mode (the link then leads to the workspace). */
+    private bool $classic = false;
+
     /**
      * Constructor.
      *
@@ -75,6 +84,20 @@ class contextbar implements renderable, templatable {
         $this->needscategory = (bool) $resolved['needscategory'];
         $this->showhiddencats = $showhiddencats;
         $this->locked = $locked && $this->contexttype === 'coursecat' && $this->categoryid > 0;
+    }
+
+    /**
+     * Add the quiet link to the hub's other mode ({@see \local_dimensions\local\hub_mode::switch_url()}).
+     *
+     * @param \moodle_url $url Where it leads.
+     * @param string $label Its words.
+     * @param bool $classic Whether the page is in classic mode.
+     * @return void
+     */
+    public function set_mode_link(\moodle_url $url, string $label, bool $classic): void {
+        $this->modeurl = $url;
+        $this->modelabel = $label;
+        $this->classic = $classic;
     }
 
     /**
@@ -177,6 +200,11 @@ class contextbar implements renderable, templatable {
             'systemtemplatecount' => (int) $systemtemplatecount,
             'selectedframeworkcount' => (int) $selectedframeworkcount,
             'selectedtemplatecount' => (int) $selectedtemplatecount,
+            'modelink' => $this->modeurl ? [
+                'url' => $this->modeurl->out(false),
+                'label' => $this->modelabel,
+                'icon' => $this->classic ? 'fa-diagram-project' : 'fa-table-list',
+            ] : null,
         ];
     }
 }

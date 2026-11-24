@@ -10,9 +10,12 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  *
  * Its buttons are the action registry's (commands.ts), the same list and the same decision the node's
  * menu and the command palette draw from: "Edit" and "Add child", then "More actions", which opens the
- * node's own menu under itself (the destructive action lives there, last). With nothing selected it shows
- * the framework's summary (summary.ts), which the palette's command brings into view, and "Add competency".
- * During a move it shows what the move needs.
+ * node's own menu under itself (the destructive action lives there, last). With nothing selected the root is
+ * selected, and the panel shows the framework: its name, ID number, context, visibility (a status label), scale
+ * with the values the framework counts as proficient, the taxonomy term of each level, the competencies' total
+ * and the summary (summary.ts), which the palette's command brings into view; then the framework's own actions
+ * ("Edit structure", then "More actions", the root's menu) and "Add competency". During a move it shows what the
+ * move needs.
  *
  * @module     local_dimensions/hubv2/Panel
  * @copyright  2026 Anderson Blaine
@@ -21,27 +24,28 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
 import { isHexColour } from "./html";
 import { fill, fillCount } from "./strings";
 const PANEL_BUTTONS = ["edit", "addchild"];
+const FRAMEWORK_BUTTONS = ["fwedit"];
 const Pair = /* @__PURE__ */ __name(({ label, children }) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
   /* @__PURE__ */ jsxDEV("dt", { className: "local-dimensions-hubv2-kv-label", children: label }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 82,
+    lineNumber: 90,
     columnNumber: 9
   }),
   /* @__PURE__ */ jsxDEV("dd", { className: "local-dimensions-hubv2-kv-value", children }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 83,
+    lineNumber: 91,
     columnNumber: 9
   })
 ] }, void 0, true, {
   fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-  lineNumber: 81,
+  lineNumber: 89,
   columnNumber: 5
 }), "Pair");
 const UsageLists = /* @__PURE__ */ __name(({ labels, usage }) => {
   if (!usage) {
     return /* @__PURE__ */ jsxDEV("p", { className: "text-muted small mb-0", children: labels.hubv2_loading }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 95,
+      lineNumber: 103,
       columnNumber: 16
     });
   }
@@ -49,7 +53,7 @@ const UsageLists = /* @__PURE__ */ __name(({ labels, usage }) => {
   if (empty) {
     return /* @__PURE__ */ jsxDEV("p", { className: "text-muted small mb-0", children: labels.hubv2_usage_none }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 99,
+      lineNumber: 107,
       columnNumber: 16
     });
   }
@@ -57,71 +61,37 @@ const UsageLists = /* @__PURE__ */ __name(({ labels, usage }) => {
     usage.templates.length > 0 ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "h6 mt-2", children: labels.hubv2_usage_templates }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 105,
+        lineNumber: 113,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("ul", { className: "list-unstyled mb-0", children: usage.templates.map((t) => /* @__PURE__ */ jsxDEV("li", { children: t.name }, `t${t.id}`, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 106,
+        lineNumber: 114,
         columnNumber: 84
       })) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 106,
+        lineNumber: 114,
         columnNumber: 21
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 104,
+      lineNumber: 112,
       columnNumber: 17
     }) : null,
     usage.courses.length > 0 ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "h6 mt-2", children: labels.hubv2_usage_courses }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 111,
+        lineNumber: 119,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("ul", { className: "list-unstyled mb-0", children: usage.courses.map((c) => /* @__PURE__ */ jsxDEV("li", { children: /* @__PURE__ */ jsxDEV("a", { href: c.url, children: c.name }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 113,
+        lineNumber: 121,
         columnNumber: 72
       }) }, `c${c.id}`, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 113,
+        lineNumber: 121,
         columnNumber: 51
-      })) }, void 0, false, {
-        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 112,
-        columnNumber: 21
-      })
-    ] }, void 0, true, {
-      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 110,
-      columnNumber: 17
-    }) : null,
-    usage.activities.length > 0 ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
-      /* @__PURE__ */ jsxDEV("h4", { className: "h6 mt-2", children: labels.hubv2_usage_activities }, void 0, false, {
-        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 119,
-        columnNumber: 21
-      }),
-      /* @__PURE__ */ jsxDEV("ul", { className: "list-unstyled mb-0", children: usage.activities.map((a) => /* @__PURE__ */ jsxDEV("li", { children: [
-        a.url ? /* @__PURE__ */ jsxDEV("a", { href: a.url, children: a.name }, void 0, false, {
-          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 123,
-          columnNumber: 42
-        }) : a.name,
-        /* @__PURE__ */ jsxDEV("span", { className: "text-muted", children: [
-          " \xB7 ",
-          a.courseshortname
-        ] }, void 0, true, {
-          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 124,
-          columnNumber: 33
-        })
-      ] }, `a${a.cmid}`, true, {
-        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 122,
-        columnNumber: 29
       })) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
         lineNumber: 120,
@@ -131,10 +101,44 @@ const UsageLists = /* @__PURE__ */ __name(({ labels, usage }) => {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
       lineNumber: 118,
       columnNumber: 17
+    }) : null,
+    usage.activities.length > 0 ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
+      /* @__PURE__ */ jsxDEV("h4", { className: "h6 mt-2", children: labels.hubv2_usage_activities }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 127,
+        columnNumber: 21
+      }),
+      /* @__PURE__ */ jsxDEV("ul", { className: "list-unstyled mb-0", children: usage.activities.map((a) => /* @__PURE__ */ jsxDEV("li", { children: [
+        a.url ? /* @__PURE__ */ jsxDEV("a", { href: a.url, children: a.name }, void 0, false, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 131,
+          columnNumber: 42
+        }) : a.name,
+        /* @__PURE__ */ jsxDEV("span", { className: "text-muted", children: [
+          " \xB7 ",
+          a.courseshortname
+        ] }, void 0, true, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 132,
+          columnNumber: 33
+        })
+      ] }, `a${a.cmid}`, true, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 130,
+        columnNumber: 29
+      })) }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 128,
+        columnNumber: 21
+      })
+    ] }, void 0, true, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 126,
+      columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 102,
+    lineNumber: 110,
     columnNumber: 9
   });
 }, "UsageLists");
@@ -144,18 +148,133 @@ const buttonClass = /* @__PURE__ */ __name((view, first) => {
   }
   return first ? "btn btn-sm btn-primary" : "btn btn-sm btn-outline-secondary";
 }, "buttonClass");
-const ActionButtons = /* @__PURE__ */ __name(({ labels, views, run }) => /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-actions d-flex flex-wrap gap-2", children: views.map((view, index) => /* @__PURE__ */ jsxDEV(
+const MoreButton = /* @__PURE__ */ __name(({ labels, open, menu }) => /* @__PURE__ */ jsxDEV(
   "button",
   {
     type: "button",
-    className: buttonClass(view, index === 0),
+    className: "btn btn-sm btn-outline-secondary",
+    "aria-haspopup": "menu",
+    "aria-expanded": open,
+    onClick: (event) => menu(event.currentTarget),
+    children: [
+      labels.hubv2_moreactions,
+      /* @__PURE__ */ jsxDEV("i", { className: "fa fa-chevron-down ms-1", "aria-hidden": "true" }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 171,
+        columnNumber: 35
+      })
+    ]
+  },
+  void 0,
+  true,
+  {
+    fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+    lineNumber: 164,
+    columnNumber: 5
+  }
+), "MoreButton");
+const visibilityClass = /* @__PURE__ */ __name((visible) => visible ? "local-dimensions-hubv2-status local-dimensions-hubv2-status--success" : "local-dimensions-hubv2-status", "visibilityClass");
+const FrameworkFacts = /* @__PURE__ */ __name(({ labels, framework }) => /* @__PURE__ */ jsxDEV(Fragment, { children: [
+  /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
+    /* @__PURE__ */ jsxDEV("dl", { className: "local-dimensions-hubv2-kv mb-0", children: [
+      /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_fw_context, children: framework.contextname }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 196,
+        columnNumber: 17
+      }),
+      /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_fw_visibility, children: /* @__PURE__ */ jsxDEV("span", { "data-region": "framework-visibility", className: visibilityClass(framework.visible), children: [
+        /* @__PURE__ */ jsxDEV("i", { className: `fa ${framework.visible ? "fa-eye" : "fa-eye-slash"}`, "aria-hidden": "true" }, void 0, false, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 199,
+          columnNumber: 25
+        }),
+        labels[framework.visible ? "tool_lp:visible" : "tool_lp:hidden"]
+      ] }, void 0, true, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 198,
+        columnNumber: 21
+      }) }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 197,
+        columnNumber: 17
+      }),
+      /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_scale, children: framework.scale.name || "-" }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 203,
+        columnNumber: 17
+      })
+    ] }, void 0, true, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 195,
+      columnNumber: 13
+    }),
+    framework.scale.values.length > 0 ? /* @__PURE__ */ jsxDEV("ul", { className: "local-dimensions-hubv2-scalevalues list-unstyled mb-0", children: framework.scale.values.map((value) => /* @__PURE__ */ jsxDEV("li", { children: [
+      /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-scalevalue", children: value.name }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 209,
+        columnNumber: 29
+      }),
+      value.proficient ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-status local-dimensions-hubv2-status--success", children: labels.central_frameworks_scaleproficient }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 211,
+        columnNumber: 33
+      }) : null,
+      value.isdefault ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-status", children: labels.central_frameworks_scaledefault }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 216,
+        columnNumber: 33
+      }) : null
+    ] }, value.id, true, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 208,
+      columnNumber: 25
+    })) }, void 0, false, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 206,
+      columnNumber: 17
+    }) : null
+  ] }, void 0, true, {
+    fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+    lineNumber: 194,
+    columnNumber: 9
+  }),
+  framework.taxonomies.length > 0 ? /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
+    /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels["tool_lp:taxonomies"] }, void 0, false, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 225,
+      columnNumber: 17
+    }),
+    /* @__PURE__ */ jsxDEV("dl", { className: "local-dimensions-hubv2-kv mb-0", children: framework.taxonomies.map((term, index) => /* @__PURE__ */ jsxDEV(Pair, { label: fill(labels.hubv2_fw_level, String(index + 1)), children: term }, index, false, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 228,
+      columnNumber: 25
+    })) }, void 0, false, {
+      fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+      lineNumber: 226,
+      columnNumber: 17
+    })
+  ] }, void 0, true, {
+    fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+    lineNumber: 224,
+    columnNumber: 13
+  }) : null
+] }, void 0, true, {
+  fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+  lineNumber: 193,
+  columnNumber: 5
+}), "FrameworkFacts");
+const ActionButtons = /* @__PURE__ */ __name(({ labels, views, run, secondary = false }) => /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-actions d-flex flex-wrap gap-2", children: views.map((view, index) => /* @__PURE__ */ jsxDEV(
+  "button",
+  {
+    type: "button",
+    className: buttonClass(view, index === 0 && !secondary),
     disabled: view.state === "disabled",
     title: view.state === "disabled" && view.spec.id === "rule" ? labels.central_rule_nochildren : void 0,
     onClick: () => run(view.spec.id),
     children: [
       /* @__PURE__ */ jsxDEV("i", { className: `fa ${view.spec.icon} me-1`, "aria-hidden": "true" }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 166,
+        lineNumber: 259,
         columnNumber: 17
       }),
       labels[view.spec.label]
@@ -165,28 +284,28 @@ const ActionButtons = /* @__PURE__ */ __name(({ labels, views, run }) => /* @__P
   true,
   {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 158,
+    lineNumber: 251,
     columnNumber: 13
   }
 )) }, void 0, false, {
   fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-  lineNumber: 156,
+  lineNumber: 249,
   columnNumber: 5
 }), "ActionButtons");
 const MoveSection = /* @__PURE__ */ __name(({ labels, moving, views, run }) => /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec local-dimensions-hubv2-movesec", children: [
   /* @__PURE__ */ jsxDEV("p", { className: "mb-2", children: fill(labels.hubv2_movepick, moving.shortname) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 185,
+    lineNumber: 278,
     columnNumber: 9
   }),
   /* @__PURE__ */ jsxDEV(ActionButtons, { labels, views, run }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 186,
+    lineNumber: 279,
     columnNumber: 9
   })
 ] }, void 0, true, {
   fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-  lineNumber: 184,
+  lineNumber: 277,
   columnNumber: 5
 }), "MoveSection");
 const Panel = /* @__PURE__ */ __name((props) => {
@@ -203,13 +322,14 @@ const Panel = /* @__PURE__ */ __name((props) => {
     menuopen,
     moveactions,
     topactions,
+    frameworkactions,
     summary,
     summaryRef,
     actions
   } = props;
   const movesection = moving ? /* @__PURE__ */ jsxDEV(MoveSection, { labels, moving, views: moveactions, run: actions.run }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 199,
+    lineNumber: 292,
     columnNumber: 34
   }) : null;
   if (!node) {
@@ -223,66 +343,119 @@ const Panel = /* @__PURE__ */ __name((props) => {
             framework.idnumber
           ] }, void 0, true, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 208,
+            lineNumber: 301,
             columnNumber: 47
           }) : null
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 206,
+          lineNumber: 299,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("h3", { className: "h5 mb-1", children: framework.shortname }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 210,
+          lineNumber: 303,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("p", { className: "text-muted mb-0", children: fillCount(labels, "hubv2_competencies", count) }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 211,
+          lineNumber: 304,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 205,
+        lineNumber: 298,
+        columnNumber: 17
+      }),
+      /* @__PURE__ */ jsxDEV(FrameworkFacts, { labels, framework }, void 0, false, {
+        fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+        lineNumber: 306,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
         /* @__PURE__ */ jsxDEV("h4", { ref: summaryRef, tabIndex: -1, className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_summary_title }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 214,
+          lineNumber: 308,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("dl", { className: "local-dimensions-hubv2-kv mb-0", children: summary.map((line) => /* @__PURE__ */ jsxDEV(Pair, { label: line.label, children: line.value }, line.label, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 216,
+          lineNumber: 310,
           columnNumber: 48
         })) }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 215,
+          lineNumber: 309,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("p", { className: "text-muted small mb-0", children: labels.hubv2_noselection }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 218,
+          lineNumber: 312,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 213,
+        lineNumber: 307,
         columnNumber: 17
       }),
-      topactions.length > 0 ? /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: /* @__PURE__ */ jsxDEV(ActionButtons, { labels, views: topactions, run: actions.run }, void 0, false, {
+      frameworkactions.length > 0 ? /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
+        /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_actions }, void 0, false, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 316,
+          columnNumber: 25
+        }),
+        /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-actions d-flex flex-wrap gap-2", children: [
+          /* @__PURE__ */ jsxDEV(
+            ActionButtons,
+            {
+              labels,
+              views: frameworkactions.filter((view) => FRAMEWORK_BUTTONS.includes(view.spec.id)),
+              run: actions.run
+            },
+            void 0,
+            false,
+            {
+              fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+              lineNumber: 318,
+              columnNumber: 29
+            }
+          ),
+          /* @__PURE__ */ jsxDEV(MoreButton, { labels, open: menuopen, menu: actions.menu }, void 0, false, {
+            fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+            lineNumber: 321,
+            columnNumber: 29
+          })
+        ] }, void 0, true, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 317,
+          columnNumber: 25
+        })
+      ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 222,
-        columnNumber: 25
-      }) }, void 0, false, {
+        lineNumber: 315,
+        columnNumber: 21
+      }) : null,
+      topactions.length > 0 ? /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: /* @__PURE__ */ jsxDEV(
+        ActionButtons,
+        {
+          labels,
+          views: topactions,
+          run: actions.run,
+          secondary: frameworkactions.length > 0
+        },
+        void 0,
+        false,
+        {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 327,
+          columnNumber: 25
+        }
+      ) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 221,
+        lineNumber: 326,
         columnNumber: 21
       }) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 203,
+      lineNumber: 296,
       columnNumber: 13
     });
   }
@@ -298,23 +471,23 @@ const Panel = /* @__PURE__ */ __name((props) => {
             " "
           ] }, void 0, true, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 236,
+            lineNumber: 342,
             columnNumber: 30
           }),
           node.idnumber
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 236,
+          lineNumber: 342,
           columnNumber: 25
         }) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 233,
+        lineNumber: 339,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("h3", { className: "h5 mb-1", children: node.shortname }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 239,
+        lineNumber: 345,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("p", { className: "text-muted small mb-0", children: [
@@ -323,132 +496,132 @@ const Panel = /* @__PURE__ */ __name((props) => {
           ": "
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 241,
+          lineNumber: 347,
           columnNumber: 21
         }),
         path.length > 0 ? path.join(" / ") : labels.hubv2_rootlevel
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 240,
+        lineNumber: 346,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 232,
+      lineNumber: 338,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_usage }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 247,
+        lineNumber: 353,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("ul", { className: "local-dimensions-hubv2-usage list-unstyled mb-2", children: [
         /* @__PURE__ */ jsxDEV("li", { children: [
           /* @__PURE__ */ jsxDEV("b", { children: node.templatecount }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 249,
+            lineNumber: 355,
             columnNumber: 25
           }),
           /* @__PURE__ */ jsxDEV("span", { children: labels.hubv2_usage_templates }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 249,
+            lineNumber: 355,
             columnNumber: 52
           })
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 249,
+          lineNumber: 355,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("li", { children: [
           /* @__PURE__ */ jsxDEV("b", { children: node.coursecount }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 250,
+            lineNumber: 356,
             columnNumber: 25
           }),
           /* @__PURE__ */ jsxDEV("span", { children: labels.hubv2_usage_courses }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 250,
+            lineNumber: 356,
             columnNumber: 50
           })
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 250,
+          lineNumber: 356,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("li", { children: [
           /* @__PURE__ */ jsxDEV("b", { children: node.activitycount }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 251,
+            lineNumber: 357,
             columnNumber: 25
           }),
           /* @__PURE__ */ jsxDEV("span", { children: labels.hubv2_usage_activities }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 251,
+            lineNumber: 357,
             columnNumber: 52
           })
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 251,
+          lineNumber: 357,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 248,
+        lineNumber: 354,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("details", { className: "local-dimensions-hubv2-details", children: [
         /* @__PURE__ */ jsxDEV("summary", { children: labels.hubv2_seeusage }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 254,
+          lineNumber: 360,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(UsageLists, { labels, usage }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 255,
+          lineNumber: 361,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 253,
+        lineNumber: 359,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 246,
+      lineNumber: 352,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_assessment }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 260,
+        lineNumber: 366,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("dl", { className: "local-dimensions-hubv2-kv mb-0", children: [
         /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_scale, children: node.scale }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 262,
+          lineNumber: 368,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_rule, children: node.ruletype ? node.rulelabel : labels.managecompetencies_norule }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 263,
+          lineNumber: 369,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 261,
+        lineNumber: 367,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 259,
+      lineNumber: 365,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_appearance }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 268,
+        lineNumber: 374,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("dl", { className: "local-dimensions-hubv2-kv mb-0", children: [
@@ -464,59 +637,59 @@ const Panel = /* @__PURE__ */ __name((props) => {
             false,
             {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-              lineNumber: 273,
+              lineNumber: 379,
               columnNumber: 33
             }
           ),
           node.bgcolor
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 272,
+          lineNumber: 378,
           columnNumber: 29
         }) : labels.hubv2_nocolour }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 270,
+          lineNumber: 376,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_tag1, children: node.tag1 || "-" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 279,
+          lineNumber: 385,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_tag2, children: node.tag2 || "-" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 280,
+          lineNumber: 386,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(Pair, { label: labels.hubv2_type, children: node.type || "-" }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 281,
+          lineNumber: 387,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 269,
+        lineNumber: 375,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 267,
+      lineNumber: 373,
       columnNumber: 13
     }),
     node.description ? /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_description }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 287,
+        lineNumber: 393,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-description", dangerouslySetInnerHTML: { __html: node.description } }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 290,
+        lineNumber: 396,
         columnNumber: 21
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 286,
+      lineNumber: 392,
       columnNumber: 17
     }) : null,
     /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
@@ -527,12 +700,12 @@ const Panel = /* @__PURE__ */ __name((props) => {
         ")"
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 295,
+        lineNumber: 401,
         columnNumber: 17
       }),
       related.length === 0 ? /* @__PURE__ */ jsxDEV("p", { className: "text-muted small mb-0", children: labels.central_related_empty }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 296,
+        lineNumber: 402,
         columnNumber: 41
       }) : null,
       related.length > 0 ? /* @__PURE__ */ jsxDEV("ul", { className: "list-unstyled small mb-0", children: related.map((item) => /* @__PURE__ */ jsxDEV("li", { children: [
@@ -548,7 +721,7 @@ const Panel = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 301,
+            lineNumber: 407,
             columnNumber: 33
           }
         ),
@@ -557,27 +730,27 @@ const Panel = /* @__PURE__ */ __name((props) => {
           item.path
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-          lineNumber: 305,
+          lineNumber: 411,
           columnNumber: 46
         }) : null
       ] }, item.id, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 300,
+        lineNumber: 406,
         columnNumber: 29
       })) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 298,
+        lineNumber: 404,
         columnNumber: 21
       }) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 294,
+      lineNumber: 400,
       columnNumber: 13
     }),
     nodeactions.length > 0 ? /* @__PURE__ */ jsxDEV("section", { className: "local-dimensions-hubv2-sec", children: [
       /* @__PURE__ */ jsxDEV("h4", { className: "local-dimensions-hubv2-sectitle", children: labels.hubv2_actions }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 314,
+        lineNumber: 420,
         columnNumber: 21
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-actions d-flex flex-wrap gap-2", children: [
@@ -592,48 +765,28 @@ const Panel = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 316,
+            lineNumber: 422,
             columnNumber: 25
           }
         ),
-        /* @__PURE__ */ jsxDEV(
-          "button",
-          {
-            type: "button",
-            className: "btn btn-sm btn-outline-secondary",
-            "aria-haspopup": "menu",
-            "aria-expanded": menuopen,
-            onClick: (event) => actions.menu(event.currentTarget),
-            children: [
-              labels.hubv2_moreactions,
-              /* @__PURE__ */ jsxDEV("i", { className: "fa fa-chevron-down ms-1", "aria-hidden": "true" }, void 0, false, {
-                fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-                lineNumber: 325,
-                columnNumber: 55
-              })
-            ]
-          },
-          void 0,
-          true,
-          {
-            fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-            lineNumber: 318,
-            columnNumber: 25
-          }
-        )
+        /* @__PURE__ */ jsxDEV(MoreButton, { labels, open: menuopen, menu: actions.menu }, void 0, false, {
+          fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
+          lineNumber: 424,
+          columnNumber: 25
+        })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-        lineNumber: 315,
+        lineNumber: 421,
         columnNumber: 21
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-      lineNumber: 313,
+      lineNumber: 419,
       columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Panel.tsx",
-    lineNumber: 230,
+    lineNumber: 336,
     columnNumber: 9
   });
 }, "Panel");

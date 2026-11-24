@@ -35,7 +35,8 @@ use local_dimensions\output\hub_map;
  * Structure tab: navigate frameworks and their competencies without reloading.
  *
  * Args (from the pane data attributes / getContent): contexttype, categoryid, locked, frameworkid,
- * showhidden, view (one of VIEWS), competencyid (the workspace's deep link).
+ * showhidden, view (one of VIEWS), competencyid (the workspace's deep link), classic (the hub's mode for the
+ * visit, {@see \local_dimensions\local\hub_mode}).
  *
  * Every view shares everything this class resolves (the context, the framework list with its
  * unlisted-category filter, the selected framework, canmanage); only the body differs: the classic
@@ -47,8 +48,9 @@ use local_dimensions\output\hub_map;
  */
 class structure extends \core\output\dynamic_tabs\base {
     /**
-     * @var string[] The tab's views; the first, the classic list, is the default. 'map' is the map alone, as
-     * links and saved preferences from before the outline name it.
+     * @var string[] The tab's views, in the switch's order. 'list', the classic list, is offered in classic mode only
+     * ({@see \local_dimensions\local\hub_mode}); 'map' is the map alone, as links and saved preferences from
+     * before the outline name it.
      */
     public const array VIEWS = ['list', 'outline', 'map', 'both'];
 
@@ -58,36 +60,56 @@ class structure extends \core\output\dynamic_tabs\base {
      */
     public const array WORKSPACE_VIEWS = ['outline', 'map', 'both'];
 
+    /** @var string The view shown when neither the pane nor the saved preference names one the mode offers. */
+    public const string DEFAULT_VIEW = 'both';
+
+    /** @var string The default view in classic mode, which is the hub as it was: the classic list. */
+    public const string CLASSIC_DEFAULT_VIEW = 'list';
+
     /**
-     * The view the tab shows: the one the pane names, else the viewer's saved one, else the list.
+     * The views the switch offers in a mode: all four in classic mode, the workspace's three otherwise.
      *
-     * The pane names a view when the URL or the view switch did; any other value counts as none, so a
-     * mistyped link opens what the viewer last chose. The saved value is sanitised on read, and is
+     * @param bool $classic Whether the hub is in classic mode.
+     * @return string[] Views, in the switch's order.
+     */
+    public static function views(bool $classic): array {
+        return $classic ? self::VIEWS : self::WORKSPACE_VIEWS;
+    }
+
+    /**
+     * The view the tab shows: the one the pane names, else the viewer's saved one, else the mode's default.
+     *
+     * The pane names a view when the URL or the view switch did; any value the mode does not offer counts as
+     * none, so a mistyped link opens what the viewer last chose, and outside classic mode a link or a saved
+     * choice naming the classic list opens the workspace. The saved value is sanitised on read, and is
      * checked again here so that this method alone decides.
      *
      * @param string $requested The pane's view value, '' when it names none.
-     * @param string $saved The viewer's saved view (helper::get_central_prefs()).
-     * @return string One of VIEWS.
+     * @param string $saved The viewer's saved view (helper::get_central_prefs()), '' when none.
+     * @param bool $classic Whether the hub is in classic mode.
+     * @return string One of views($classic).
      */
-    public static function resolve_view(string $requested, string $saved): string {
-        if (in_array($requested, self::VIEWS, true)) {
+    public static function resolve_view(string $requested, string $saved, bool $classic = false): string {
+        $offered = self::views($classic);
+        if (in_array($requested, $offered, true)) {
             return $requested;
         }
-        if (in_array($saved, self::VIEWS, true)) {
+        if (in_array($saved, $offered, true)) {
             return $saved;
         }
-        return self::VIEWS[0];
+        return $classic ? self::CLASSIC_DEFAULT_VIEW : self::DEFAULT_VIEW;
     }
 
     /**
      * The view switch's cells, in VIEWS' order: each view's value, label, icon and whether it is shown.
      *
      * @param string $view The view shown.
+     * @param bool $classic Whether the hub is in classic mode; without it the classic list has no cell.
      * @return array Each: value (string), label (string), icon (string, a Font Awesome class), pressed (bool).
      */
-    public static function view_cells(string $view): array {
+    public static function view_cells(string $view, bool $classic = true): array {
         $cells = [];
-        foreach (self::VIEWS as $value) {
+        foreach (self::views($classic) as $value) {
             $cells[] = [
                 'value' => $value,
                 'label' => match ($value) {
@@ -173,9 +195,14 @@ class structure extends \core\output\dynamic_tabs\base {
         $pagecontext = $resolved['context'];
         $frameworkid = (int) ($data['frameworkid'] ?? 0);
         $showhidden = (bool) ($data['showhidden'] ?? false);
+        $prefs = helper::get_central_prefs();
+        // The visit's mode rides in the pane data (central.php resolved it, the address included); a pane
+        // asked for without it reads the saved one. Display only: is_available() admitted the viewer.
+        $classic = array_key_exists('classic', $data) ? (bool) (int) $data['classic'] : (bool) $prefs['display']['classic'];
         $view = self::resolve_view(
             (string) ($data['view'] ?? ''),
-            (string) helper::get_central_prefs()['display']['structure']['view']
+            (string) $prefs['display']['structure']['view'],
+            $classic
         );
         $isworkspace = in_array($view, self::WORKSPACE_VIEWS, true);
 
@@ -249,6 +276,7 @@ class structure extends \core\output\dynamic_tabs\base {
         ]);
 
         $canmanage = $selected && competency_framework::can_manage_context($selected->get_context());
+        $structures = self::structures_commands($pagecontext, $needscategory);
 
         $PAGE->requires->js_call_amd('local_dimensions/central/structure', 'init');
 
@@ -265,7 +293,8 @@ class structure extends \core\output\dynamic_tabs\base {
                 $roottotal,
                 $canmanage,
                 hub_map::reveal_target($selected, (int) ($data['competencyid'] ?? 0)),
-                $view
+                $view,
+                $structures
             );
             // Read back by core's React helper with JSON.parse; the hex flags keep the markup inert, and a
             // stray invalid byte in admin text must not empty the whole props, and the mount with them.
@@ -275,10 +304,27 @@ class structure extends \core\output\dynamic_tabs\base {
             );
         }
 
+        // The Structures menu beside the framework select: outside classic mode it is the only way to create,
+        // import or reveal hidden structures; in classic mode the workspace's views carry it too, the list keeps
+        // its own toggle. It carries the "show hidden" toggle, so the standalone one is left out with it.
+        $showmenu = !$needscategory && (!$classic || $isworkspace)
+            && ($structures['cancreate'] || $structures['canscalespage'] || $hashiddenframeworks);
+
         return [
             'contexttype' => $contexttype,
+            'contextid' => $pagecontext->id,
+            'classic' => $classic,
             'view' => $view,
-            'views' => self::view_cells($view),
+            'views' => self::view_cells($view, $classic),
+            'structuresmenu' => $showmenu ? [
+                'cancreate' => $structures['cancreate'],
+                'canscalespage' => $structures['canscalespage'],
+                'scalesurl' => $structures['scalesurl'],
+                'hashidden' => $hashiddenframeworks,
+                'showhidden' => (bool) $prefs['display']['structure']['showhidden'],
+                'sepbeforehidden' => $structures['cancreate'],
+                'sepbeforescales' => $structures['cancreate'] || $hashiddenframeworks,
+            ] : null,
             'isworkspace' => $mapprops !== '',
             'mapprops' => $mapprops,
             'selectedcategoryid' => $categoryid,
@@ -289,7 +335,7 @@ class structure extends \core\output\dynamic_tabs\base {
             'needscategoryselection' => $needscategory,
             'showhidden' => $showhidden,
             'hashiddenframeworks' => $hashiddenframeworks,
-            'showhiddentoggle' => $hashiddenframeworks ? [
+            'showhiddentoggle' => $hashiddenframeworks && !$showmenu ? [
                 'id' => 'local-dimensions-structure-showhidden',
                 'label' => get_string('managecompetencies_showhiddenframeworks', 'local_dimensions'),
                 'action' => 'toggle-hidden',
@@ -317,6 +363,29 @@ class structure extends \core\output\dynamic_tabs\base {
             ),
             'courseoutcomesjson' => json_encode(helper::course_outcome_options(), $jsonoptions),
             'moduleoutcomesjson' => json_encode(helper::module_outcome_options(), $jsonoptions),
+        ];
+    }
+
+    /**
+     * What the commands that are not about one framework need: creating or importing one in the tab's context,
+     * and the scales page.
+     *
+     * Creating and importing are offered to whoever manages competencies in the context the tab lists, which is
+     * the context the framework form and the import form check again on submission
+     * (framework_dynamic_form and import_framework_dynamic_form, check_access_for_dynamic_submission()).
+     *
+     * @param \context $context The tab's resolved context.
+     * @param bool $needscategory Whether category mode still waits for a category (nothing can be created then).
+     * @return array Keys: contextid (int), cancreate (bool), canscalespage (bool), scalesurl (string).
+     */
+    public static function structures_commands(\context $context, bool $needscategory): array {
+        // The scales page's own gate, as the Structures tab reads it.
+        $canscalespage = has_capability('moodle/course:managescales', \context_system::instance());
+        return [
+            'contextid' => (int) $context->id,
+            'cancreate' => !$needscategory && competency_framework::can_manage_context($context),
+            'canscalespage' => $canscalespage,
+            'scalesurl' => $canscalespage ? (new \moodle_url('/grade/edit/scale/index.php'))->out(false) : '',
         ];
     }
 

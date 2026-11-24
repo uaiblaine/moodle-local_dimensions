@@ -18,6 +18,12 @@
  * visibility toggle and delete. The framework list is server-rendered; every action that changes it
  * reloads the pane via reloadPane.
  *
+ * The same actions are exported for the Competencies tab, whose workspace carries them on its root node
+ * and whose Structures menu carries creating and importing (amd/src/central/structure.js, and the workspace
+ * through js/esm/src/hubv2/amd.ts): one implementation, each export taking what the tab reads from its row
+ * as arguments and telling its caller what changed through a callback, so the tab keeps reloading its pane
+ * and the Competencies tab reloads its own.
+ *
  * @module     local_dimensions/central/frameworks
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -131,16 +137,14 @@ const setupScaleConfigDelegation = () => {
  * user can reach the scales admin page.
  *
  * @param {ModalForm} form The modal form (after its LOADED event).
+ * @param {Boolean} canscalespage Whether the viewer may open the scales page (the server's gate).
  * @return {Promise<void>}
  */
-const injectScalesLink = async(form) => {
-    if (!form.modal) {
+const injectScalesLink = async(form, canscalespage) => {
+    if (!form.modal || !canscalespage) {
         return;
     }
     const root = form.modal.getRoot()[0];
-    if (!activeRegion || activeRegion.dataset.canscalespage !== '1') {
-        return;
-    }
     const footer = root.querySelector('.modal-footer');
     if (!footer || footer.querySelector('.local-dimensions-modal-footer-links')) {
         return;
@@ -164,45 +168,63 @@ const injectScalesLink = async(form) => {
 };
 
 /**
- * Open the framework create/edit modal, wiring the scale-config control and pane refresh.
+ * Open the framework create/edit modal, wiring the scale-config control.
  *
- * @param {HTMLElement} pane The tab pane.
  * @param {Object} args The dynamic form args ({id} for edit, {id: 0, contextid} for create).
  * @param {String} titlekey The modal title lang key.
+ * @param {Object} options What the caller adds.
+ * @param {Function} options.onSaved Called with the saved framework's id once the form is saved.
+ * @param {Boolean} options.canscalespage Whether the footer offers the scales page.
+ * @param {Boolean} [options.scale] Whether the scale configuration opens as soon as the form has loaded.
  * @return {Promise<void>}
  */
-const openFrameworkForm = async(pane, args, titlekey) => {
+const openFrameworkForm = async(args, titlekey, {onSaved, canscalespage, scale = false}) => {
+    setupScaleConfigDelegation();
     const form = new ModalForm({
         formClass: FORM_CLASS,
         args: args,
         modalConfig: {title: await getString(titlekey, 'local_dimensions')},
     });
-    form.addEventListener(form.events.FORM_SUBMITTED, () => {
+    let scaleopened = false;
+    form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
         getString('central_frameworks_saved', 'local_dimensions').then(addToast).catch(notifyError);
-        reloadPane(pane).catch(notifyError);
+        const saved = event.detail && event.detail.frameworkid ? Number(event.detail.frameworkid) : Number(args.id || 0);
+        onSaved(saved);
     });
-    form.addEventListener(form.events.LOADED, () => injectScalesLink(form).catch(notifyError));
+    form.addEventListener(form.events.LOADED, () => {
+        injectScalesLink(form, canscalespage).catch(notifyError);
+        // "Configure scale" from the Competencies tab: the form's own button, pressed once for the viewer.
+        if (scale && !scaleopened) {
+            scaleopened = true;
+            openScaleConfigForForm();
+        }
+    });
     form.show();
 };
 
 /**
- * Open the edit modal for a framework.
+ * Open the edit modal for a framework (it carries the taxonomies and the scale).
  *
- * @param {HTMLElement} pane The tab pane.
  * @param {Number} id The framework id.
+ * @param {Object} options What the caller adds.
+ * @param {Function} options.onSaved Called with the framework's id once the form is saved.
+ * @param {Boolean} options.canscalespage Whether the footer offers the scales page.
+ * @param {Boolean} [options.scale] Whether the scale configuration opens as soon as the form has loaded.
  * @return {Promise<void>}
  */
-const editFramework = (pane, id) => openFrameworkForm(pane, {id: id}, 'central_frameworks_edit');
+export const editFramework = (id, options) => openFrameworkForm({id: id}, 'central_frameworks_edit', options);
 
 /**
- * Open the create modal for a new framework in the tab's context.
+ * Open the create modal for a new framework in a context.
  *
- * @param {HTMLElement} pane The tab pane.
- * @param {HTMLElement} region The frameworks region (carries data-contextid).
+ * @param {Number} contextid The context the framework is created in (the tab's).
+ * @param {Object} options What the caller adds.
+ * @param {Function} options.onSaved Called with the new framework's id once it is created.
+ * @param {Boolean} options.canscalespage Whether the footer offers the scales page.
  * @return {Promise<void>}
  */
-const createFramework = (pane, region) =>
-    openFrameworkForm(pane, {id: 0, contextid: Number(region.dataset.contextid)}, 'central_frameworks_new');
+export const createFramework = (contextid, options) =>
+    openFrameworkForm({id: 0, contextid: Number(contextid)}, 'central_frameworks_new', options);
 
 /**
  * Show a processing banner inside the import modal body while the CSV is imported in-request.
@@ -241,16 +263,16 @@ const hideImportLoading = (form) => {
 };
 
 /**
- * Open the import-framework modal (a dynamic form with a CSV file picker) for the tab's context.
+ * Open the import-framework modal (a dynamic form with a CSV file picker) for a context.
  *
- * @param {HTMLElement} pane The tab pane.
- * @param {HTMLElement} region The frameworks region (carries data-contextid).
+ * @param {Number} contextid The context the framework is imported into (the tab's).
+ * @param {Function} onImported Called with the imported framework's id (0 when the answer names none).
  * @return {Promise<void>}
  */
-const openImportForm = async(pane, region) => {
+export const importFramework = async(contextid, onImported) => {
     const form = new ModalForm({
         formClass: IMPORT_FORM_CLASS,
-        args: {contextid: Number(region.dataset.contextid)},
+        args: {contextid: Number(contextid)},
         modalConfig: {title: await getString('central_frameworks_import_title', 'local_dimensions')},
     });
     form.addEventListener(form.events.SUBMIT_BUTTON_PRESSED, () => showImportLoading(form).catch(notifyError));
@@ -258,7 +280,7 @@ const openImportForm = async(pane, region) => {
     form.addEventListener(form.events.SERVER_VALIDATION_ERROR, () => hideImportLoading(form));
     form.addEventListener(form.events.FORM_SUBMITTED, (event) => {
         const count = event.detail && event.detail.competencycount ? event.detail.competencycount : 0;
-        reloadPane(pane).catch(notifyError);
+        onImported(event.detail && event.detail.frameworkid ? Number(event.detail.frameworkid) : 0);
         getString('central_frameworks_import_done', 'local_dimensions', {count: count})
             .then((message) => addToast(message, {type: 'success'}))
             .catch(notifyError);
@@ -267,7 +289,22 @@ const openImportForm = async(pane, region) => {
 };
 
 /**
- * Fetch the selected framework's CSV from the web service and download it, with a loader.
+ * Fetch a framework's CSV from the web service and download it, then say so.
+ *
+ * @param {Number} frameworkid The framework.
+ * @return {Promise<void>}
+ */
+export const exportFramework = async(frameworkid) => {
+    const result = await Ajax.call([{
+        methodname: 'local_dimensions_export_framework',
+        args: {frameworkid: Number(frameworkid)},
+    }])[0];
+    triggerDownload(result.filename, result.content);
+    addToast(await getString('central_frameworks_export_done', 'local_dimensions'), {type: 'success'});
+};
+
+/**
+ * Fetch the selected framework's CSV and download it, with a loader.
  *
  * @param {Modal} modal The export modal.
  * @return {Promise<void>}
@@ -287,12 +324,7 @@ const downloadFramework = async(modal) => {
     loader.hidden = false;
     loader.append(spinner);
     try {
-        const result = await Ajax.call([{
-            methodname: 'local_dimensions_export_framework',
-            args: {frameworkid: frameworkid},
-        }])[0];
-        triggerDownload(result.filename, result.content);
-        addToast(await getString('central_frameworks_export_done', 'local_dimensions'), {type: 'success'});
+        await exportFramework(frameworkid);
     } catch (error) {
         notifyError(error);
     } finally {
@@ -335,19 +367,35 @@ const openExportModal = async(pane, region) => {
 };
 
 /**
+ * Set a framework's visibility through the plugin's service (core checks competencymanage in its context).
+ *
+ * @param {Number} id The framework id.
+ * @param {Boolean} visible Whether it becomes visible.
+ * @return {Promise<Object>} The service's answer.
+ */
+export const setVisibility = (id, visible) => Ajax.call([{
+    methodname: 'local_dimensions_set_framework_visibility',
+    args: {frameworkid: Number(id), visible: visible ? 1 : 0},
+}])[0];
+
+/**
  * Toggle a framework's visibility, then refresh the pane.
  *
  * @param {HTMLElement} pane The tab pane.
  * @param {HTMLElement} row The framework row.
  * @return {Promise<void>}
  */
-const toggleVisibility = (pane, row) => {
-    const visible = row.dataset.visible === '1' ? 0 : 1;
-    return Ajax.call([{
-        methodname: 'local_dimensions_set_framework_visibility',
-        args: {frameworkid: Number(row.dataset.framework), visible: visible},
-    }])[0].then(() => reloadPane(pane));
-};
+const toggleVisibility = (pane, row) =>
+    setVisibility(Number(row.dataset.framework), row.dataset.visible !== '1').then(() => reloadPane(pane));
+
+/**
+ * Duplicate a framework through core's service.
+ *
+ * @param {Number} id The framework id.
+ * @return {Promise<Object>} The copy, as core's service describes it.
+ */
+export const duplicate = (id) =>
+    Ajax.call([{methodname: 'core_competency_duplicate_competency_framework', args: {id: Number(id)}}])[0];
 
 /**
  * Duplicate a framework, then refresh the pane.
@@ -356,43 +404,61 @@ const toggleVisibility = (pane, row) => {
  * @param {Number} id The framework id.
  * @return {Promise<void>}
  */
-const duplicateFramework = (pane, id) =>
-    Ajax.call([{methodname: 'core_competency_duplicate_competency_framework', args: {id: id}}])[0]
-        .then(() => reloadPane(pane));
+const duplicateFramework = (pane, id) => duplicate(id).then(() => reloadPane(pane));
 
 /**
  * Delete a framework after a cascade confirm, or explain why it is blocked.
+ *
+ * @param {Object} framework What the confirmation names.
+ * @param {Number} framework.id The framework id.
+ * @param {String} framework.name Its name, the plain spelling.
+ * @param {Number} framework.count How many competencies it holds.
+ * @param {Boolean} framework.deletable Whether the server found every competency deletable.
+ * @return {Promise<Boolean>} Whether core deleted it.
+ */
+export const confirmDelete = async({id, name, count, deletable}) => {
+    if (!deletable) {
+        Notification.alert('', await getString('central_frameworks_delete_blocked', 'local_dimensions'));
+        return false;
+    }
+    // The name is the plain spelling and the confirm body is HTML.
+    const [title, body] = await Promise.all([
+        getString('delete'),
+        getString('central_frameworks_delete_confirm', 'local_dimensions', {name: escapeHtml(name), count: count}),
+    ]);
+    try {
+        await Notification.deleteCancelPromise(title, body);
+    } catch (e) {
+        return false;
+    }
+    const success = await Ajax.call([{
+        methodname: 'core_competency_delete_competency_framework',
+        args: {id: Number(id)},
+    }])[0];
+    if (success === false) {
+        Notification.alert('', await getString('central_frameworks_delete_blocked', 'local_dimensions'));
+        return false;
+    }
+    return true;
+};
+
+/**
+ * Delete a framework after a cascade confirm, or explain why it is blocked, then refresh the pane.
  *
  * @param {HTMLElement} pane The tab pane.
  * @param {HTMLElement} row The framework row.
  * @return {Promise<void>}
  */
 const deleteFramework = async(pane, row) => {
-    const id = Number(row.dataset.framework);
-    if (row.dataset.deletable !== '1') {
-        Notification.alert('', await getString('central_frameworks_delete_blocked', 'local_dimensions'));
-        return;
+    const deleted = await confirmDelete({
+        id: Number(row.dataset.framework),
+        name: row.dataset.name,
+        count: row.dataset.count,
+        deletable: row.dataset.deletable === '1',
+    });
+    if (deleted) {
+        await reloadPane(pane);
     }
-    // The row carries the plain name and the confirm body is HTML.
-    const [title, body] = await Promise.all([
-        getString('delete'),
-        getString('central_frameworks_delete_confirm', 'local_dimensions',
-            {name: escapeHtml(row.dataset.name), count: row.dataset.count}),
-    ]);
-    try {
-        await Notification.deleteCancelPromise(title, body);
-    } catch (e) {
-        return;
-    }
-    const success = await Ajax.call([{
-        methodname: 'core_competency_delete_competency_framework',
-        args: {id: id},
-    }])[0];
-    if (success === false) {
-        Notification.alert('', await getString('central_frameworks_delete_blocked', 'local_dimensions'));
-        return;
-    }
-    await reloadPane(pane);
 };
 
 /**
@@ -412,7 +478,11 @@ const dispatchFrameworksAction = (target) => {
     const id = Number(row.dataset.framework);
     const action = target.dataset.action;
     if (action === 'edit') {
-        editFramework(activePane, id).catch(notifyError);
+        const pane = activePane;
+        editFramework(id, {
+            onSaved: () => reloadPane(pane).catch(notifyError),
+            canscalespage: activeRegion.dataset.canscalespage === '1',
+        }).catch(notifyError);
     } else if (action === 'visibility') {
         toggleVisibility(activePane, row).catch(notifyError);
     } else if (action === 'duplicate') {
@@ -473,11 +543,14 @@ export const init = () => {
 
     region.addEventListener('click', (event) => {
         if (event.target.closest('[data-action="new"]')) {
-            createFramework(pane, region).catch(notifyError);
+            createFramework(region.dataset.contextid, {
+                onSaved: () => reloadPane(pane).catch(notifyError),
+                canscalespage: region.dataset.canscalespage === '1',
+            }).catch(notifyError);
             return;
         }
         if (event.target.closest('[data-action="import"]')) {
-            openImportForm(pane, region).catch(notifyError);
+            importFramework(region.dataset.contextid, () => reloadPane(pane).catch(notifyError)).catch(notifyError);
             return;
         }
         if (event.target.closest('[data-action="export"]')) {
