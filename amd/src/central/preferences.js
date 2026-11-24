@@ -32,6 +32,8 @@ import {notifyError} from 'local_dimensions/central/errors';
 const PREF_NAV = 'local_dimensions_central_nav';
 /** @type {String} User preference name for the hub display-toggle state. */
 const PREF_DISPLAY = 'local_dimensions_central_display';
+/** @type {String[]} The Competencies tab's views (structure::VIEWS); the first is the default. */
+const STRUCTURE_VIEWS = ['list', 'map'];
 /** @type {Number} Debounce (ms) before a change is written to the server. */
 const SAVE_DELAY = 400;
 
@@ -41,7 +43,7 @@ const NAV_DEFAULTS = {
 };
 /** @type {Object} Default display state. */
 const DISPLAY_DEFAULTS = {
-    structure: {tax: false, id: false, rule: true, showhidden: false},
+    structure: {tax: false, id: false, rule: true, showhidden: false, view: 'list'},
     planslist: {id: false, duedate: false},
     plansdetail: {tax: false, path: false, id: false},
     panels: {structure: true, planslist: true, plansdetail: true},
@@ -102,8 +104,13 @@ export const init = (state) => {
         };
     }
     const incoming = seed.display || {};
+    const structure = {...DISPLAY_DEFAULTS.structure, ...(incoming.structure || {})};
+    // As helper::get_central_prefs() reads it: anything but a known view is the list.
+    if (!STRUCTURE_VIEWS.includes(structure.view)) {
+        structure.view = STRUCTURE_VIEWS[0];
+    }
     display = {
-        structure: {...DISPLAY_DEFAULTS.structure, ...(incoming.structure || {})},
+        structure,
         planslist: {...DISPLAY_DEFAULTS.planslist, ...(incoming.planslist || {})},
         plansdetail: {...DISPLAY_DEFAULTS.plansdetail, ...(incoming.plansdetail || {})},
         panels: {...DISPLAY_DEFAULTS.panels, ...(incoming.panels || {})},

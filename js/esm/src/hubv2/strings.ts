@@ -16,9 +16,10 @@
 /**
  * The canvas's strings: read once at mount, then filled in place.
  *
- * The page hands every one of them to core's string cache (hubv2_page::STRINGS and OTHER_STRINGS,
- * through strings_for_js), so {@see loadLabels()} resolves without a request. hubv2_page_test holds
- * these lists equal to the server's and every key present in both languages.
+ * The Competencies tab hands every one of them to core's string cache in its map view
+ * (hub_map::STRINGS and OTHER_STRINGS, through strings_for_js), so {@see loadLabels()} resolves
+ * without a request. hub_map_test holds these lists equal to the server's and every key present in
+ * both languages.
  *
  * @module     local_dimensions/hubv2/strings
  * @copyright  2026 Anderson Blaine
@@ -30,7 +31,7 @@ import {getStrings} from '@moodle/lms/core/stringUtils';
 /** The plugin's component. */
 const COMPONENT = 'local_dimensions';
 
-/** Every local_dimensions string the canvas reads, in hubv2_page::STRINGS' order. */
+/** Every local_dimensions string the canvas reads, in hub_map::STRINGS' order. */
 export const KEYS = [
     'central_browseframeworks_framework',
     'central_links_button',
@@ -93,6 +94,8 @@ export const KEYS = [
     'hubv2_moveinvalid',
     'hubv2_movepick',
     'hubv2_moveroot',
+    'hubv2_moverule_newparent',
+    'hubv2_moverule_oldparent',
     'hubv2_movetitle',
     'hubv2_moveup',
     'hubv2_nocolour',
@@ -126,7 +129,7 @@ export const KEYS = [
     'managecompetencies_searchplaceholder',
 ];
 
-/** The other components' strings, as [component, key], in hubv2_page::OTHER_STRINGS' order. */
+/** The other components' strings, as [component, key], in hub_map::OTHER_STRINGS' order. */
 export const OTHER: [string, string][] = [
     ['core', 'changessaved'],
     ['core', 'idnumber'],

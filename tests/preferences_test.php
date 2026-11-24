@@ -147,6 +147,39 @@ final class preferences_test extends advanced_testcase {
     }
 
     /**
+     * The Competencies tab's saved view is the list by default, the map when stored, and the list for
+     * anything else stored, whatever its type.
+     *
+     * @return void
+     */
+    public function test_get_central_prefs_sanitises_the_saved_view(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $this->assertSame('list', helper::get_central_prefs()['display']['structure']['view']);
+
+        $stored = static function ($view) use ($USER): string {
+            set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['view' => $view]]), $USER->id);
+            return helper::get_central_prefs()['display']['structure']['view'];
+        };
+        $this->assertSame('map', $stored('map'));
+        $this->assertSame('list', $stored('list'));
+        foreach (['MAP', 'canvas', '', '<b>map</b>', 1, true, null, ['map']] as $value) {
+            $this->assertSame('list', $stored($value), 'Stored ' . json_encode($value));
+        }
+        // The other structure toggles are read beside it, untouched.
+        set_user_preference(
+            constants::PREF_CENTRAL_DISPLAY,
+            json_encode(['structure' => ['view' => 'map', 'tax' => true]]),
+            $USER->id
+        );
+        $structure = helper::get_central_prefs()['display']['structure'];
+        $this->assertSame('map', $structure['view']);
+        $this->assertTrue($structure['tax']);
+        $this->assertTrue($structure['rule']);
+    }
+
+    /**
      * The uninstall purge removes only this plugin's preference rows.
      *
      * @return void

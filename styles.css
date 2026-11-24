@@ -26,6 +26,10 @@
       --local-dimensions-loading-min-height reserves height so a pane does not collapse behind the busy cover.
       Older rules still use literal durations.
 
+      The radius scale (--local-dimensions-radius-*) is the fleet Design System's: xs 4, sm 6, md 8,
+      lg 12, xl 16, each reading the theme's family token first. Only a counter is round (50rem); a
+      control never is.
+
       The names use the plugin prefix, never --mds-*: that is core's design-system namespace
       (Moodle 5.2 ships theme/boost/scss/design-system/ with $mds-* tokens), and a --mds-* name on
       :root could collide with core. The design kit documents core's palette under core's names;
@@ -37,6 +41,11 @@
     --local-dimensions-motion-flash: 1500ms;
     --local-dimensions-motion-ease: var(--dimensions-motion-ease, cubic-bezier(0.4, 0, 0.2, 1));
     --local-dimensions-loading-min-height: 12rem;
+    --local-dimensions-radius-xs: var(--dimensions-radius-xs, 4px);
+    --local-dimensions-radius-sm: var(--dimensions-radius-sm, 6px);
+    --local-dimensions-radius-md: var(--dimensions-radius-md, 8px);
+    --local-dimensions-radius-lg: var(--dimensions-radius-lg, 12px);
+    --local-dimensions-radius-xl: var(--dimensions-radius-xl, 16px);
 }
 
 /* ============================================
@@ -7561,6 +7570,48 @@ body.mtube-htmlframe-fullscreen-active .local-dimensions-return-fab {
     color: var(--local-dimensions-ink);
 }
 
+/* The List / Map view switch: the Design System's segmented control, as a view switch (aria-pressed). */
+.local-dimensions-central-viewswitch {
+    display: inline-flex;
+    gap: 0.125rem;
+    padding: 0.1875rem;
+    border: 1px solid transparent;
+    border-radius: var(--local-dimensions-radius-lg);
+    background-color: var(--local-dimensions-surface-inset);
+}
+
+.local-dimensions-central-viewswitch .local-dimensions-central-viewswitch-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    height: 2rem;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--local-dimensions-radius-md);
+    background-color: transparent;
+    color: var(--local-dimensions-ink-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.local-dimensions-central-viewswitch .local-dimensions-central-viewswitch-cell[aria-pressed="true"] {
+    background-color: var(--local-dimensions-surface);
+    color: var(--local-dimensions-ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px var(--local-dimensions-shadow);
+}
+
+.local-dimensions-central-viewswitch .local-dimensions-central-viewswitch-cell:focus-visible {
+    outline: 2px solid var(--local-dimensions-focus-ring);
+    outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+    .local-dimensions-central-viewswitch .local-dimensions-central-viewswitch-cell {
+        height: 2.25rem;
+    }
+}
+
 .local-dimensions-central-structure-subheader-actions {
     display: flex;
     flex-direction: column;
@@ -8887,7 +8938,11 @@ a.local-dimensions-central-links-badge-warn:focus {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Competency hub v2 (hubv2.php): the canvas of a framework's tree.
+ * Competency hub v2: the canvas of a framework's tree, the map view of the hub's Competencies tab.
+ *
+ * Design System: radii from the plugin's scale tokens (a counter alone is round), colours from the
+ * token block only, sentence case. The canvas animates nothing in CSS; its one animated move, the
+ * centring on a revealed competency, is instant under reduced motion (js/esm/src/hubv2/motion.ts).
  *
  * React Flow's own stylesheet is not loaded. The rules it needs to work (positioning, layers,
  * pointer events) are ported from its base.css, each under the plugin's root class, and painted
@@ -8902,7 +8957,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     min-height: 560px;
     --local-dimensions-hubv2-height: calc(100vh - 14rem);
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 12px;
+    border-radius: var(--local-dimensions-radius-lg);
     background-color: var(--local-dimensions-surface);
     color: var(--local-dimensions-ink);
     overflow: hidden;
@@ -9017,7 +9072,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     align-items: center;
     padding: 8px;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 10px;
+    border-radius: var(--local-dimensions-radius-md);
     font-size: 0.75rem;
     color: var(--local-dimensions-ink-muted);
 }
@@ -9039,7 +9094,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     height: 14px;
     margin-right: 6px;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 4px;
+    border-radius: var(--local-dimensions-radius-xs);
     vertical-align: -2px;
 }
 
@@ -9062,7 +9117,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     margin-top: 4px;
     overflow-y: auto;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 10px;
+    border-radius: var(--local-dimensions-radius-md);
     background-color: var(--local-dimensions-surface);
     box-shadow: 0 6px 18px var(--local-dimensions-shadow);
 }
@@ -9106,7 +9161,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     height: 76px;
     padding: 8px 10px;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 12px;
+    border-radius: var(--local-dimensions-radius-lg);
     background-color: var(--local-dimensions-surface);
     color: var(--local-dimensions-ink);
     box-shadow: 0 1px 3px var(--local-dimensions-shadow);
@@ -9133,7 +9188,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     place-items: center;
     width: 28px;
     height: 28px;
-    border-radius: 8px;
+    border-radius: var(--local-dimensions-radius-md);
     font-size: 0.8125rem;
 }
 
@@ -9189,7 +9244,8 @@ a.local-dimensions-central-links-badge-warn:focus {
     flex: none;
     min-width: 24px;
     padding: 1px 7px;
-    border-radius: 10px;
+    /* A counter: the one round shape the Design System allows. */
+    border-radius: 50rem;
     background-color: var(--local-dimensions-surface-inset);
     color: var(--local-dimensions-ink-strong);
     font-size: 0.75rem;
@@ -9205,10 +9261,10 @@ a.local-dimensions-central-links-badge-warn:focus {
     height: 26px;
     padding: 0;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 50%;
+    border-radius: var(--local-dimensions-radius-md);
     background-color: var(--local-dimensions-surface);
     color: var(--local-dimensions-ink);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     cursor: pointer;
 }
 
@@ -9322,10 +9378,10 @@ a.local-dimensions-central-links-badge-warn:focus {
     position: absolute;
     padding: 2px 8px;
     border: 1px solid var(--local-dimensions-warning-edge);
-    border-radius: 999px;
+    border-radius: var(--local-dimensions-radius-sm);
     background-color: var(--local-dimensions-warning-tint);
     color: var(--local-dimensions-warning-ink);
-    font-size: 0.6875rem;
+    font-size: 0.75rem;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -9339,7 +9395,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     position: absolute;
     box-sizing: border-box;
     transform-origin: 0 0;
-    border-radius: 12px;
+    border-radius: var(--local-dimensions-radius-lg);
     pointer-events: all;
     user-select: none;
     cursor: default;
@@ -9409,7 +9465,7 @@ a.local-dimensions-central-links-badge-warn:focus {
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 10px;
+    border-radius: var(--local-dimensions-radius-lg);
     background-color: var(--local-dimensions-surface);
 }
 
@@ -9446,7 +9502,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 .local-dimensions-hubv2 .react-flow__minimap {
     overflow: hidden;
     border: 1px solid var(--local-dimensions-line);
-    border-radius: 10px;
+    border-radius: var(--local-dimensions-radius-lg);
     background-color: var(--local-dimensions-surface);
 }
 

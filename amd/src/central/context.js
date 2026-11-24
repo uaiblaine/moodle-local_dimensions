@@ -31,6 +31,7 @@ import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as Preferences from 'local_dimensions/central/preferences';
+import {setUrlParams} from 'local_dimensions/central/deeplink';
 import * as Categories from 'local_dimensions/central/category_datasource';
 
 /**
@@ -162,7 +163,8 @@ const showHiddenCats = (bar) => {
 
 /**
  * Push the shared context onto every tab pane, resetting the per-tab selection
- * (framework / template) that a context change invalidates.
+ * (framework / template / the map's competency) that a context change invalidates. The
+ * Competencies tab's view is not a selection: it stays.
  *
  * @param {String} contexttype
  * @param {Number} categoryid
@@ -178,7 +180,11 @@ const applyContextToPanes = (contexttype, categoryid) => {
         if ('competencyids' in pane.dataset) {
             pane.dataset.competencyids = '';
         }
+        if ('competencyid' in pane.dataset) {
+            pane.dataset.competencyid = 0;
+        }
     });
+    setUrlParams({competencyid: null});
 };
 
 /**

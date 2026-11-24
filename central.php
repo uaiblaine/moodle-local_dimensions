@@ -90,6 +90,13 @@ $activetab = optional_param('tab', $nav['tab'], PARAM_ALPHA);
 if (!in_array($activetab, ['frameworks', 'structure', 'plans'], true)) {
     $activetab = 'frameworks';
 }
+// The Competencies tab's view, when the link names one; without it the tab opens the viewer's saved
+// view. The competency is the map's deep link: a key the tab checks against the framework it shows.
+$view = optional_param('view', '', PARAM_ALPHA);
+if (!in_array($view, structure::VIEWS, true)) {
+    $view = '';
+}
+$competencyid = max(0, optional_param('competencyid', 0, PARAM_INT));
 
 
 // Resolve the shared context once so the page-level selector and every tab agree.
@@ -113,6 +120,8 @@ $tabinstances = [
         'categoryid' => $categoryid,
         'locked' => (int) $locked,
         'frameworkid' => $frameworkid,
+        'view' => $view,
+        'competencyid' => $competencyid,
     ]),
     'plans' => new plans([
         'contexttype' => $contexttype,
@@ -208,6 +217,8 @@ $tabsdata = [
         ['name' => 'locked', 'value' => (int) $locked],
         ['name' => 'frameworkid', 'value' => $frameworkid],
         ['name' => 'templateid', 'value' => $templateid],
+        ['name' => 'view', 'value' => $view],
+        ['name' => 'competencyid', 'value' => $competencyid],
     ],
     'tabs' => $tabs,
 ];

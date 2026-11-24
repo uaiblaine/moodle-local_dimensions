@@ -2,15 +2,18 @@ var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 import { jsxDEV } from "react/jsx-dev-runtime";
 /**
- * Competency hub v2: a framework's tree as a canvas of nodes, with a detail panel beside it.
+ * The map view of the hub's Competencies tab: a framework's tree as a canvas of nodes, with a detail
+ * panel beside it.
  *
- * The entry of the bundle (js/esm/bundle.json), mounted by templates/hubv2.mustache with the props
- * classes/output/hubv2_page.php builds. The tree is lazy: the first page of roots arrives as props,
+ * The entry of the bundle (js/esm/bundle.json), mounted by templates/central/structure.mustache in the
+ * map view with the props classes/output/hub_map.php builds; the tab around it owns the context, the
+ * framework choice and the view switch. The tree is lazy: the first page of roots arrives as props,
  * each branch is loaded when it is first opened (local_dimensions_browse_structure), and a node is
  * refreshed from the server after every change. Nothing is persisted: the layout is recomputed from
  * the tree on every change (layout.ts), and nodes cannot be dragged. Every action reuses the hub's
  * own dialogues and core's competency services, called as the list view (amd/src/central/structure.js)
- * calls them.
+ * calls them. The selected competency is kept in the address (deeplink.ts), and a competency the link
+ * named is revealed at mount when the server found it in this framework (props.reveal).
  *
  * @module     local_dimensions/hubv2/Hub
  * @copyright  2026 Anderson Blaine
@@ -28,8 +31,11 @@ import {
 } from "../../vendor/xyflow/xyflow.js";
 import { load, notifyError } from "./amd";
 import { CARD, FRAMEWORK_ID, buildGraph, competencyKey, competencyOf } from "./graph";
+import { rememberSelection } from "./deeplink";
 import { blockedBody, confirmBody } from "./deletion";
 import { escapeHtml } from "./html";
+import { motionDuration } from "./motion";
+import { moveBody } from "./move";
 import { CanvasContext, CompetencyNode, FrameworkNode, MoreNode, RuleEdge } from "./Nodes";
 import Panel from "./Panel";
 import { track } from "./pending";
@@ -46,7 +52,7 @@ import {
   updateRule
 } from "./repository";
 import Search from "./Search";
-import { fill, fillObject, loadLabels } from "./strings";
+import { fill, loadLabels } from "./strings";
 import {
   ROOT,
   ancestors,
@@ -149,6 +155,7 @@ const Canvas = /* @__PURE__ */ __name((props) => {
   const choose = useCallback((id) => {
     selectedRef.current = id;
     setSelected(id);
+    rememberSelection(id);
     setUsage(null);
     setRelated([]);
     if (id === null) {
@@ -231,9 +238,17 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       endMove(true);
       return;
     }
-    const name = escapeHtml(source.shortname);
-    const question = target === ROOT ? fill(labels.hubv2_moveconfirmroot, name) : fillObject(labels.hubv2_moveconfirm, { name, parent: escapeHtml(treeRef.current.nodes[target]?.shortname ?? "") });
+    const freshParent = /* @__PURE__ */ __name(async (id) => {
+      if (id === ROOT) {
+        return null;
+      }
+      const answer = await getNode(id);
+      return answer.found && answer.node ? answer.node : null;
+    }, "freshParent");
     (async () => {
+      const [oldparent, newparent] = await track("move", Promise.all([freshParent(source.parentid), freshParent(target)]));
+      const known = target === ROOT ? null : { shortname: treeRef.current.nodes[target]?.shortname ?? "", ruletype: null };
+      const question = moveBody(labels, source.shortname, oldparent, newparent ?? known);
       const notification = await load("core/notification");
       const confirmed = await notification.saveCancelPromise(labels.hubv2_movetitle, question, labels.hubv2_move).then(() => true, () => false);
       if (!confirmed) {
@@ -450,10 +465,26 @@ const Canvas = /* @__PURE__ */ __name((props) => {
     selected,
     related: relatedids,
     moving,
-    labels: { roledescription: labels.hubv2_noderole, more: moreLabel }
-  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel]);
+    labels: { roledescription: labels.hubv2_noderole, more: moreLabel },
+    rtl: props.rtl
+  }), [tree, framework, count, selected, relatedids, moving, labels, moreLabel, props.rtl]);
   const nodes = useMemo(() => graph.nodes.map((node2) => measured[node2.id] ? { ...node2, measured: measured[node2.id] } : node2), [graph, measured]);
   const oncanvas = useMemo(() => new Set(graph.nodes.map((node2) => node2.id)), [graph]);
+  const linked = useRef(false);
+  useEffect(() => {
+    const target = props.reveal;
+    if (linked.current || !target) {
+      return;
+    }
+    linked.current = true;
+    track("reveal", ensureVisible(target.id, target.pathids).then(() => {
+      if (treeRef.current.nodes[target.id]) {
+        centreOn.current = competencyKey(target.id);
+        choose(target.id);
+      }
+      return void 0;
+    })).catch(notifyError);
+  }, [props.reveal, ensureVisible, choose]);
   useEffect(() => {
     const key = centreOn.current;
     const position2 = key ? graph.positions[key] : void 0;
@@ -462,12 +493,12 @@ const Canvas = /* @__PURE__ */ __name((props) => {
     }
     centreOn.current = null;
     const zoom = Math.max(flow.getZoom(), 0.8);
-    flow.setCenter(position2.x + CARD.width / 2, position2.y + CARD.height / 2, { zoom, duration: 300 }).catch(() => null);
+    flow.setCenter(position2.x + CARD.width / 2, position2.y + CARD.height / 2, { zoom, duration: motionDuration(300) }).catch(() => null);
     focusNode(key);
   }, [graph, flow]);
   const canvasActions = useMemo(
-    () => ({ labels, pagesize, toggle, loadMore }),
-    [labels, pagesize, toggle, loadMore]
+    () => ({ labels, pagesize, rtl: props.rtl, toggle, loadMore }),
+    [labels, pagesize, props.rtl, toggle, loadMore]
   );
   const silent = /* @__PURE__ */ __name(() => "", "silent");
   const aria = useMemo(() => ({
@@ -493,24 +524,24 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 822,
+          lineNumber: 862,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 824,
+            lineNumber: 864,
             columnNumber: 25
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 823,
+          lineNumber: 863,
           columnNumber: 21
         })
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 821,
+        lineNumber: 861,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-canvas", role: "region", "aria-label": labels.hubv2_canvas, children: /* @__PURE__ */ jsxDEV(CanvasContext.Provider, { value: canvasActions, children: /* @__PURE__ */ jsxDEV(
@@ -539,6 +570,7 @@ const Canvas = /* @__PURE__ */ __name((props) => {
           minZoom: 0.2,
           maxZoom: 1.5,
           ariaLabelConfig: aria,
+          "aria-label": framework.shortname,
           proOptions: { hideAttribution: true },
           children: [
             /* @__PURE__ */ jsxDEV(
@@ -553,18 +585,18 @@ const Canvas = /* @__PURE__ */ __name((props) => {
               false,
               {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 856,
+                lineNumber: 898,
                 columnNumber: 29
               }
             ),
             /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 858,
+              lineNumber: 900,
               columnNumber: 29
             }),
             /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-              lineNumber: 859,
+              lineNumber: 901,
               columnNumber: 29
             })
           ]
@@ -573,21 +605,21 @@ const Canvas = /* @__PURE__ */ __name((props) => {
         true,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 829,
+          lineNumber: 869,
           columnNumber: 25
         }
       ) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 828,
+        lineNumber: 868,
         columnNumber: 21
       }) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 827,
+        lineNumber: 867,
         columnNumber: 17
       })
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 820,
+      lineNumber: 860,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -610,18 +642,18 @@ const Canvas = /* @__PURE__ */ __name((props) => {
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 864,
+        lineNumber: 906,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 878,
+      lineNumber: 920,
       columnNumber: 13
     })
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 819,
+    lineNumber: 859,
     columnNumber: 9
   });
 }, "Canvas");
@@ -633,21 +665,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 895,
+      lineNumber: 937,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Canvas, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 900,
+    lineNumber: 942,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 899,
+    lineNumber: 941,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 898,
+    lineNumber: 940,
     columnNumber: 9
   });
 }, "Hub");

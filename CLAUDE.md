@@ -90,9 +90,11 @@ mdl mutate moodle-local_dimensions mutations/<spec>.conf --fast     # both --db 
 ```
 settings.php, lib.php, styles.css, version.php
 view-plan.php / view-competency.php   learner views (plan overview; competency tracker)
-central.php                           the Competency hub: admin tree entry and a course category's
-                                      More-menu entry (locked to the category; design in
+central.php                           the Competency hub, the only hub page: admin tree entry and a course
+                                      category's More-menu entry (locked to the category; design in
                                       docs/superpowers/specs/2026-09-02-central-category-context-design.md)
+hubv2.php                             retired map address: the hub's admin gate, then a redirect to the
+                                      Competencies tab's map view (output\hub_map::legacy_url())
 classes/
   hook_callbacks.php   before_footer_html_generation -> Return FAB
   helper.php           custom-field provisioning, return context, queries
@@ -105,10 +107,13 @@ classes/
   event/, external/ (one WS class per file), form/ (dynamic_form), task/, reportbuilder/
   local/               plan_access, plan_status, colour_mode (constants only),
                        enrolment_provider*, view_events, category_lifecycle
-  output/              renderables: learner pages and hub tabs
+  output/              renderables: learner pages and hub tabs; hub_map = the Competencies tab's
+                       map view (canvas props, its string list, the deep link)
   privacy/             preference-only provider (core_user owns preference deletion)
 db/                    access, caches, events, hooks, services, install, upgrade, uninstall; NO install.xml
-templates/, amd/src (plain AMD, no React), amd/build, lang/{en,pt_br}
+templates/, amd/src (plain AMD), amd/build, lang/{en,pt_br}
+js/esm/src/hubv2     the map view's React canvas (TypeScript), bundled into js/esm/build/bundle.js
+                     with the vendored React Flow (js/esm/vendor/xyflow); Jest tests in js/esm/tests
 docs/design-kit, docs/learner-kit   design kits; tokens.html names core's --mds-* in DOCS only
 tests/                 PHPUnit incl. the file-scanner suites under tests/local/; behat/
 mutations/             one spec per area (plan_access, detail_access, sec_*, followups_*, enrolment_provider*)

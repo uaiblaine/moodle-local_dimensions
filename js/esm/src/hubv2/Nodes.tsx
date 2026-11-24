@@ -20,6 +20,10 @@
  * Space selects it); the card itself holds the one control a node has of its own, the button that
  * opens or closes its children, which stops its key and click from also selecting the node.
  *
+ * In a language written right to left the tree grows leftwards: a card's parent edge arrives on its
+ * right and its children's leave from its left, and the chevrons point the other way. React Flow's
+ * own layer stays left to right (its coordinates need it); each card takes the page's direction back.
+ *
  * @module     local_dimensions/hubv2/Nodes
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -39,6 +43,8 @@ import type {Labels} from './strings';
 export type CanvasActions = {
     labels: Labels,
     pagesize: number,
+    /** Whether the tree grows right to left. */
+    rtl: boolean,
     toggle: (id: number) => void,
     loadMore: (parent: number) => void,
 };
@@ -86,17 +92,35 @@ const DEPTH_TILES = [
 const SELECTED = ' local-dimensions-hubv2-selected';
 
 /**
- * The two connection points every edge needs; nothing connects through them.
+ * The two connection points every edge needs; nothing connects through them. The parent's edge
+ * arrives on the side the tree comes from, the children's leave on the side it grows to.
  *
  * @param {object} props The props.
  * @returns {ReactNode} The handles.
  */
-const Handles = ({source = true, target = true}: {source?: boolean, target?: boolean}): ReactNode => (
-    <>
-        {target ? <Handle type="target" position={Position.Left} isConnectable={false} className={HANDLE} /> : null}
-        {source ? <Handle type="source" position={Position.Right} isConnectable={false} className={HANDLE} /> : null}
-    </>
-);
+const Handles = ({source = true, target = true}: {source?: boolean, target?: boolean}): ReactNode => {
+    const {rtl} = useCanvas();
+    return (
+        <>
+            {target ? (
+                <Handle type="target" position={rtl ? Position.Right : Position.Left} isConnectable={false} className={HANDLE} />
+            ) : null}
+            {source ? (
+                <Handle type="source" position={rtl ? Position.Left : Position.Right} isConnectable={false} className={HANDLE} />
+            ) : null}
+        </>
+    );
+};
+
+/**
+ * The chevron of a card's expand button: towards the children to open them, back to close them.
+ *
+ * @param {boolean} expanded Whether the children are shown.
+ * @param {boolean} rtl Whether the tree grows right to left.
+ * @returns {string} The Font Awesome class.
+ */
+export const chevron = (expanded: boolean, rtl: boolean): string =>
+    (expanded !== rtl ? 'fa-chevron-left' : 'fa-chevron-right');
 
 /**
  * The framework's card, at the left of the tree.
@@ -105,10 +129,11 @@ const Handles = ({source = true, target = true}: {source?: boolean, target?: boo
  * @returns {ReactNode} The card.
  */
 export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
-    const {labels} = useCanvas();
+    const {labels, rtl} = useCanvas();
     const {framework, count} = data as FrameworkData;
     return (
-        <div className={`local-dimensions-hubv2-card local-dimensions-hubv2-card-framework${selected ? SELECTED : ''}`}>
+        <div className={`local-dimensions-hubv2-card local-dimensions-hubv2-card-framework${selected ? SELECTED : ''}`}
+            dir={rtl ? 'rtl' : undefined}>
             <span className="local-dimensions-hubv2-tile local-dimensions-hubv2-tile-framework" aria-hidden="true">
                 <i className="fa fa-sitemap" />
             </span>
@@ -129,7 +154,7 @@ export const FrameworkNode = ({data, selected}: NodeProps<CanvasNode>): ReactNod
  * @returns {ReactNode} The card.
  */
 export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNode => {
-    const {labels, toggle} = useCanvas();
+    const {labels, rtl, toggle} = useCanvas();
     const {node, expanded, childcount, depth, moving} = data as CompetencyData;
     // The admin's colours go straight into the style, never through the stylesheet: only a hex value passes.
     const tilestyle = isHexColour(node.bgcolor)
@@ -158,7 +183,7 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
         toggle(node.id);
     };
     return (
-        <div className={classes.join(' ')}>
+        <div className={classes.join(' ')} dir={rtl ? 'rtl' : undefined}>
             <Handles />
             <span className={`local-dimensions-hubv2-tile ${tileclass}`} style={tilestyle} aria-hidden="true">{glyph}</span>
             <span className="local-dimensions-hubv2-card-text">
@@ -180,7 +205,7 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
                     onClick={onToggle}
                     onKeyDown={keepKeys}
                 >
-                    <i className={`fa ${expanded ? 'fa-chevron-left' : 'fa-chevron-right'}`} aria-hidden="true" />
+                    <i className={`fa ${chevron(expanded, rtl)}`} aria-hidden="true" />
                 </button>
             ) : null}
         </div>
@@ -194,10 +219,10 @@ export const CompetencyNode = ({data, selected}: NodeProps<CanvasNode>): ReactNo
  * @returns {ReactNode} The card.
  */
 export const MoreNode = ({data}: NodeProps<CanvasNode>): ReactNode => {
-    const {labels, loadMore, pagesize} = useCanvas();
+    const {labels, loadMore, pagesize, rtl} = useCanvas();
     const {parent, remaining} = data as MoreData;
     return (
-        <div className="local-dimensions-hubv2-card local-dimensions-hubv2-card-more">
+        <div className="local-dimensions-hubv2-card local-dimensions-hubv2-card-more" dir={rtl ? 'rtl' : undefined}>
             <Handles source={false} />
             <button type="button" className="btn btn-sm btn-outline-secondary nodrag nopan" onClick={() => loadMore(parent)}>
                 {fill(labels.hubv2_loadmore, String(Math.min(remaining, pagesize)))}
@@ -208,7 +233,7 @@ export const MoreNode = ({data}: NodeProps<CanvasNode>): ReactNode => {
 
 /**
  * The edge from a competency with a rule to one of its children: the rule's colour, and the
- * rule's label once, near the parent, on the first child's edge.
+ * rule's label once, near the parent, on the first child's edge, on the side the children are.
  *
  * @param {object} props The edge's props.
  * @returns {ReactNode} The edge.
@@ -216,6 +241,10 @@ export const MoreNode = ({data}: NodeProps<CanvasNode>): ReactNode => {
 export const RuleEdge = (props: EdgeProps<CanvasEdge>): ReactNode => {
     const {id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data} = props;
     const [path] = getSmoothStepPath({sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition});
+    // Right to left, the children are to the parent's left: the label ends 14px left of the handle.
+    const placement = sourcePosition === Position.Left
+        ? `translate(-100%, -50%) translate(${sourceX - 14}px, ${sourceY}px)`
+        : `translate(0, -50%) translate(${sourceX + 14}px, ${sourceY}px)`;
     return (
         <>
             <BaseEdge id={id} path={path} />
@@ -223,7 +252,7 @@ export const RuleEdge = (props: EdgeProps<CanvasEdge>): ReactNode => {
                 <EdgeLabelRenderer>
                     <div
                         className="local-dimensions-hubv2-edge-label"
-                        style={{transform: `translate(0, -50%) translate(${sourceX + 14}px, ${sourceY}px)`}}
+                        style={{transform: placement}}
                     >
                         {data.label}
                     </div>

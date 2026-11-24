@@ -18,6 +18,9 @@
  * left, a "load more" node after a partly loaded branch, the parent-child edges and, for the
  * selected competency, a dotted edge to each related competency on the canvas.
  *
+ * Every edge is drawing only: what an edge says (a parent, a rule, a relation) the nodes and the panel
+ * say in words, so each edge is left out of the accessibility tree ({@see EDGE_A11Y}).
+ *
  * Pure: the nodes carry plain data, and the components read the callbacks from context.
  *
  * @module     local_dimensions/hubv2/graph
@@ -26,7 +29,7 @@
  */
 
 import type {Edge, Node} from '../../vendor/xyflow/xyflow.js';
-import {layoutTree} from './layout';
+import {layoutTree, mirrorLayout} from './layout';
 import type {LayoutInput, Point} from './layout';
 import {ROOT, isExpanded, visibleItems} from './tree';
 import type {Tree} from './tree';
@@ -37,6 +40,13 @@ export const CARD = {width: 240, height: 76};
 
 /** The framework node's id. */
 export const FRAMEWORK_ID = 'f';
+
+/**
+ * What every edge carries for assistive technology: nothing. React Flow otherwise draws each edge as
+ * an image named "Edge from <source> to <target>" with internal ids; hidden, with no role and no name,
+ * an edge is not read out between the cards.
+ */
+export const EDGE_A11Y = {ariaRole: 'presentation', ariaLabel: null, domAttributes: {'aria-hidden': true}} as const;
 
 /** Data of the framework node. */
 export type FrameworkData = {kind: 'framework', framework: Framework, count: number};
@@ -119,6 +129,8 @@ export type GraphInput = {
     related: number[],
     moving: number | null,
     labels: {roledescription: string, more: (remaining: number) => string},
+    /** Whether the tree grows right to left (the page's language is written so). */
+    rtl?: boolean,
 };
 
 /** The graph: nodes, edges, and every position by node id. */
@@ -140,7 +152,8 @@ export const buildGraph = (input: GraphInput): Graph => {
             parent: parentKey(item.parent),
         });
     });
-    const positions = layoutTree(layoutinput);
+    const placed = layoutTree(layoutinput);
+    const positions = input.rtl ? mirrorLayout(placed) : placed;
 
     const nodes: CanvasNode[] = [{
         id: FRAMEWORK_ID,
@@ -170,7 +183,7 @@ export const buildGraph = (input: GraphInput): Graph => {
                 ariaLabel: labels.more(item.remaining),
             });
             edges.push({id: `e-${key}`, source: parentKey(item.parent), target: key, type: 'smoothstep',
-                className: 'local-dimensions-hubv2-edge local-dimensions-hubv2-edge-more'});
+                className: 'local-dimensions-hubv2-edge local-dimensions-hubv2-edge-more', ...EDGE_A11Y});
             return;
         }
         const node = tree.nodes[item.id];
@@ -212,6 +225,7 @@ export const buildGraph = (input: GraphInput): Graph => {
             type: hasrule ? 'rule' : 'smoothstep',
             className: hasrule ? 'local-dimensions-hubv2-edge local-dimensions-hubv2-edge-rule' : 'local-dimensions-hubv2-edge',
             data: {label: first && parent ? parent.rulelabel : ''},
+            ...EDGE_A11Y,
         });
     });
 
@@ -224,6 +238,7 @@ export const buildGraph = (input: GraphInput): Graph => {
                 type: 'default',
                 className: 'local-dimensions-hubv2-edge-related',
                 zIndex: 1,
+                ...EDGE_A11Y,
             });
         });
     }

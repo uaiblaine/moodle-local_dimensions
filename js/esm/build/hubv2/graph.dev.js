@@ -5,16 +5,20 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
  * left, a "load more" node after a partly loaded branch, the parent-child edges and, for the
  * selected competency, a dotted edge to each related competency on the canvas.
  *
+ * Every edge is drawing only: what an edge says (a parent, a rule, a relation) the nodes and the panel
+ * say in words, so each edge is left out of the accessibility tree ({@see EDGE_A11Y}).
+ *
  * Pure: the nodes carry plain data, and the components read the callbacks from context.
  *
  * @module     local_dimensions/hubv2/graph
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-import { layoutTree } from "./layout";
+import { layoutTree, mirrorLayout } from "./layout";
 import { ROOT, isExpanded, visibleItems } from "./tree";
 const CARD = { width: 240, height: 76 };
 const FRAMEWORK_ID = "f";
+const EDGE_A11Y = { ariaRole: "presentation", ariaLabel: null, domAttributes: { "aria-hidden": true } };
 const cardCount = /* @__PURE__ */ __name((node, childcount) => {
   if (childcount !== null) {
     return { kind: "children", count: childcount };
@@ -37,7 +41,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       parent: parentKey(item.parent)
     });
   });
-  const positions = layoutTree(layoutinput);
+  const placed = layoutTree(layoutinput);
+  const positions = input.rtl ? mirrorLayout(placed) : placed;
   const nodes = [{
     id: FRAMEWORK_ID,
     type: "framework",
@@ -69,7 +74,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
         source: parentKey(item.parent),
         target: key2,
         type: "smoothstep",
-        className: "local-dimensions-hubv2-edge local-dimensions-hubv2-edge-more"
+        className: "local-dimensions-hubv2-edge local-dimensions-hubv2-edge-more",
+        ...EDGE_A11Y
       });
       return;
     }
@@ -110,7 +116,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
       target: key,
       type: hasrule ? "rule" : "smoothstep",
       className: hasrule ? "local-dimensions-hubv2-edge local-dimensions-hubv2-edge-rule" : "local-dimensions-hubv2-edge",
-      data: { label: first && parent ? parent.rulelabel : "" }
+      data: { label: first && parent ? parent.rulelabel : "" },
+      ...EDGE_A11Y
     });
   });
   if (selected !== null && onCanvas.has(selected)) {
@@ -121,7 +128,8 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
         target: competencyKey(id),
         type: "default",
         className: "local-dimensions-hubv2-edge-related",
-        zIndex: 1
+        zIndex: 1,
+        ...EDGE_A11Y
       });
     });
   }
@@ -129,6 +137,7 @@ const buildGraph = /* @__PURE__ */ __name((input) => {
 }, "buildGraph");
 export {
   CARD,
+  EDGE_A11Y,
   FRAMEWORK_ID,
   buildGraph,
   cardCount,

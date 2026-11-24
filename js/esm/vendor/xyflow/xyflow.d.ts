@@ -27,7 +27,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import type {ComponentType, CSSProperties, HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode} from 'react';
+import type {ComponentType, CSSProperties, HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode, SVGAttributes} from 'react';
 
 /** Which side of a node a handle sits on (an enum of strings in the library). */
 export declare const Position: {readonly Left: 'left', readonly Top: 'top', readonly Right: 'right', readonly Bottom: 'bottom'};
@@ -73,6 +73,15 @@ export type Edge<EdgeData extends Record<string, unknown> = Record<string, unkno
     focusable?: boolean,
     deletable?: boolean,
     zIndex?: number,
+    /**
+     * The edge's name. The library names an edge without one "Edge from <source> to <target>", and
+     * writes no name at all for null: its EdgeWrapper tests `edge.ariaLabel === null`, though its own
+     * declaration says string only.
+     */
+    ariaLabel?: string | null,
+    ariaRole?: string,
+    domAttributes?: Omit<SVGAttributes<SVGGElement>,
+        'id' | 'style' | 'className' | 'role' | 'aria-label' | 'dangerouslySetInnerHTML'>,
 };
 
 /** What a custom node component receives. */
