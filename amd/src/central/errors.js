@@ -17,11 +17,16 @@
  * Network-aware error routing for the Competency hub.
  *
  * Moodle 5.3's core/ajax is fetch-based, and so is core/templates' core_output_load_template_with_dependencies
- * call, which goes through it. A transport failure rejects with an error object, never a bare string:
- * fetch's own TypeError for a dropped connection, an AbortError for a timeout or an aborted request, and
- * Error('HTTP <status>: <text>') for a non-2xx answer such as a balancer's 502 or 504. core/notification's
- * exception() renders those as a raw technical dialogue, so connectivity drops get a dismissible toast
- * instead, while application errors keep the exception dialogue.
+ * call, which goes through it. A transport failure rejects with fetch's own TypeError for a dropped connection,
+ * an AbortError for a timeout or an aborted request, and Error('HTTP <status>: <text>') for a non-2xx answer
+ * such as a balancer's 502 or 504. core/notification's exception() renders those as a raw technical dialogue, so
+ * connectivity drops get a dismissible toast instead, while application errors keep the exception dialogue.
+ *
+ * A 4xx answer is the server refusing the request, not a lost connection: it keeps the dialogue, which names the
+ * status. Core's REST helper (core/fetch) rejects a non-2xx answer with the bare status text, where Moodle writes
+ * its own message for a refusal, and, over HTTP/2, with an empty string whatever the status, so its refusals
+ * cannot always be told from a drop: the hub's own calls go through core/ajax (hub_javascript_guards_test holds
+ * the preference write to it).
  *
  * @module     local_dimensions/central/errors
  * @copyright  2026 Anderson Blaine
@@ -50,14 +55,39 @@ const isFetchFailure = (error) => {
 };
 
 /**
+ * @type {String[]} The status texts of the answers that say the request was lost on the way: a timeout, a 5xx of
+ * a balancer or a gateway, in the spellings Apache and nginx send. Core's REST helper rejects with the status
+ * text alone, and Moodle writes its own message there when it refuses a request, so any other text is a refusal.
+ */
+const TRANSPORT_STATUS_TEXTS = [
+    'Request Timeout', 'Request Time-out', 'Internal Server Error', 'Bad Gateway', 'Service Unavailable',
+    'Service Temporarily Unavailable', 'Gateway Timeout', 'Gateway Time-out',
+];
+
+/**
+ * Whether a non-2xx status says the request was refused rather than lost on the way.
+ *
+ * A 4xx is the server's (or a proxy's) answer to this request; 408, a request timeout, is the exception. A 5xx,
+ * and a status that cannot be read, stay connectivity failures: a balancer's 502 or 504 is the common case.
+ *
+ * @param {Number} status The HTTP status.
+ * @return {Boolean} True for a 4xx other than 408.
+ */
+const isRefusalStatus = (status) => {
+    return status >= 400 && status < 500 && status !== 408;
+};
+
+/**
  * Decide whether a rejected call failed because of a connectivity problem rather
  * than a genuine application error.
  *
  * navigator.onLine === false is the strongest signal. Otherwise the connectivity shapes of core/ajax's fetch
  * layer are: fetch's TypeError for a dropped connection, an AbortError for a timeout, and Error('HTTP <status>:
- * <text>') for a non-2xx answer. A falsy rejection or a bare string (older callers) counts too. Everything else
- * is an error to show: a web-service exception (it carries a Moodle errorcode), core/ajax's own
- * Error('missing response') and a script fault (TypeError and friends).
+ * <text>') for a non-2xx answer that is not a refusal ({@see isRefusalStatus}). A falsy rejection counts too, and
+ * so does a bare string that is the status text of a timeout or a 5xx. Everything else is an error to show: a
+ * refused request (a 4xx, or any other bare string, which is what the server said), a web-service exception (it
+ * carries a Moodle errorcode), core/ajax's own Error('missing response') and a script fault (TypeError and
+ * friends).
  *
  * @param {*} error The rejection value.
  * @return {Boolean} True when the failure looks like a connectivity drop.
@@ -66,8 +96,11 @@ export const isNetworkError = (error) => {
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
         return true;
     }
-    if (!error || typeof error === 'string') {
+    if (!error) {
         return true;
+    }
+    if (typeof error === 'string') {
+        return TRANSPORT_STATUS_TEXTS.includes(error);
     }
     if (typeof error !== 'object' || error.errorcode) {
         return false;
@@ -76,7 +109,7 @@ export const isNetworkError = (error) => {
         return true;
     }
     if (typeof error.message === 'string' && error.message.startsWith('HTTP ')) {
-        return true;
+        return !isRefusalStatus(parseInt(error.message.slice('HTTP '.length), 10));
     }
     return isFetchFailure(error);
 };
@@ -92,7 +125,8 @@ export const isNetworkError = (error) => {
  */
 export const notifyError = async(error) => {
     if (!isNetworkError(error)) {
-        Notification.exception(error);
+        // The dialogue reads the message of an error object; what the server said arrives as a bare string.
+        Notification.exception(typeof error === 'string' ? new Error(error) : error);
         return;
     }
     let message = 'Connection lost. Please check your network and try again.';

@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed: the hub's display choices were refused in classic mode
+
+Version `2026100542`.
+
+- In the classic hub, and in the workspace once a lens had been chosen, every display choice (the view switch, a
+  display option) showed "Connection lost" and was not remembered. The hub wrote the preference through core's
+  REST route, which answers HTTP 400 when the preference's cleaning callback changes the value, and the callback
+  puts the stored mode and lens back on every write. The hub now writes through `core_user_set_user_preferences`,
+  which stores the cleaned value, as its PHPUnit tests already did.
+- A scheduled preference write keeps the page pending until the server answers, so a Behat step cannot leave the
+  page before it.
+- An HTTP 4xx answer is no longer shown as "Connection lost": it is the server refusing the request, and it now
+  reaches the error dialogue, which says what the server said (`Error('HTTP 4xx: ...')` from core/ajax, or the
+  bare text core's REST helper rejects with, where Moodle writes its own message). A request timeout (408), a
+  5xx and a dropped connection keep the toast.
+
 ### Sections other plugins add to the workspace's panel
 
 Version `2026100541`. Stage S7 of the hub v2 record (idea I25, job J10, decision H9): a companion plugin adds

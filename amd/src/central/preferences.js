@@ -25,7 +25,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {setUserPreference} from 'core_user/repository';
+import Ajax from 'core/ajax';
+import Pending from 'core/pending';
 import {notifyError} from 'local_dimensions/central/errors';
 
 /** @type {String} User preference name for the hub navigation state. */
@@ -83,17 +84,51 @@ const timers = {};
  */
 let pinnedcontext = null;
 
+/** @type {Object} The page's pending marker of each scheduled write, keyed by preference name. */
+const pendings = {};
+
+/**
+ * Write one of the hub's preferences.
+ *
+ * Through core's preference web service, never core_user/repository's setUserPreference(): that helper posts to
+ * core's REST route, which refuses (HTTP 400) a value the preference's cleaning callback changes, and the display
+ * preference's callback changes every write once a mode or a lens is stored, by putting the stored one back
+ * (hub_mode::clean_display(), hub_map::clean_display()). The web service stores the cleaned value.
+ *
+ * @param {String} name Preference name.
+ * @param {Object} payload Value to JSON-encode and store.
+ * @return {Promise} Resolved once the server has answered.
+ */
+const writePreference = (name, payload) => {
+    return Ajax.call([{
+        methodname: 'core_user_set_user_preferences',
+        args: {preferences: [{name, value: JSON.stringify(payload), userid: 0}]},
+    }])[0];
+};
+
 /**
  * Schedule a debounced write of a preference to the server.
+ *
+ * The page stays pending from the choice to the server's answer: the delay is not a request yet, and a test that
+ * leaves the page inside it would never see the write.
  *
  * @param {String} name Preference name.
  * @param {Object} value Value to JSON-encode and store.
  */
 const scheduleSave = (name, value) => {
     window.clearTimeout(timers[name]);
-    timers[name] = window.setTimeout(() => {
+    const pending = pendings[name] || new Pending(`local_dimensions/central/preferences:${name}`);
+    pendings[name] = pending;
+    timers[name] = window.setTimeout(async() => {
+        delete pendings[name];
         const payload = typeof value === 'function' ? value() : value;
-        setUserPreference(name, JSON.stringify(payload)).catch(notifyError);
+        try {
+            await writePreference(name, payload);
+        } catch (error) {
+            await notifyError(error);
+        } finally {
+            pending.resolve();
+        }
     }, SAVE_DELAY);
 };
 

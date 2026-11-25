@@ -176,6 +176,35 @@ final class hub_javascript_guards_test extends \basic_testcase {
     }
 
     /**
+     * The hub's preferences are written through core's preference web service, never its REST route.
+     *
+     * core_user/repository's setUserPreference() posts to the REST route, which answers HTTP 400 when the
+     * preference's cleaning callback changes the value. The display preference's callback puts the stored mode
+     * and lens back, so in classic mode, or with a lens saved, every display write was refused and shown as a
+     * lost connection. core_user_set_user_preferences stores the cleaned value; hub_mode_test and hub_map_test
+     * write through it.
+     *
+     * @return void
+     */
+    public function test_the_hub_preferences_are_written_through_the_preference_web_service(): void {
+        $source = $this->source('preferences');
+        $this->assertStringNotContainsString(
+            'core_user/repository',
+            $source,
+            'The REST helper refuses a value the cleaning callback changes.'
+        );
+        $this->assertStringContainsString(
+            "methodname: 'core_user_set_user_preferences'",
+            $this->body($source, 'writePreference'),
+            'The write does not go through core\'s preference web service.'
+        );
+        $save = $this->body($source, 'scheduleSave');
+        $this->assertStringContainsString('await writePreference(name, payload);', $save, 'A scheduled save is not written.');
+        // The page is pending from the choice to the answer, so Behat cannot leave inside the delay.
+        $this->assert_in_order($save, ['new Pending(', 'window.setTimeout(', 'pending.resolve();']);
+    }
+
+    /**
      * Only a transport failure is routed to the connection-lost toast.
      *
      * Moodle 5.3's fetch-based core/ajax rejects a lost connection with fetch's TypeError, a timeout
@@ -190,9 +219,37 @@ final class hub_javascript_guards_test extends \basic_testcase {
         $check = $this->body($source, 'isNetworkError');
         $this->assertStringContainsString("'AbortError'", $check, 'The timeout shape (AbortError) is not recognised.');
         $this->assertStringContainsString("startsWith('HTTP ')", $check, 'The non-2xx shape (Error HTTP n) is not recognised.');
+        // A 4xx is the server refusing the request: it reaches the dialogue, as Error('HTTP 4xx') or as the bare
+        // text core's REST helper rejects with (Moodle's own message). A timeout and a 5xx stay connectivity
+        // failures, by status or by their status text.
+        $this->assertStringContainsString(
+            "return !isRefusalStatus(parseInt(error.message.slice('HTTP '.length), 10));",
+            $check,
+            'An HTTP 4xx answer is counted as a lost connection.'
+        );
+        $this->assertStringContainsString(
+            'return status >= 400 && status < 500 && status !== 408;',
+            $this->body($source, 'isRefusalStatus'),
+            'The refusal statuses are not the 4xx other than 408.'
+        );
+        $this->assertStringContainsString(
+            'return TRANSPORT_STATUS_TEXTS.includes(error);',
+            $check,
+            'A bare string that is no timeout or 5xx status text is counted as a lost connection.'
+        );
+        $texts = $this->between($source, 'const TRANSPORT_STATUS_TEXTS = [', '];');
+        foreach (['Request Timeout', 'Bad Gateway', 'Service Unavailable', 'Gateway Timeout', 'Gateway Time-out'] as $text) {
+            $this->assertStringContainsString("'{$text}'", $texts, "The status text '{$text}' is not a connectivity failure.");
+        }
+        $this->assertStringNotContainsString("'Bad Request'", $texts, 'A refusal is listed as a connectivity failure.');
+        $this->assertStringContainsString(
+            "Notification.exception(typeof error === 'string' ? new Error(error) : error);",
+            $this->body($source, 'notifyError'),
+            'A refusal that arrives as a bare string is not shown.'
+        );
         $this->assertStringContainsString('isFetchFailure(error)', $check, 'The dropped-connection shape is not checked.');
         $this->assertStringContainsString('error.errorcode', $check, 'A web-service exception is not excluded.');
-        $this->assertStringContainsString("typeof error === 'string'", $check, 'The legacy string rejection is not kept.');
+        $this->assertStringContainsString("typeof error === 'string'", $check, 'A string rejection is not classified.');
 
         $fetch = $this->body($source, 'isFetchFailure');
         $this->assertStringContainsString('instanceof TypeError', $fetch, 'A fetch failure is not required to be a TypeError.');
