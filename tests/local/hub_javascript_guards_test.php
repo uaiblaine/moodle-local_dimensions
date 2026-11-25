@@ -176,6 +176,35 @@ final class hub_javascript_guards_test extends \basic_testcase {
     }
 
     /**
+     * The hub's preferences are written through core's preference web service, never its REST route.
+     *
+     * core_user/repository's setUserPreference() posts to the REST route, which answers HTTP 400 when the
+     * preference's cleaning callback changes the value. The display preference's callback puts the stored mode
+     * and lens back, so in classic mode, or with a lens saved, every display write was refused and shown as a
+     * lost connection. core_user_set_user_preferences stores the cleaned value; hub_mode_test and hub_map_test
+     * write through it.
+     *
+     * @return void
+     */
+    public function test_the_hub_preferences_are_written_through_the_preference_web_service(): void {
+        $source = $this->source('preferences');
+        $this->assertStringNotContainsString(
+            'core_user/repository',
+            $source,
+            'The REST helper refuses a value the cleaning callback changes.'
+        );
+        $this->assertStringContainsString(
+            "methodname: 'core_user_set_user_preferences'",
+            $this->body($source, 'writePreference'),
+            'The write does not go through core\'s preference web service.'
+        );
+        $save = $this->body($source, 'scheduleSave');
+        $this->assertStringContainsString('await writePreference(name, payload);', $save, 'A scheduled save is not written.');
+        // The page is pending from the choice to the answer, so Behat cannot leave inside the delay.
+        $this->assert_in_order($save, ['new Pending(', 'window.setTimeout(', 'pending.resolve();']);
+    }
+
+    /**
      * Only a transport failure is routed to the connection-lost toast.
      *
      * Moodle 5.3's fetch-based core/ajax rejects a lost connection with fetch's TypeError, a timeout

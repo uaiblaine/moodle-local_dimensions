@@ -489,9 +489,13 @@ final class hub_map {
     }
 
     /**
-     * Clean a client write of the display preference (core_user's preference services call it, lib.php): the hub's
+     * Clean a client write of the display preference (core_user::clean_preference() calls it, lib.php): the hub's
      * mode is the stored one ({@see \local_dimensions\local\hub_mode::clean_display()}), and so is the lens unless
      * the write carries a lens of LENSES.
+     *
+     * The hub's script writes through core_user_set_user_preferences, which stores what this returns. Core's REST
+     * route for preferences refuses a write this changes, which is every write once a mode or a lens is stored, so
+     * amd/src/central/preferences.js never uses it.
      *
      * The client sends the lens only in the write that follows its choice (amd/src/central/preferences.js), so a
      * page left open since an earlier visit, saving another display choice, never writes back the lens it loaded
