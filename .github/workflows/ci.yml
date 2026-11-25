@@ -12,6 +12,14 @@ on:
       - 'MOODLE_*_STABLE'
   pull_request:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Where the jobs run. "variable" follows the repository variable CI_RUNNER (the self-hosted runners); "hosted" uses GitHub's own runners, on Actions minutes, for a gate that wants every leg at once.
+        type: choice
+        default: variable
+        options:
+          - variable
+          - hosted
 
 # Supersede a run when new commits arrive on the same pull request: pushing
 # three fixes in a row otherwise leaves three full pipelines running to the end.
@@ -55,7 +63,7 @@ jobs:
     name: Moodle 5.03
     uses: uaiblaine/moodle-workflows/.github/workflows/moodle-plugin-ci.yml@main
     with:
-      runner: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || '' }}
+      runner: ${{ inputs.runner != 'hosted' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || '' }}
       moodle-core-branch: MOODLE_503_STABLE
       plugin-dependencies: |
         uaiblaine/moodle-enrol_apply,master
