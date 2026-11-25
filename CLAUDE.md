@@ -186,6 +186,14 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   a draft-only reader sees the list and no detail; the template drops the region, the toggle
   returns on a missing `aria-controls`, `openDetailModal()` returns before `Modal.create()`.
   Spec `mutations/detail_access.conf`.
+- **Plan overview's address and actions** (`view-plan.php`): `competencyid` reaches the page module
+  only when the renderable finds it among the rows it lists and `candetail` holds; anything else is 0,
+  one answer for "not in the plan" and "does not exist"; `set_url` stays `id` alone (the stored return
+  context leads to the plan). The review flags are `plan_access::review_actions()`, core's
+  `plan_exporter` rule (pinned against it), and the buttons call core's two plan review services: no
+  web service of our own. The address path shows a hidden row for this view only (`revealItem()` sets
+  the controls through `setScope()`/`setFavouriteFilter()`, never `.click()`, since a press saves the
+  view preference and a GET must not). Spec `mutations/plan_overview_actions.conf`.
 - **Reading a plan (`plan_access`)**: never wrap `api::read_plan()` in a catch that reports
   `invalidplan`; only `dml_missing_record_exception` means no plan. `competency_scope()` decides
   which competencies a plan reaches (own, related when both `showrelated*` resolve and the

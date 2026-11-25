@@ -51,13 +51,78 @@ class view_plan_summary_page implements renderable, templatable {
     /** @var plan The plan object */
     private readonly plan $plan;
 
+    /** @var int The competency the address asked to open (view-plan.php's competencyid), not yet checked. */
+    private readonly int $requestedcompetencyid;
+
     /**
      * Constructor.
      *
      * @param plan $plan The learning plan
+     * @param int $requestedcompetencyid The competency the address asked to open, 0 for none; any value
+     *     is accepted here and handed on only when export_for_template() finds it among the plan's rows.
      */
-    public function __construct(plan $plan) {
+    public function __construct(plan $plan, int $requestedcompetencyid = 0) {
         $this->plan = $plan;
+        $this->requestedcompetencyid = $requestedcompetencyid;
+    }
+
+    /**
+     * The actions row between the hero and the filter line (local_dimensions/plan_actions).
+     *
+     * The plan's status is named only in the draft states the review actions are about; the actions
+     * are core's (plan_access::review_actions()); the link to core's plan page is drawn for every
+     * viewer, named after what core lets them do there. noredirect is read by a theme that sends plan
+     * owners from core's page to this one, so it does not send them back; core ignores it.
+     *
+     * @param plan $plan The plan being viewed.
+     * @return array The partial's context.
+     */
+    private static function plan_actions(plan $plan): array {
+        $planid = (int) $plan->get('id');
+        $review = \local_dimensions\local\plan_access::review_actions($plan);
+        $tones = [
+            plan::STATUS_DRAFT => 'neutral',
+            plan::STATUS_WAITING_FOR_REVIEW => 'warning',
+            plan::STATUS_IN_REVIEW => 'info',
+        ];
+        $status = (int) $plan->get('status');
+
+        $actions = [
+            'planid' => $planid,
+            'hasstatus' => isset($tones[$status]),
+            'isrequestreviewallowed' => $review['isrequestreviewallowed'],
+            'iscancelreviewrequestallowed' => $review['iscancelreviewrequestallowed'],
+            'hasreviewaction' => $review['isrequestreviewallowed'] || $review['iscancelreviewrequestallowed'],
+            'planurl' => (new \moodle_url('/admin/tool/lp/plan.php', ['id' => $planid, 'noredirect' => 1]))->out(false),
+            'planlinklabel' => $plan->can_manage()
+                ? get_string('plan_link_manage', 'local_dimensions')
+                : get_string('plan_link_core', 'local_dimensions'),
+        ];
+        if ($actions['hasstatus']) {
+            // Core's own status name, the words its plan page uses.
+            $actions['status'] = ['label' => $plan->get_statusname(), 'tone' => $tones[$status]];
+        }
+        return $actions;
+    }
+
+    /**
+     * The competency the page module opens on load: the requested one, or 0.
+     *
+     * Handed on only when it is one of the rows this page lists and the viewer may open a detail. Any
+     * other value - another plan's competency, one that does not exist, zero or less - is 0, the same
+     * answer for each, so the page is exactly the plain overview and says nothing about the id.
+     *
+     * @param int $requested The requested competency id.
+     * @param array $competencies The rows the page lists.
+     * @param bool $candetail Whether the viewer may open a competency's detail.
+     * @return int
+     */
+    private static function open_competency_id(int $requested, array $competencies, bool $candetail): int {
+        if (!$candetail || $requested <= 0) {
+            return 0;
+        }
+        $listed = array_map(fn($competency) => (int) $competency['id'], $competencies);
+        return in_array($requested, $listed, true) ? $requested : 0;
     }
 
     /**
@@ -465,6 +530,12 @@ class view_plan_summary_page implements renderable, templatable {
 
         $data['competencycount'] = count($data['competencies']);
         $data['hascompetencies'] = !empty($data['competencies']);
+        $data['opencompetencyid'] = self::open_competency_id(
+            $this->requestedcompetencyid,
+            $data['competencies'],
+            $data['candetail']
+        );
+        $data['actions'] = self::plan_actions($this->plan);
 
         // Count incomplete (not proficient) competencies for filter UI.
         $data['incompletecount'] = count(array_filter($data['competencies'], function ($c) {

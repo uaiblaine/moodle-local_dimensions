@@ -29,15 +29,19 @@ require_once('../../config.php');
 
 use local_dimensions\output\view_plan_summary_page;
 
-// Parameters received via URL.
+// Parameters received via URL. The competency to open is only a request: the renderable hands it to
+// the page module when it is one of the plan's listed competencies and the viewer gets detail, and
+// ignores it otherwise.
 $planid = required_param('id', PARAM_INT);
+$competencyid = optional_param('competencyid', 0, PARAM_INT);
 
 // Security and Login Checks.
 require_login();
 $context = context_system::instance();
 require_capability('local/dimensions:view', $context);
 
-// Moodle Page Configuration.
+// Moodle Page Configuration. The address is the plan's alone: the competency is a view of it, and the
+// return context stored below must lead back to the plan, not reopen one competency.
 $PAGE->set_url(new moodle_url('/local/dimensions/view-plan.php', ['id' => $planid]));
 $PAGE->set_context($context);
 $PAGE->add_body_class('local-dimensions-viewplan');
@@ -89,9 +93,17 @@ $accordionsettings = [
 echo $OUTPUT->header();
 
 // Render full plan overview using Mustache template.
-$page = new view_plan_summary_page($plan);
+$page = new view_plan_summary_page($plan, $competencyid);
 $templatedata = $page->export_for_template($OUTPUT);
 echo $OUTPUT->render_from_template('local_dimensions/view_plan_summary', $templatedata);
+
+// The checked competency to open on load, 0 for none (view_plan_summary_page::open_competency_id()).
+$accordionsettings['opencompetencyid'] = (int) $templatedata['opencompetencyid'];
+
+// Core's review actions, shown only once this arms them.
+if (!empty($templatedata['actions']['hasreviewaction'])) {
+    $PAGE->requires->js_call_amd('local_dimensions/plan_actions', 'init');
+}
 
 // Initialise the collapsible description for the hero (accordion description
 // tabs are wired up by accordion.js after AJAX load).

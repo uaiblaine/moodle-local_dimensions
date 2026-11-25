@@ -2079,6 +2079,43 @@ body {
     margin: 0 0.375rem 0.75rem 0;
 }
 
+/* The plan overview's actions row (templates/plan_actions.mustache): one quiet row under the hero,
+   the plan's status, core's review action and the link to core's plan page. The buttons are core's
+   .btn classes, unstyled here (fleet Design System, action-button.md). */
+.local-dimensions-plan-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* The plan's status (fleet Design System, status-label.md): a rectangle in one tone triple, neutral by default. */
+.local-dimensions-plan-actions .local-dimensions-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid var(--local-dimensions-neutral-edge);
+    border-radius: var(--local-dimensions-radius-sm);
+    background: var(--local-dimensions-neutral-tint);
+    color: var(--local-dimensions-neutral-ink);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.local-dimensions-plan-actions .local-dimensions-status--warning {
+    border-color: var(--local-dimensions-warning-edge);
+    background: var(--local-dimensions-warning-tint);
+    color: var(--local-dimensions-warning-ink);
+}
+
+.local-dimensions-plan-actions .local-dimensions-status--info {
+    border-color: var(--local-dimensions-info-edge);
+    background: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
 /* The badge's status icon is drawn the way the status icons are (see .local-dimensions-icon): the
    SVG is the mask, the badge's ink the paint and its tint the glyph. The proficient check shares
    their check glyph rule. */

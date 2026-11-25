@@ -368,6 +368,23 @@ The hero folds: a handle on its bottom edge collapses it to a slim row, and that
 per plan and per competency and applied before the page paints. A draggable **Return to plan**
 button brings learners back from a course to the plan they came from.
 
+Under the hero, one quiet row acts on the plan itself:
+
+- While the plan is a draft, waiting for review or in review, its status is named there.
+- **Request review** and **Cancel review request** appear exactly when Moodle's own plan page would
+  offer them to the viewer (an individual plan, not one based on a template; a viewer allowed to request
+  a review; a draft, or a plan waiting for review). They call Moodle's own web services; the plugin adds
+  none. They need JavaScript, as on Moodle's page.
+- A link to Moodle's plan page (`admin/tool/lp/plan.php`, with `noredirect=1` for a theme that sends
+  plan owners here from that page): **Manage plan** for a viewer who may manage the plan, otherwise
+  **Plan page in Moodle**.
+
+The address `view-plan.php?id=<plan>&competencyid=<competency>` opens that competency on arrival, as
+a press would: its row in the list, its dialog in the card layout, after showing it through the filter
+line when the current scope hides it. The row is shown for this view only: the line's controls are set
+to show it, nothing is saved, and the reader's stored view is unchanged. Only a competency of this plan, for a viewer who may open its
+detail; any other value shows the plain overview.
+
 ### The filter line
 
 Both learner views share one line, in this order: the scope (*To do* and *All*, with counts), a
