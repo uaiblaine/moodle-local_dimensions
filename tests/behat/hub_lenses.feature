@@ -52,6 +52,19 @@ Feature: Read a framework through the Competency hub's lenses and check its stru
     And I should see "Domain A" in the ".local-dimensions-hubv2-tree" "css_element"
     And the "aria-pressed" attribute of "//*[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-lensswitch ')]//button[.='Usage']" "xpath_element" should contain "true"
 
+  Scenario: A saved lens survives a later display choice and a visit whose address names no lens
+    When I click on "Usage" "button" in the ".local-dimensions-hubv2-lensswitch" "css_element"
+    Then the "aria-pressed" attribute of "//*[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-lensswitch ')]//button[.='Usage']" "xpath_element" should contain "true"
+    # A display save that carries no lens: the server keeps the stored one, and must not refuse the save.
+    When I click on "Outline" "button" in the ".local-dimensions-central-viewswitch" "css_element"
+    Then the "aria-pressed" attribute of ".local-dimensions-central-viewswitch [data-view='outline']" "css_element" should contain "true"
+    And I should not see "Connection lost"
+    When I visit "/local/dimensions/central.php"
+    Then I should see "Domain A" in the ".local-dimensions-hubv2-tree" "css_element"
+    And the "aria-pressed" attribute of ".local-dimensions-central-viewswitch [data-view='outline']" "css_element" should contain "true"
+    When I click on "Both" "button" in the ".local-dimensions-central-viewswitch" "css_element"
+    Then the "aria-pressed" attribute of "//*[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-lensswitch ')]//button[.='Usage']" "xpath_element" should contain "true"
+
   Scenario: The Rules lens names the rule on a parent, on the map and in the panel
     When I click on "Rules" "button" in the ".local-dimensions-hubv2-lensswitch" "css_element"
     Then I should see "All children are complete" in the "//div[contains(concat(' ', @class, ' '), ' react-flow__node ')][starts-with(@aria-label, 'Domain A,')]" "xpath_element"

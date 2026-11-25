@@ -107,9 +107,10 @@ final class hub_mode {
     }
 
     /**
-     * Clean a write of the display preference from the client (core_user's preference services call it): the
-     * `classic` member is always the stored one, so save() is its one writer and a page left open in the other
-     * mode cannot write its mode back over a choice saved since.
+     * Clean a write of the display preference from the client: the `classic` member is always the stored one, so
+     * save() is its one writer and a page left open in the other mode cannot write its mode back over a choice
+     * saved since. core_user_set_user_preferences stores what this returns; core's REST route would refuse the
+     * write instead ({@see \local_dimensions\output\hub_map::clean_display()}).
      *
      * The preference is writable by its owner only (local_dimensions_user_preferences()), so the stored value read
      * here is the writer's own.
