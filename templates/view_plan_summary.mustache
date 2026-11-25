@@ -48,6 +48,8 @@
     * haschipfilters, chipfilters - Chip-filter model
     * line (object) - The filter line's context (local_dimensions/filter_line)
     * hascustomcss, customcss - Compiled template SCSS
+    * opencompetencyid (int) - The competency the page module opens on load, 0 for none (read by view-plan.php)
+    * actions (object) - The actions row's context (local_dimensions/plan_actions)
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -100,7 +102,16 @@
         "favonly": false,
         "viewstatejson": "{}",
         "favouritesjson": "{}",
-        "nonfavouritecount": 0
+        "nonfavouritecount": 0,
+        "opencompetencyid": 0,
+        "actions": {
+            "planid": 10,
+            "hasstatus": false,
+            "isrequestreviewallowed": false,
+            "iscancelreviewrequestallowed": false,
+            "planurl": "https://example.com/admin/tool/lp/plan.php?id=10&noredirect=1",
+            "planlinklabel": "Manage plan"
+        }
     }
 }}
 {{! Custom SCSS compiled CSS from template }}
@@ -112,6 +123,12 @@
 {{#hero}}
 {{> local_dimensions/hero_header}}
 {{/hero}}
+
+{{! The plan's status, core's review action and the link to core's page: off the hero, whose colours
+    are the author's, and above the filter line. Drawn for a plan with no competency too. }}
+{{#actions}}
+{{> local_dimensions/plan_actions }}
+{{/actions}}
 
 <div class="percentagemode-{{percentagemode}}">
     {{#hascompetencies}}

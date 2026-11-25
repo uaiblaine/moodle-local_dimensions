@@ -1,0 +1,62 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/plan_actions
+
+    The plan overview's actions row, between the hero and the filter line: the plan's status in its
+    draft states, core's review action for this viewer, and the link to core's plan page. One quiet
+    row, no heading. The review buttons need JavaScript, as on core's page, so they are drawn hidden
+    and local_dimensions/plan_actions shows them once it has armed them; without it the row is the
+    status and the link.
+
+    Context variables required:
+    * planid (int) - The plan id, sent to core's review services
+    * hasstatus (bool) - Whether the plan is in a draft state (draft, waiting for review, in review)
+    * status (object) - label (core's status name, plain text) and tone (neutral, warning, info)
+    * isrequestreviewallowed (bool) - core's plan_exporter flag of the same name
+    * iscancelreviewrequestallowed (bool) - core's plan_exporter flag of the same name
+    * planurl (string) - core's plan page, with noredirect=1
+    * planlinklabel (string) - "Manage plan" or "Plan page in Moodle", plain text
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "planid": 10,
+        "hasstatus": true,
+        "status": {"label": "Draft", "tone": "neutral"},
+        "isrequestreviewallowed": true,
+        "iscancelreviewrequestallowed": false,
+        "planurl": "https://example.com/admin/tool/lp/plan.php?id=10&noredirect=1",
+        "planlinklabel": "Plan page in Moodle"
+    }
+}}
+<div class="local-dimensions-plan-actions" data-region="local-dimensions-plan-actions" data-planid="{{planid}}">
+    {{#hasstatus}}
+    {{#status}}
+    <span class="local-dimensions-status local-dimensions-status--{{tone}}" data-region="local-dimensions-plan-status">{{label}}</span>
+    {{/status}}
+    {{/hasstatus}}
+    {{#isrequestreviewallowed}}
+    <button type="button" class="btn btn-sm btn-primary" data-action="local-dimensions-plan-request-review" hidden>{{#str}}requestreview, tool_lp{{/str}}</button>
+    {{/isrequestreviewallowed}}
+    {{#iscancelreviewrequestallowed}}
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="local-dimensions-plan-cancel-review-request" hidden>{{#str}}cancelreviewrequest, tool_lp{{/str}}</button>
+    {{/iscancelreviewrequestallowed}}
+    <a class="btn btn-sm btn-outline-secondary" href="{{planurl}}">{{planlinklabel}}</a>
+</div>
