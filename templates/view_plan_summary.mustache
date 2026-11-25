@@ -36,8 +36,10 @@
     * sortmode (string) - Stored sort: planorder, name, completed or favourites
     * sort_is_planorder / sort_is_name / sort_is_completed / sort_is_favourites (bool) - Which sort is checked
     * filter_is_incomplete / filter_is_all (bool) - Which completion tab starts active
-    * viewmode (string) - Stored layout: list or grid
-    * view_is_list / view_is_grid (bool) - Which layout starts active
+    * viewmode (string) - Layout painted first: list, grid or journey (journey only with candetail)
+    * view_is_list / view_is_grid / view_is_journey (bool) - Which layout starts active
+    * hasjourney (bool), journey (object) - Whether the Journey view is offered, and its frame's context
+      (local_dimensions/plan_journey)
     * showstar (bool) - Whether the learner owns this plan, so the favourites controls render
     * hasfavourites (bool) - Whether at least one is starred, so the favourites filter renders
     * favouritecount (int) - How many are starred, shown on the favourites pill
@@ -96,6 +98,9 @@
         "viewmode": "list",
         "view_is_list": true,
         "view_is_grid": false,
+        "view_is_journey": false,
+        "hasjourney": true,
+        "journey": {"planid": 10},
         "showstar": true,
         "hasfavourites": false,
         "favouritecount": 0,
@@ -293,6 +298,14 @@
             </div>
             {{/showstar}}
         </div>
+
+        {{! The third view, Journey (local_dimensions/plan_journey), for a viewer who gets the detail: hidden
+            until its module shows it. }}
+        {{#hasjourney}}
+        {{#journey}}
+        {{> local_dimensions/plan_journey }}
+        {{/journey}}
+        {{/hasjourney}}
 
         {{! Sits outside the role="list" region, and must not carry
             local-dimensions-accordion-item - the filter-initialized rules force those to
