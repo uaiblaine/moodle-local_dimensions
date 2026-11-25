@@ -18,8 +18,9 @@ What a later session may still pick up:
    focus return and the S7 policy section were proven by Behat only (`hub_bulk.feature`,
    `local_evidencehub`'s `hub_policy_section.feature`), never by eye: the pane's m503 session was logged out
    and a session does not type a password.
-2. **The open points** listed below ("Open points found on the way").
-3. **The owner's**: MDL Shield reviews of #176, #179, #180 and evidencehub #26 if wanted; releases.
+2. **The open points** listed below ("Open points found on the way"); three of them were closed after the run
+   ("After the run").
+3. **The owner's**: MDL Shield reviews of #176, #179, #180, #187 and evidencehub #26 if wanted; releases.
 
 Facts worth keeping for the next piece of work here:
 
@@ -32,6 +33,44 @@ Facts worth keeping for the next piece of work here:
 - The worktrees and branches of the merged stages are removed. `~/dev/wt-local_dimensions-hubv2-a11y` (branch
   `spike/hubv2-a11y`, the S0 spike: one commit never merged and uncommitted files) is kept as it is. `spike/scratch-setup/` in this folder rebuilds the Jest and
   type-check setup (`xyflow13-build/` needs `npm install`).
+
+## After the run: two follow-ups (2026-11-25)
+
+Both came after the report of the run, the first from the owner's own use of the hub.
+
+1. **#183, the display preference was refused and shown as a lost connection** (version 2026100542, main
+   `61e5c1c`; `MOODLE_503_STABLE` level through #184). Reported by the owner: every switch among Classic, Outline,
+   Map and Both showed "Connection lost".
+   - Cause: the hub wrote `local_dimensions_central_display` through `core_user/repository`'s
+     `setUserPreference()`, which posts to core's REST route. That route answers HTTP 400 when the preference's
+     cleaning callback changes the value, and the callback puts the stored mode (`classic`, S4) and the stored
+     lens (S5) back on every write. So in the classic hub, and in the workspace once a lens had been chosen, no
+     display choice was saved.
+   - Fix: the hub writes through `core_user_set_user_preferences`, which stores the cleaned value, and a
+     scheduled write keeps the page pending until the server answers. The error routing no longer counts a
+     refusal as a lost connection: an HTTP 4xx other than 408 reaches the error dialogue, and so does a bare
+     string that is not the status text of a timeout or a 5xx (core's REST helper rejects with Moodle's own
+     message as a bare string).
+   - Why no test saw it: the PHPUnit tests wrote through the web service, a door the script did not use, and
+     the Behat scenarios that say a view or a lens is remembered reload an address that names it. Two scenarios
+     now prove the save with a visit whose address names neither (`hub_map_view.feature`,
+     `hub_lenses.feature`), and `hub_javascript_guards_test` holds the write to the web service.
+   - Gate: one full leg with Behat (1,178 tests, 55 scenarios). By hand, with the REST helper back: the guard
+     test and both new scenarios fail. Seen on m503b in classic mode: seven switches, each save answered 200,
+     no toast, and a visit without `view` opened on the saved view.
+2. **#187, three open points of the list below** (version 2026100544, main `9799755`; `MOODLE_503_STABLE` level
+   through #188; 2026100543 is another session's #185).
+   - A type or tag label holding markup could stop the tree from loading with `formatstringstriptags` off:
+     `helper::structure_nodes()` sends type, tag 1 and tag 2 through `helper::plain_text()`.
+   - A Behat scenario shows a reader on the root with no action, with its controls in the manager's scenario.
+   - The keys of `js/esm/tests/hubv2/deletion.test.ts` are quoted.
+   - `mutations/esc_hub.conf`: gates P05 to P07 follow the changed lines, gate J21 named a line S4 rewrote (the
+     spec stopped at its first pattern check, so it had not run since), new gate P42.
+   - Gate: the GitHub pipeline on GitHub's own runners (the owner allowed GitHub CI on 2026-11-25), four legs
+     green on the first pass, 1,195 tests and 58 scenarios a leg; the mutation sweep of the change, 72 of 72 red
+     on pgsql and on mariadb.
+
+Both are installed on m503, m503b and the mini cluster (2026100544, 2026-11-25).
 
 ## Where it stands
 
@@ -47,15 +86,23 @@ Facts worth keeping for the next piece of work here:
 | S5 lenses and checker (client) | **merged** 2026-11-24, `b8ad5c0` on main; matrix with Behat 4 of 4 (1,102 tests, 49 scenarios, Jest 265); seen on m503 as admin: the three lenses with their legends and `lens=` in the address, usage counts in the names, the checker with 6 findings and the focus on its heading; no console error. Colours and layout not looked at (hidden pane) | [#178](https://github.com/uaiblaine/moodle-local_dimensions/pull/178) | version 2026100539 |
 | S6 selection and bulk dock | **merged** 2026-11-24, `247e327` on main; matrix with Behat 4 of 4 on `53f92c6`; sweep 21 of 21 red on both databases on `19ba28a`; installed on m503, m503b and the cluster (2026100540) by a peer's round; seen on m503 as admin: the boxes, the dock, the appearance dialogue and the move dialogue's opening | [#179](https://github.com/uaiblaine/moodle-local_dimensions/pull/179) | version 2026100540 |
 | S7 companion sections | **merged** 2026-11-25. local_dimensions: `51aba0b` on main, matrix with Behat 4 of 4 one leg at a time on the MacBook (1,177 tests, 53 scenarios, Jest 309), sweep 21 of 21 red on both databases, `security-diff-read` no blocker; it carries the bulk dock's "Move under…" focus fix. local_evidencehub: `b50e3c2` on its main, matrix with Behat 4 of 4 (589 tests, 23 scenarios), 15 of 15 gates red on both databases. Both installed on m503, m503b and the cluster | [#180](https://github.com/uaiblaine/moodle-local_dimensions/pull/180) and [evidencehub #26](https://github.com/uaiblaine/moodle-local_evidencehub/pull/26) | versions 2026100541 and 2026100520 |
+| After the run: display preference | **merged** 2026-11-25, `61e5c1c` on main; one full leg with Behat (1,178 tests, 55 scenarios); seen on m503b in classic mode | [#183](https://github.com/uaiblaine/moodle-local_dimensions/pull/183) | version 2026100542 |
+| After the run: three open points | **merged** 2026-11-25, `9799755` on main; GitHub pipeline 4 of 4 legs (1,195 tests, 58 scenarios); sweep 72 of 72 red on both databases | [#187](https://github.com/uaiblaine/moodle-local_dimensions/pull/187) | version 2026100544 |
 
 ## Open points found on the way
 
-- `helper::structure_nodes()` hands `browse_structure`'s `PARAM_TEXT` tag and type fields the option label as `format_string` returns it; with `formatstringstriptags` off a label holding markup can fail the response. Found by the S6 work, not fixed yet.
-- 22 camelcase warnings in `js/esm/tests/hubv2/deletion.test.ts` (the gate does not lint the tests).
-- No Behat scenario shows a reader with no root actions (S4 pins the server flags only).
+Closed by #187: the label holding markup, the camelcase warnings of the Jest test, the reader's scenario.
+
 - Not checked in a browser at any stage: a screen reader, phone width, right-to-left, dark mode, colours and layout.
 - S6's bound of 30 statements a competency (`PER_COMPETENCY`) passes; the exact number was not measured.
-- What the client shows for an option label such as `R&D <beta>` was not measured.
+- What the client shows for an option label such as `R&D <beta>` was not measured (the server now sends it as
+  the same plain text whatever `formatstringstriptags` says).
+- The routing of an HTTP 4xx (#183) is on `main` only; whether it fits the 4.5, 5.1 and 5.2 branches was not
+  looked at.
+- Over HTTP/2 core's REST helper rejects any non-2xx answer with an empty string, which the hub still shows as
+  a lost connection. The hub no longer calls that helper; a new caller would meet it.
+- The first-pass Behat failures of the GitHub pipeline on the Mac mini's runner (#187's first run: old
+  scenarios, WebDriver timeouts, green on the workflow's rerun) were not looked into.
 
 ## Order of work, as refined on 2026-11-23
 
@@ -155,5 +202,5 @@ list as the default view until S3 reaches parity.
 
 ## Left for the owner
 
-- MDL Shield reviews: only the owner posts the command (candidates: #176, #179, #180, evidencehub #26).
+- MDL Shield reviews: only the owner posts the command (candidates: #176, #179, #180, #187, evidencehub #26).
 - Releases and tags: none made.
