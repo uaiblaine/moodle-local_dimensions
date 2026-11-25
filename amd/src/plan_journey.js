@@ -62,6 +62,8 @@ const loaded = {
     nexttime: 0,
     nextid: 0,
     records: 0,
+    entries: 0,
+    pages: 0,
     planstart: null,
     startplaced: false,
     months: new Map(),
@@ -223,11 +225,12 @@ const drawEntry = (entry) => {
  * Write a month's count of another component's logs on its quiet line, the line created at the month's end.
  *
  * @param {Object} fold A fold of the service's page.
+ * @param {String} key The group's key: its month, or the page's own for the remainder line.
  * @param {Number} total The month's count so far, this page's included.
  * @param {String} text The line's words for that count.
  */
-const drawFold = (fold, total, text) => {
-    const group = monthGroup(fold.monthkey, fold.monthlabel);
+const drawFold = (fold, key, total, text) => {
+    const group = monthGroup(key, fold.monthlabel);
     group.foldcount = total;
     if (!group.fold) {
         const {item, body} = marker('local-dimensions-journey-entry local-dimensions-journey-entry--fold', null, '');
@@ -259,7 +262,7 @@ const applyFilter = () => {
         group.heading.hidden = empty;
         group.list.hidden = empty;
     });
-    frame.filtered.hidden = !(loaded.records > 0 && shown === 0);
+    frame.filtered.hidden = !(loaded.entries > 0 && shown === 0);
 };
 
 /**
@@ -278,10 +281,38 @@ const setBusy = (busy) => {
 };
 
 /**
+ * The key of a fold's group: its month, or, for the remainder line of everything older than the page's windows,
+ * a key of the page's own (each page's remainder is another range of time).
+ *
+ * @param {Object} fold A fold of the service's page.
+ * @return {String}
+ */
+const foldKey = (fold) => (fold.older ? 'older-' + loaded.pages : fold.monthkey);
+
+/**
+ * Create the page's month groups newest first before anything is drawn, so a month a record or a quiet line
+ * reaches later never lands out of order; the remainder lines come after the months of their page.
+ *
+ * @param {Object} page The service's answer.
+ * @param {Boolean} startHere Whether the plan's start is drawn by this page.
+ */
+const prepareGroups = (page, startHere) => {
+    const labels = new Map();
+    page.entries.forEach((entry) => labels.set(entry.monthkey, entry.monthlabel));
+    page.folds.filter((fold) => !fold.older).forEach((fold) => labels.set(fold.monthkey, fold.monthlabel));
+    if (startHere) {
+        labels.set(page.planstart.monthkey, page.planstart.monthlabel);
+    }
+    Array.from(labels.keys()).sort().reverse().forEach((key) => monthGroup(key, labels.get(key)));
+    page.folds.filter((fold) => fold.older).forEach((fold) => monthGroup(foldKey(fold), fold.monthlabel));
+};
+
+/**
  * Paint a page: its records, its folds, the start marker on the last page, "Load more" and the empty state.
  *
  * The words of the quiet lines are fetched first, and nothing is drawn unless the request is still the latest
- * once they arrive, so a dropped answer leaves no record behind.
+ * once they arrive, so a dropped answer leaves no record behind. A page of only quiet lines is a page: it is
+ * drawn and the empty state stays hidden; the empty state is for a plan with nothing at all.
  *
  * @param {Object} page The service's answer.
  * @param {Number} ticket The request's ticket.
@@ -289,7 +320,7 @@ const setBusy = (busy) => {
  */
 const paint = async(page, ticket) => {
     const totals = page.folds.map((fold) => {
-        const group = loaded.months.get(fold.monthkey);
+        const group = loaded.months.get(foldKey(fold));
         return (group ? group.foldcount : 0) + fold.count;
     });
     const texts = await Promise.all(totals.map((total) => getString('journey_fold', 'local_dimensions', total)));
@@ -298,9 +329,17 @@ const paint = async(page, ticket) => {
     }
 
     loaded.planstart = page.planstart;
+    const count = page.entries.length + page.folds.length;
+    const startHere = !loaded.startplaced && (
+        page.entries.some((entry) => entry.timecreated < page.planstart.timecreated)
+        || (!page.hasmore && loaded.records + count > 0)
+    );
+    prepareGroups(page, startHere);
     page.entries.forEach(drawEntry);
-    page.folds.forEach((fold, index) => drawFold(fold, totals[index], texts[index]));
-    loaded.records += page.entries.length + page.folds.length;
+    page.folds.forEach((fold, index) => drawFold(fold, foldKey(fold), totals[index], texts[index]));
+    loaded.records += count;
+    loaded.entries += page.entries.length;
+    loaded.pages++;
     loaded.hasmore = page.hasmore;
     loaded.nexttime = page.nexttime;
     loaded.nextid = page.nextid;
@@ -397,16 +436,19 @@ export const arm = (root, options) => {
 
 /**
  * Show the Journey, asking for its first page the first time.
+ *
+ * @return {Boolean} Whether the Journey is on screen: false when the module was never armed.
  */
 export const show = () => {
     if (!frame) {
-        return;
+        return false;
     }
     frame.region.hidden = false;
     if (!loaded.started) {
         loaded.started = true;
         load();
     }
+    return true;
 };
 
 /**

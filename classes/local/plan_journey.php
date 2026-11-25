@@ -43,10 +43,11 @@ use core_competency\plan;
  * lists a competency's whole evidence inside a plan, before the plan began included. A completed plan stops
  * where core's list stops, at the plan's last modification (api::list_evidence()).
  *
- * The records come from ONE statement, keyset-paged on (timecreated, id), with the competency names, the
+ * The records come from one statement, keyset-paged on (timecreated, id), with the competency names, the
  * rating scales and the acting users looked up in bulk, so a page costs the same number of statements
  * whatever it holds. A log written by another component than core_competency (the evidence hub's validity
- * log, in volume) is not listed: it is counted into one line per month of the page.
+ * log, in volume) is not listed, and takes none of the page's places: a second statement counts those logs
+ * between the page's edges into one line per month (see folds()).
  *
  * @package    local_dimensions
  * @copyright  2026 Anderson Blaine
@@ -55,6 +56,9 @@ use core_competency\plan;
 final class plan_journey {
     /** @var int Records a page reads, listed and folded together. */
     public const int PAGE_SIZE = 50;
+
+    /** @var int Calendar months a page's quiet lines are counted by; everything older is one remainder line. */
+    public const int FOLD_MONTHS = 24;
 
     /** @var string The component of the evidence core itself records. */
     public const string CORE_COMPONENT = 'core_competency';
@@ -99,61 +103,57 @@ final class plan_journey {
         [$insql, $params] = $DB->get_in_or_equal(array_keys($competencies), SQL_PARAMS_NAMED, 'comp');
         $params['userid'] = $ownerid;
         $where = "uc.userid = :userid AND uc.competencyid {$insql}";
+        // The page's upper edge in time: the cursor, else where the list begins (core's stop for a completed plan, now).
+        $upper = $beforetime;
         if ((int) $plan->get('status') === plan::STATUS_COMPLETE) {
             // Where core's api::list_evidence() stops for a completed plan.
             $where .= ' AND e.timecreated <= :timecompleted';
             $params['timecompleted'] = (int) $plan->get('timemodified');
+            $upper = $upper ?: (int) $params['timecompleted'];
         }
+        $upper = $upper ?: \core\di::get(\core\clock::class)->time();
         if ($beforetime > 0) {
             // Strictly after the cursor's record in (timecreated DESC, id DESC): each record once, ties split by id.
             $where .= ' AND (e.timecreated < :beforetime OR (e.timecreated = :beforetimeeq AND e.id < :beforeid))';
             $params += ['beforetime' => $beforetime, 'beforetimeeq' => $beforetime, 'beforeid' => $beforeid];
         }
+
+        // Statement one: the records the reader sees. The folded rows (see folds()) are left out here, in SQL,
+        // so a page is a full page of listed records however many log rows another component wrote.
         $ctxfields = \context_helper::get_preload_record_columns_sql('ctx');
         $sql = "SELECT e.id, e.contextid, e.action, e.actionuserid, e.descidentifier, e.desccomponent, e.desca,
                        e.url, e.grade, e.note, e.timecreated, uc.competencyid, {$ctxfields}
                   FROM {competency_evidence} e
                   JOIN {competency_usercomp} uc ON uc.id = e.usercompetencyid
              LEFT JOIN {context} ctx ON ctx.id = e.contextid
-                 WHERE {$where}
+                 WHERE {$where} AND (e.desccomponent = :corecomp OR e.action <> :actionlog)
               ORDER BY e.timecreated DESC, e.id DESC";
-        $rows = array_values($DB->get_records_sql($sql, $params, 0, $limit + 1));
+        $listparams = $params + ['corecomp' => self::CORE_COMPONENT, 'actionlog' => evidence::ACTION_LOG];
+        $listed = array_values($DB->get_records_sql($sql, $listparams, 0, $limit + 1));
 
-        if (count($rows) > $limit) {
-            $rows = array_slice($rows, 0, $limit);
-            $last = end($rows);
+        $last = null;
+        if (count($listed) > $limit) {
+            $listed = array_slice($listed, 0, $limit);
+            $last = end($listed);
             $result['hasmore'] = true;
             $result['nexttime'] = (int) $last->timecreated;
             $result['nextid'] = (int) $last->id;
         }
-
-        $listed = [];
-        $folds = [];
-        foreach ($rows as $row) {
+        foreach ($listed as $row) {
             \context_helper::preload_from_record($row);
-            if (self::is_folded($row)) {
-                $month = self::month_key((int) $row->timecreated);
-                if (!isset($folds[$month])) {
-                    $folds[$month] = [
-                        'monthkey' => $month,
-                        'monthlabel' => self::month_label((int) $row->timecreated),
-                        'count' => 0,
-                        'timecreated' => (int) $row->timecreated,
-                    ];
-                }
-                $folds[$month]['count']++;
-                continue;
-            }
-            $listed[] = $row;
         }
+
+        $result['folds'] = self::folds($where, $params, $upper, $last);
 
         $scales = self::scales($listed, $competencies);
         $users = self::acting_users($listed);
+        // The framework read behind a competency's context is made once per competency, not once per record.
+        $contexts = [];
         foreach ($listed as $row) {
-            $result['entries'][] = self::entry($row, $competencies[(int) $row->competencyid], $scales, $users);
+            $id = (int) $row->competencyid;
+            $contexts[$id] ??= $competencies[$id]->get_context();
+            $result['entries'][] = self::entry($row, $competencies[$id], $contexts[$id], $scales, $users);
         }
-        $result['folds'] = array_values($folds);
-
         return $result;
     }
 
@@ -174,18 +174,105 @@ final class plan_journey {
     }
 
     /**
-     * Whether a record is counted into its month's quiet line instead of listed.
+     * The quiet lines of a page: the other components' logs between the page's edges, counted per month.
      *
-     * A log (it changes no rating) written by another component than core: the evidence hub writes its
-     * validity log this way, in volume. A record of another component that rates or completes a competency
-     * is listed: it changed the learner's state.
+     * The folded rows are a log (action ACTION_LOG) written by another component than core: the evidence hub
+     * writes its validity log this way, in volume. A record of another component that rates or completes a
+     * competency is not folded: it changed the learner's state, and is listed. This is the negation of the
+     * condition page() puts in the listing's WHERE.
      *
-     * @param \stdClass $row An evidence row.
-     * @return bool
+     * ONE aggregate whose cost does not depend on how many rows it counts: a SUM per month window, at most
+     * FOLD_MONTHS windows from the page's upper edge, then one remainder for everything older, so nothing is
+     * left uncounted. The page's edges are those of its listed records: below by the cursor (inside $scope),
+     * above by the last listed record. A folded row that shares the last listed record's time is counted HERE
+     * when its id is the higher (it sorts before that record) and on the next page when it is the lower: the
+     * next page's cursor is that record, and it takes what sorts strictly after it, so each row is counted once.
+     * On the last page (no $last) there is no lower edge.
+     *
+     * @param string $scope The WHERE of the listing without its folding rule: the owner, the competencies, the
+     *     completed plan's stop and the cursor.
+     * @param array $params Its named parameters.
+     * @param int $upper The time the windows start from: the cursor's, or the list's first edge.
+     * @param \stdClass|null $last The page's last listed record when an older page exists, else null.
+     * @return array The folds, newest first: monthkey, monthlabel, count, timecreated (the window's start, 0 for the
+     *     remainder), older (whether it is the remainder, one line for everything older than the windows).
      */
-    private static function is_folded(\stdClass $row): bool {
-        return (string) $row->desccomponent !== self::CORE_COMPONENT
-            && (int) $row->action === evidence::ACTION_LOG;
+    private static function folds(string $scope, array $params, int $upper, ?\stdClass $last): array {
+        global $DB;
+
+        $zone = \core_date::get_user_timezone_object();
+        $month = (new \DateTimeImmutable('@' . $upper))->setTimezone($zone)->modify('first day of this month')->setTime(0, 0);
+        $lowtime = $last ? (int) $last->timecreated : null;
+
+        $starts = [];
+        $selects = [];
+        $reached = false;
+        for ($i = 0; $i < self::FOLD_MONTHS; $i++) {
+            $start = $month->getTimestamp();
+            $window = "e.timecreated >= :lo{$i}";
+            $params["lo{$i}"] = $start;
+            if ($i > 0) {
+                // The first window is open above: the scope already holds the page's upper edge.
+                $window .= " AND e.timecreated < :hi{$i}";
+                $params["hi{$i}"] = $starts[$i - 1];
+            }
+            $selects[] = "SUM(CASE WHEN {$window} THEN 1 ELSE 0 END) AS b{$i}";
+            $starts[$i] = $start;
+            if ($lowtime !== null && $start <= $lowtime) {
+                $reached = true;
+                break;
+            }
+            $month = $month->modify('first day of previous month');
+        }
+        if (!$reached) {
+            $selects[] = 'SUM(CASE WHEN e.timecreated < :lorem THEN 1 ELSE 0 END) AS bolder';
+            $params['lorem'] = end($starts);
+        }
+
+        $lower = '';
+        if ($last) {
+            $lower = ' AND (e.timecreated > :lowtime OR (e.timecreated = :lowtimeeq AND e.id > :lowid))';
+            $params += ['lowtime' => $lowtime, 'lowtimeeq' => $lowtime, 'lowid' => (int) $last->id];
+        }
+        $params += ['corecomp' => self::CORE_COMPONENT, 'actionlog' => evidence::ACTION_LOG];
+        $columns = implode(', ', $selects);
+        $sql = "SELECT e.desccomponent, {$columns}
+                  FROM {competency_evidence} e
+                  JOIN {competency_usercomp} uc ON uc.id = e.usercompetencyid
+                 WHERE {$scope}{$lower} AND e.desccomponent <> :corecomp AND e.action = :actionlog
+              GROUP BY e.desccomponent";
+
+        $totals = array_fill(0, count($starts), 0);
+        $older = 0;
+        foreach ($DB->get_records_sql($sql, $params) as $row) {
+            foreach (array_keys($starts) as $i) {
+                $totals[$i] += (int) $row->{"b{$i}"};
+            }
+            $older += (int) ($row->bolder ?? 0);
+        }
+
+        $folds = [];
+        foreach ($totals as $i => $count) {
+            if ($count > 0) {
+                $folds[] = [
+                    'monthkey' => self::month_key($starts[$i]),
+                    'monthlabel' => self::month_label($starts[$i]),
+                    'count' => $count,
+                    'timecreated' => $starts[$i],
+                    'older' => false,
+                ];
+            }
+        }
+        if ($older > 0) {
+            $folds[] = [
+                'monthkey' => 'older',
+                'monthlabel' => get_string('journey_older', 'local_dimensions'),
+                'count' => $older,
+                'timecreated' => 0,
+                'older' => true,
+            ];
+        }
+        return $folds;
     }
 
     /**
@@ -270,11 +357,18 @@ final class plan_journey {
      *
      * @param \stdClass $row The evidence row, its context preloaded.
      * @param \core_competency\competency $competency The plan's competency it belongs to.
+     * @param \context $competencycontext The competency's context (its framework's), shared by its records.
      * @param array $scales Competency id => scale items.
      * @param array $users User id => user record.
      * @return array The entry (the service's entry structure).
      */
-    private static function entry(\stdClass $row, \core_competency\competency $competency, array $scales, array $users): array {
+    private static function entry(
+        \stdClass $row,
+        \core_competency\competency $competency,
+        \context $competencycontext,
+        array $scales,
+        array $users
+    ): array {
         $context = \context::instance_by_id((int) $row->contextid, IGNORE_MISSING) ?: \context_system::instance();
         $time = (int) $row->timecreated;
 
@@ -302,7 +396,7 @@ final class plan_journey {
             'monthlabel' => self::month_label($time),
             'daylabel' => userdate($time, get_string('strftimedateshort', 'langconfig')),
             'competencyid' => (int) $row->competencyid,
-            'competencyname' => self::plain((string) $competency->get('shortname'), $competency->get_context()),
+            'competencyname' => self::plain((string) $competency->get('shortname'), $competencycontext),
             'description' => self::plain(self::description($row), $context),
             'hasrating' => $rating !== '',
             'rating' => $rating,

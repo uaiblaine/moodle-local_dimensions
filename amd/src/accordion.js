@@ -3806,16 +3806,20 @@ define(
             }
             tearDownAccordionPanes();
             container.classList.toggle('local-dimensions-grid-mode', mode === 'grid');
-            /* The stylesheet hides the list while the summary says journey, so a stored Journey is never
-               painted as the list first; the Journey's own region is shown by its module. */
             const summary = document.querySelector('.local-dimensions-plan-summary');
             if (summary) {
                 summary.dataset.viewmode = mode;
             }
+            /* The stylesheet hides the list under the class the Journey earns here, once its module is armed
+               and its frame is shown: a module that failed before that leaves the list on the page. */
+            let journeyOn = false;
             if (mode === 'journey') {
-                Journey.show();
+                journeyOn = Journey.show();
             } else {
                 Journey.hide();
+            }
+            if (summary) {
+                summary.classList.toggle('local-dimensions-journey-on', journeyOn);
             }
         }
 

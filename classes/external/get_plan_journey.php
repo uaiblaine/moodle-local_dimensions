@@ -117,8 +117,9 @@ class get_plan_journey extends external_api {
             'folds' => new external_multiple_structure(new external_single_structure([
                 'monthkey' => new external_value(PARAM_ALPHANUMEXT, 'The month, YYYY-MM'),
                 'monthlabel' => new external_value(PARAM_TEXT, 'The month, named'),
-                'count' => new external_value(PARAM_INT, 'Logs of other components in that month of the page'),
-                'timecreated' => new external_value(PARAM_INT, 'The newest of them'),
+                'count' => new external_value(PARAM_INT, 'Logs of other components in that month between the page\'s edges'),
+                'timecreated' => new external_value(PARAM_INT, 'The month\'s first second, 0 for the remainder'),
+                'older' => new external_value(PARAM_BOOL, 'Whether it is the one line for every month older than the windows'),
             ])),
             'hasmore' => new external_value(PARAM_BOOL, 'Whether an older page exists'),
             'nexttime' => new external_value(PARAM_INT, 'The next page\'s cursor time, 0 for none'),

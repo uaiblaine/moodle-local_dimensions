@@ -11124,21 +11124,22 @@ a.local-dimensions-central-links-badge-warn:focus {
 /* ============================================
    PLAN OVERVIEW: JOURNEY
    The third view of the overview (local_dimensions/plan_journey): the plan's evidence by month, newest
-   first, each record a day, a dot on a rail and its body. While the summary says journey the list is not
-   painted: under JavaScript only, so a page without it keeps the list (the Journey needs the module).
+   first, each record a day, a dot on a rail and its body. The list is not painted while the summary carries
+   local-dimensions-journey-on, a class accordion.js writes only after the Journey module armed and showed its
+   frame: a page without JavaScript, or one whose module failed first, keeps the list.
    ============================================ */
 
-body.jsenabled .local-dimensions-plan-summary[data-viewmode="journey"] > .local-dimensions-competency-accordion {
+body.jsenabled .local-dimensions-plan-summary.local-dimensions-journey-on > .local-dimensions-competency-accordion {
     display: none;
 }
 
 /* Organise sorts the list; in the Journey the order is the date, so its sort menu is not offered. The
    menu stays reachable at the two-line step, where it carries "Show as", the way back to the list. */
-.local-dimensions-plan-summary[data-viewmode="journey"] .local-dimensions-sort-menu {
+.local-dimensions-plan-summary.local-dimensions-journey-on .local-dimensions-sort-menu {
     display: none;
 }
 
-.local-dimensions-plan-summary[data-viewmode="journey"]
+.local-dimensions-plan-summary.local-dimensions-journey-on
 .local-dimensions-line:not(.local-dimensions-line--s4)
 .local-dimensions-line-organise {
     display: none;
@@ -11240,12 +11241,13 @@ body.jsenabled .local-dimensions-plan-summary[data-viewmode="journey"] > .local-
     gap: 0.375rem 0.75rem;
 }
 
-/* The competency: a quiet text button opening its detail, as a press on its row does. */
+/* The competency: a quiet text button opening its detail, as a press on its row does. It sits on the entry
+   body's surface, which it states so the ink's ground is known. */
 .local-dimensions-journey .local-dimensions-journey-competency {
     padding: 0;
     border: 0;
     border-radius: var(--local-dimensions-radius-xs);
-    background: none;
+    background: var(--local-dimensions-surface);
     color: var(--local-dimensions-accent);
     font-weight: 600;
     text-align: left;
