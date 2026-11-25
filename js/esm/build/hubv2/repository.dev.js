@@ -35,6 +35,7 @@ const selectionData = /* @__PURE__ */ __name((competencyid) => callMany([
   { methodname: "local_dimensions_competency_usage", args: { competencyid } },
   { methodname: "local_dimensions_list_related_competencies", args: { competencyid } }
 ]).then(([usage, related]) => [usage, related.items]), "selectionData");
+const panelSections = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_get_competency_panel_sections", { competencyid }).then((answer) => answer.sections), "panelSections");
 const deleteCheck = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_competency_delete_check", { competencyid }), "deleteCheck");
 const deleteChecks = /* @__PURE__ */ __name((ids) => ids.length === 0 ? Promise.resolve([]) : callMany(ids.map((competencyid) => ({ methodname: "local_dimensions_competency_delete_check", args: { competencyid } }))).then((answers) => answers), "deleteChecks");
 const setAppearance = /* @__PURE__ */ __name((frameworkid, competencyids, fields) => call("local_dimensions_set_competencies_appearance", { frameworkid, competencyids, fields }), "setAppearance");
@@ -65,6 +66,7 @@ export {
   insights,
   moveOne,
   moveUpTimes,
+  panelSections,
   renameCompetency,
   search,
   selectionData,

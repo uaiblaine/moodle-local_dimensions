@@ -74,6 +74,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass(\local_dimensions\external\list_enrol_courses::class)]
 #[CoversClass(\local_dimensions\external\get_enrol_queue_status::class)]
 #[CoversClass(\local_dimensions\external\search_categories::class)]
+#[CoversClass(\local_dimensions\external\get_competency_panel_sections::class)]
 final class readonly_session_test extends \advanced_testcase {
     /** @var string[] The plugin's application-mode cache definitions (db/caches.php), purged before every call. */
     private const CACHES = [
@@ -142,6 +143,7 @@ final class readonly_session_test extends \advanced_testcase {
             'local_dimensions_browse_structure' => ['frameworkid' => $f['frameworkid'], 'parentid' => $f['parentid']],
             'local_dimensions_get_structure_node' => ['competencyid' => $f['childid']],
             'local_dimensions_list_related_competencies' => ['competencyid' => $f['relatedid']],
+            'local_dimensions_get_competency_panel_sections' => ['competencyid' => $f['childid']],
             'local_dimensions_list_template_cohorts' => ['templateid' => $f['templateid']],
             'local_dimensions_list_template_participants' => ['templateid' => $f['templateid']],
             'local_dimensions_search_assignable_users' => ['templateid' => $f['templateid'], 'query' => 'Gamma'],
@@ -235,7 +237,7 @@ final class readonly_session_test extends \advanced_testcase {
         $exercised = array_keys(self::read_only_calls(array_fill_keys(self::FIXTURE_KEYS, 0)));
         sort($exercised);
 
-        $this->assertCount(29, $declared);
+        $this->assertCount(30, $declared);
         $this->assertSame($exercised, $declared);
     }
 
@@ -367,6 +369,11 @@ final class readonly_session_test extends \advanced_testcase {
                 break;
             case 'get_structure_node':
                 $this->assertSame($f['childid'], (int) $data['node']['id'], $name);
+                break;
+            case 'get_competency_panel_sections':
+                // The sections depend on the listeners the site has; the competency answered is the fixture's.
+                $this->assertSame($f['childid'], (int) $data['competencyid'], $name);
+                $this->assertIsArray($data['sections'], $name);
                 break;
             case 'list_template_cohorts':
                 $this->assertSame([$f['cohortid']], self::ids($data['cohorts'], 'cohortid'), $name);

@@ -265,10 +265,12 @@ final class structure_view_test extends advanced_testcase {
         $props = $data['decoded'];
         $this->assertSame(
             ['framework', 'roots', 'pagesize', 'rulesmodules', 'courseoutcomes', 'moduleoutcomes', 'rtl', 'reveal', 'layout',
-                'structures', 'lens', 'appearance'],
+                'structures', 'lens', 'appearance', 'sections'],
             array_keys($props)
         );
         $this->assertSame('none', $props['lens']);
+        // Whether a plugin listens for the panel's sections depends on what the site has installed.
+        $this->assertIsBool($props['sections']);
         // A manager's bulk dock gets the appearance selects' options, each list in its field's order.
         $this->assertSame(['tag1', 'tag2', 'type'], array_keys($props['appearance']));
         $this->assertSame(

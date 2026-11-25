@@ -10757,6 +10757,19 @@ a.local-dimensions-central-links-badge-warn:focus {
     color: var(--local-dimensions-warning-ink);
 }
 
+/* The two tones only the panel's companion sections draw (hook competency_panel_sections). */
+.local-dimensions-hubv2-status--danger {
+    border-color: var(--local-dimensions-danger-edge);
+    background-color: var(--local-dimensions-danger-tint);
+    color: var(--local-dimensions-danger-ink);
+}
+
+.local-dimensions-hubv2-status--info {
+    border-color: var(--local-dimensions-info-edge);
+    background-color: var(--local-dimensions-info-tint);
+    color: var(--local-dimensions-info-ink);
+}
+
 .local-dimensions-hubv2-pairsep {
     color: var(--local-dimensions-ink-muted);
 }

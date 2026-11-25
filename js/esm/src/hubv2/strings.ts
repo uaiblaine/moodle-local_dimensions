@@ -333,6 +333,7 @@ export const KEYS = [
     'hubv2_searchnone',
     'hubv2_searchresults',
     'hubv2_searchresults_one',
+    'hubv2_sections_failed',
     'hubv2_seeusage',
     'hubv2_showmore',
     'hubv2_summary_findings',

@@ -51,7 +51,7 @@ import { Fragment, jsxDEV } from "react/jsx-dev-runtime";
  * @copyright  2026 Anderson Blaine
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   LENS_ACTIONS,
   PALETTE_SHORTCUT,
@@ -123,12 +123,14 @@ import {
   insights as readInsights,
   moveOne,
   moveUpTimes,
+  panelSections,
   renameCompetency,
   selectionData,
   setAppearance,
   setParent,
   updateRule
 } from "./repository";
+import { NO_SECTIONS, readSections, sectionsFor, sectionsReducer } from "./sections";
 import Search from "./Search";
 import { fill, fillCount, fillObject, loadLabels } from "./strings";
 import {
@@ -194,6 +196,9 @@ const Workspace = /* @__PURE__ */ __name((props) => {
   const selectedRef = useRef(null);
   const [usage, setUsage] = useState(null);
   const [related, setRelated] = useState([]);
+  const [sectionsState, sendSections] = useReducer(sectionsReducer, NO_SECTIONS);
+  const sectionsAsk = useRef(0);
+  const listens = props.sections === true;
   const [moving, setMoving] = useState(null);
   const movingRef = useRef(null);
   const [count, setCount] = useState(framework.competencycount);
@@ -314,6 +319,20 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     }
     commit((current) => expandPath(current, pathids));
   }, [commit, loadPage]);
+  const loadSections = useCallback((id, keep) => {
+    const ask = ++sectionsAsk.current;
+    if (id === null || !listens) {
+      sendSections({ type: "clear", ask });
+      return;
+    }
+    sendSections({ type: "ask", ask, competencyid: id, keep });
+    track("sections", panelSections(id)).then((answer) => {
+      sendSections({ type: "answer", ask, sections: readSections(answer, window.location.origin) });
+      return null;
+    }).catch(() => {
+      sendSections({ type: "fail", ask });
+    });
+  }, [listens]);
   const loadSelection = useCallback((id) => {
     const ask = ++selectionAsk.current;
     track("selection", selectionData(id)).then(([answer, relations]) => {
@@ -335,10 +354,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     setRelated([]);
     if (id === null) {
       selectionAsk.current++;
+      loadSections(null, false);
       return;
     }
     loadSelection(id);
-  }, [loadSelection]);
+    loadSections(id, false);
+  }, [loadSelection, loadSections]);
   const reveal = useCallback((id, pathids) => ensureVisible(id, pathids).then(() => {
     centreOn.current = competencyKey(id);
     choose(id);
@@ -461,7 +482,10 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     if (specOf(id).changes && insightsStatus.current !== "idle") {
       loadInsights().catch(notifyError);
     }
-  }, [loadInsights]);
+    if (specOf(id).changes && selectedRef.current !== null) {
+      loadSections(selectedRef.current, true);
+    }
+  }, [loadInsights, loadSections]);
   const need = useCallback((ids) => {
     const missing = ids.filter((id) => id > 0 && !treeRef.current.nodes[id] && !naming.current.has(id) && namedPaths.current[id] === void 0);
     for (let start = 0; start < missing.length; start += NAME_BATCH) {
@@ -1985,7 +2009,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3037,
+            lineNumber: 3074,
             columnNumber: 21
           }
         ) };
@@ -2014,7 +2038,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3052,
+            lineNumber: 3089,
             columnNumber: 21
           }
         ) };
@@ -2082,7 +2106,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3156,
+          lineNumber: 3193,
           columnNumber: 21
         }
       ) : null,
@@ -2110,7 +2134,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3171,
+          lineNumber: 3208,
           columnNumber: 21
         }
       ) : null,
@@ -2148,7 +2172,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3191,
+          lineNumber: 3228,
           columnNumber: 21
         }
       ) : null,
@@ -2168,13 +2192,14 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           onPick: closeBulk,
           onCommit: bulkMove,
           onClose: closeBulk,
-          onLostFocus: restoreFocus
+          onLostFocus: restoreFocus,
+          returnTo: "opener"
         },
         void 0,
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3221,
+          lineNumber: 3258,
           columnNumber: 21
         }
       ) : null,
@@ -2192,7 +2217,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3239,
+          lineNumber: 3277,
           columnNumber: 21
         }
       ) : null,
@@ -2214,13 +2239,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3249,
+          lineNumber: 3287,
           columnNumber: 21
         }
       ) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3154,
+      lineNumber: 3191,
       columnNumber: 13
     });
   }, "overlays");
@@ -2263,7 +2288,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
     false,
     {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3295,
+      lineNumber: 3333,
       columnNumber: 9
     }
   ) : null, "checkerPanel");
@@ -2281,24 +2306,24 @@ const Workspace = /* @__PURE__ */ __name((props) => {
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-bar", children: [
         /* @__PURE__ */ jsxDEV(LensSwitch, { labels, lens, offered: offeredlenses, onChange: changeLens }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3331,
+          lineNumber: 3369,
           columnNumber: 21
         }),
         /* @__PURE__ */ jsxDEV(Search, { labels, frameworkid: framework.id, onChoose: actions.reveal }, void 0, false, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3332,
+          lineNumber: 3370,
           columnNumber: 21
         }),
         panes.map ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-hint", children: [
           /* @__PURE__ */ jsxDEV("i", { className: "fa fa-search-plus me-1", "aria-hidden": "true" }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3335,
+            lineNumber: 3373,
             columnNumber: 29
           }),
           labels.hubv2_zoomhint
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3334,
+          lineNumber: 3372,
           columnNumber: 25
         }) : null,
         /* @__PURE__ */ jsxDEV(
@@ -2314,7 +2339,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3338,
+            lineNumber: 3376,
             columnNumber: 21
           }
         ),
@@ -2333,11 +2358,11 @@ const Workspace = /* @__PURE__ */ __name((props) => {
               labels.hubv2_commands,
               /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-keys", "aria-hidden": "true", children: shortcutCaps(PALETTE_SHORTCUT, mac).map((cap) => /* @__PURE__ */ jsxDEV("kbd", { children: cap }, cap, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 3352,
+                lineNumber: 3390,
                 columnNumber: 79
               })) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 3351,
+                lineNumber: 3389,
                 columnNumber: 25
               })
             ]
@@ -2346,13 +2371,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3340,
+            lineNumber: 3378,
             columnNumber: 21
           }
         )
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 3330,
+        lineNumber: 3368,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-panes", ref: panesBox, children: [
@@ -2391,7 +2416,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3358,
+            lineNumber: 3396,
             columnNumber: 25
           }
         ) : null,
@@ -2410,7 +2435,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3389,
+            lineNumber: 3427,
             columnNumber: 25
           }
         ) : null,
@@ -2454,7 +2479,7 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                 false,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                  lineNumber: 3423,
+                  lineNumber: 3461,
                   columnNumber: 29
                 }
               ),
@@ -2501,18 +2526,18 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                       false,
                       {
                         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                        lineNumber: 3467,
+                        lineNumber: 3505,
                         columnNumber: 37
                       }
                     ),
                     /* @__PURE__ */ jsxDEV(Controls, { showInteractive: false, fitViewOptions: FIT }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 3469,
+                      lineNumber: 3507,
                       columnNumber: 37
                     }),
                     /* @__PURE__ */ jsxDEV(MiniMap, { pannable: true, zoomable: true, ariaLabel: labels.hubv2_minimap, style: MINIMAP }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                      lineNumber: 3470,
+                      lineNumber: 3508,
                       columnNumber: 37
                     })
                   ]
@@ -2521,12 +2546,12 @@ const Workspace = /* @__PURE__ */ __name((props) => {
                 true,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                  lineNumber: 3434,
+                  lineNumber: 3472,
                   columnNumber: 33
                 }
               ) }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-                lineNumber: 3433,
+                lineNumber: 3471,
                 columnNumber: 29
               })
             ]
@@ -2535,13 +2560,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           true,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3400,
+            lineNumber: 3438,
             columnNumber: 25
           }
         ) : null
       ] }, void 0, true, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 3356,
+        lineNumber: 3394,
         columnNumber: 17
       }),
       /* @__PURE__ */ jsxDEV(
@@ -2558,13 +2583,13 @@ const Workspace = /* @__PURE__ */ __name((props) => {
         false,
         {
           fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-          lineNumber: 3476,
+          lineNumber: 3514,
           columnNumber: 17
         }
       )
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3329,
+      lineNumber: 3367,
       columnNumber: 13
     }),
     /* @__PURE__ */ jsxDEV(
@@ -2608,29 +2633,30 @@ const Workspace = /* @__PURE__ */ __name((props) => {
           false,
           {
             fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-            lineNumber: 3503,
+            lineNumber: 3541,
             columnNumber: 21
           }
         ),
-        checker: checkerPanel()
+        checker: checkerPanel(),
+        sections: sectionsFor(sectionsState, selected)
       },
       void 0,
       false,
       {
         fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-        lineNumber: 3485,
+        lineNumber: 3523,
         columnNumber: 13
       }
     ),
     /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: announcement }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3522,
+      lineNumber: 3561,
       columnNumber: 13
     }),
     overlays()
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3328,
+    lineNumber: 3366,
     columnNumber: 9
   });
 }, "Workspace");
@@ -2642,21 +2668,21 @@ const Hub = /* @__PURE__ */ __name((props) => {
   if (!labels) {
     return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-layout", "aria-busy": "true" }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-      lineNumber: 3540,
+      lineNumber: 3579,
       columnNumber: 16
     });
   }
   return /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-root", children: /* @__PURE__ */ jsxDEV(ReactFlowProvider, { children: /* @__PURE__ */ jsxDEV(Workspace, { ...props, labels }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3545,
+    lineNumber: 3584,
     columnNumber: 17
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3544,
+    lineNumber: 3583,
     columnNumber: 13
   }) }, void 0, false, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/Hub.tsx",
-    lineNumber: 3543,
+    lineNumber: 3582,
     columnNumber: 9
   });
 }, "Hub");

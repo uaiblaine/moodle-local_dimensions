@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Sections other plugins add to the workspace's panel
+
+Version `2026100541`. Stage S7 of the hub v2 record (idea I25, job J10, decision H9): a companion plugin adds
+sections of its own under the panel of the selected competency, as data only.
+
+- New hook `\local_dimensions\hook\competency_panel_sections`: the competency, its framework, the framework's
+  context and whether the viewer manages there, read-only; `add_section()` takes a component, a key, a title,
+  rows of a label, a value and an optional tone, a note and one link. Everything is plain text (decoded and
+  stripped until stable, so it survives `PARAM_TEXT` whatever `formatstringstriptags` says), the link is a page
+  of this site or nothing, and the hook bounds sections (6), rows (12) and every length. No HTML; zero-width and
+  bidirectional controls removed, and a text with nothing visible is empty. Nothing passed to `add_section()`
+  throws: a refused section (component, key, a taken key: the first wins) or tone is dropped with a
+  `debugging()` message, so one listener cannot blank the others.
+- New read web service `local_dimensions_get_competency_panel_sections` (`readonlysession`): the framework and
+  its context from the competency's row, `validate_context()`, a guest refused, competencies enabled, core's
+  read right on the competency, then the dispatch and an allowlisted answer. No statement beyond its checks
+  when no plugin listens.
+- The panel asks only when the page says a plugin listens (`hub_map::has_panel_sections()`), on every
+  selection and after every change; an answer for an earlier selection is dropped, and a failed read is one
+  muted line ("Some details could not be loaded.") under the rest of the panel. Each section is a heading, a
+  definition list (a tone drawn as a status label around its text) and one link in the same tab; two status
+  label tones, danger and info, join the workspace's sheet.
+- Mutation spec `mutations/competency_panel_sections.conf` (21 gates).
+- Fixed: closing the bulk dock's "Move under…" dialogue gives the focus back to the dock's button, as its two
+  other dialogues do; it went to the outline's item, where the picks' actions are a Tab away.
+
 ### Acting on several competencies at once in the workspace
 
 Version `2026100540`. Stage S6 of the hub v2 record (idea I16, job J7): a manager picks several

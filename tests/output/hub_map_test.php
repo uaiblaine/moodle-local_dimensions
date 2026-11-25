@@ -214,6 +214,27 @@ final class hub_map_test extends advanced_testcase {
     }
 
     /**
+     * The props say whether a plugin listens for the panel's companion sections: not with no listener, yes with one,
+     * so a site without a companion never asks for them.
+     *
+     * @return void
+     */
+    public function test_the_props_say_whether_a_plugin_adds_panel_sections(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $framework = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_framework();
+        $structures = ['contextid' => 1, 'cancreate' => false, 'canscalespage' => false];
+        require_once(__DIR__ . '/../fixtures/hook/panel_sections_listener.php');
+
+        \core\di::set(\core\hook\manager::class, \core\hook\manager::phpunit_get_instance([]));
+        $this->assertFalse(hub_map::props($framework, 0, [], 0, false, null, 'both', $structures)['sections']);
+        \core\di::set(\core\hook\manager::class, \core\hook\manager::phpunit_get_instance([
+            'local_dimensions' => __DIR__ . '/../fixtures/hook/panel_sections_hooks.php',
+        ]));
+        $this->assertTrue(hub_map::props($framework, 0, [], 0, false, null, 'both', $structures)['sections']);
+    }
+
+    /**
      * The bulk dock's appearance choices reach a manager only, each select's options in its own order and plain, so
      * position + 1 is what the bulk service takes; a reader, who has no dock, gets none.
      *

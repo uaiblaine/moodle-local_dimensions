@@ -82,6 +82,9 @@ export type MoveDialogProps = {
     onCommit: (target: number) => void,
     onClose: () => void,
     onLostFocus: () => void,
+    // Where the focus goes on close: the item (a node's menu, the default) or the control that opened the
+    // dialogue (the bulk dock's button, which is still there while something is picked).
+    returnTo?: 'opener' | 'item',
     // Told the parent chosen, null for none, so the workspace marks what the move touches (an impact preview).
     onTarget?: (target: number | null) => void,
 };
@@ -380,7 +383,7 @@ const MoveDialog = (props: MoveDialogProps): ReactNode => {
 
     return (
         <Dialog labelledby={titleid} className="local-dimensions-hubv2-dialog local-dimensions-hubv2-movedialog"
-            initialFocus={field} returnTo="item" onClose={onClose} onLostFocus={onLostFocus}>
+            initialFocus={field} returnTo={props.returnTo ?? 'item'} onClose={onClose} onLostFocus={onLostFocus}>
             <div className="local-dimensions-hubv2-dialog-head">
                 <h2 id={titleid} className="local-dimensions-hubv2-dialog-title">
                     {titleOf(labels, subjects)}

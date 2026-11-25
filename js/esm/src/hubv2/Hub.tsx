@@ -64,7 +64,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useReducer, useRef, useState} from 'react';
 import type {CSSProperties, KeyboardEvent as ReactKeyboardEvent, ReactNode} from 'react';
 import {
     LENS_ACTIONS, PALETTE_SHORTCUT, VIEW_ACTIONS, actionState, actionsFor, ariaShortcut, isMac, shortcutAction, shortcutCaps,
@@ -133,9 +133,11 @@ import type {PanelActions} from './Panel';
 import {track} from './pending';
 import {
     allChildren, browse, countCompetencies, createCompetency, deleteCheck, deleteChecks, deleteCompetency, getNode, getNodes,
-    insights as readInsights, moveOne, moveUpTimes, renameCompetency, selectionData, setAppearance, setParent, updateRule,
+    insights as readInsights, moveOne, moveUpTimes, panelSections, renameCompetency, selectionData, setAppearance, setParent,
+    updateRule,
 } from './repository';
 import type {NodeAnswer} from './repository';
+import {NO_SECTIONS, readSections, sectionsFor, sectionsReducer} from './sections';
 import Search from './Search';
 import {fill, fillCount, fillObject, loadLabels} from './strings';
 import type {Labels} from './strings';
@@ -272,6 +274,10 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     const selectedRef = useRef<number | null>(null);
     const [usage, setUsage] = useState<Usage | null>(null);
     const [related, setRelated] = useState<PathItem[]>([]);
+    // The selection's companion sections (sections.ts), asked for only when the page says a plugin adds some.
+    const [sectionsState, sendSections] = useReducer(sectionsReducer, NO_SECTIONS);
+    const sectionsAsk = useRef(0);
+    const listens = props.sections === true;
     const [moving, setMoving] = useState<number | null>(null);
     const movingRef = useRef<number | null>(null);
     const [count, setCount] = useState(framework.competencycount);
@@ -454,6 +460,31 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
     }, [commit, loadPage]);
 
     /**
+     * Ask for the companion sections of a competency, or clear them with null; only the newest request's answer
+     * or failure is kept (sections.ts). A failure is said in the panel's own quiet line, never as an error.
+     *
+     * @param {number|null} id The competency, null for none.
+     * @param {boolean} keep Whether what is shown stays until the answer (a reload of the same selection).
+     * @returns {void}
+     */
+    const loadSections = useCallback((id: number | null, keep: boolean): void => {
+        const ask = ++sectionsAsk.current;
+        if (id === null || !listens) {
+            sendSections({type: 'clear', ask});
+            return;
+        }
+        sendSections({type: 'ask', ask, competencyid: id, keep});
+        track('sections', panelSections(id))
+            .then((answer) => {
+                sendSections({type: 'answer', ask, sections: readSections(answer, window.location.origin)});
+                return null;
+            })
+            .catch(() => {
+                sendSections({type: 'fail', ask});
+            });
+    }, [listens]);
+
+    /**
      * Load what the panel shows beyond the node; a later selection discards an earlier answer.
      *
      * @param {number} id The competency.
@@ -491,10 +522,12 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         setRelated([]);
         if (id === null) {
             selectionAsk.current++;
+            loadSections(null, false);
             return;
         }
         loadSelection(id);
-    }, [loadSelection]);
+        loadSections(id, false);
+    }, [loadSelection, loadSections]);
 
     /**
      * Reveal a competency, select it and centre the canvas on it.
@@ -722,7 +755,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
 
     /**
      * An action of the registry is done: read the insights again when the registry says it can change them
-     * (commands.ts `changes`) and they have been read at all.
+     * (commands.ts `changes`) and they have been read at all, and the selection's companion sections.
      *
      * @param {string} id The action.
      * @returns {void}
@@ -731,7 +764,11 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
         if (specOf(id).changes && insightsStatus.current !== 'idle') {
             loadInsights().catch(notifyError);
         }
-    }, [loadInsights]);
+        // The companion sections may describe what the action changed: read the selection's again, keeping them meanwhile.
+        if (specOf(id).changes && selectedRef.current !== null) {
+            loadSections(selectedRef.current, true);
+        }
+    }, [loadInsights, loadSections]);
 
     /**
      * Ask for the names of competencies the panel's lists show and the tree has not loaded, a batch per request.
@@ -3233,6 +3270,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                         onCommit={bulkMove}
                         onClose={closeBulk}
                         onLostFocus={restoreFocus}
+                        returnTo="opener"
                     />
                 ) : null}
                 {bulk !== null && bulk.kind === 'appearance' ? (
@@ -3518,6 +3556,7 @@ const Workspace = (props: HubProps & {labels: Labels}): ReactNode => {
                     />
                 )}
                 checker={checkerPanel()}
+                sections={sectionsFor(sectionsState, selected)}
             />
             <div className="visually-hidden" aria-live="polite">{announcement}</div>
             {overlays()}

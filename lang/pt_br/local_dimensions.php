@@ -899,6 +899,7 @@ $string['hubv2_search'] = 'Buscar na árvore';
 $string['hubv2_searchnone'] = 'Nenhuma competência encontrada.';
 $string['hubv2_searchresults'] = '{$a} resultados';
 $string['hubv2_searchresults_one'] = '1 resultado';
+$string['hubv2_sections_failed'] = 'Alguns detalhes não puderam ser carregados.';
 $string['hubv2_seeusage'] = 'Ver uso';
 $string['hubv2_showmore'] = 'Mostrar mais {$a}';
 $string['hubv2_structures_import'] = 'Importar de CSV';

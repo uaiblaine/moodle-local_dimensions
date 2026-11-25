@@ -67,27 +67,27 @@ const BulkLines = /* @__PURE__ */ __name((props) => {
     /* @__PURE__ */ jsxDEV("ul", { className: "local-dimensions-hubv2-bulknames", children: [
       names.shown.map((name, index) => /* @__PURE__ */ jsxDEV("li", { children: name }, `${index}-${name}`, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-        lineNumber: 164,
+        lineNumber: 167,
         columnNumber: 51
       })),
       names.more > 0 ? /* @__PURE__ */ jsxDEV("li", { children: fill(labels.hubv2_bulk_more, String(names.more)) }, void 0, false, {
         fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-        lineNumber: 165,
+        lineNumber: 168,
         columnNumber: 35
       }) : null
     ] }, void 0, true, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-      lineNumber: 163,
+      lineNumber: 166,
       columnNumber: 13
     }),
     skipped > 0 ? /* @__PURE__ */ jsxDEV("p", { className: "local-dimensions-hubv2-dialog-label", children: fillCount(labels, "hubv2_bulk_move_skipped", skipped) }, void 0, false, {
       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-      lineNumber: 168,
+      lineNumber: 171,
       columnNumber: 17
     }) : null
   ] }, void 0, true, {
     fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-    lineNumber: 162,
+    lineNumber: 165,
     columnNumber: 9
   });
 }, "BulkLines");
@@ -253,14 +253,14 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
       labelledby: titleid,
       className: "local-dimensions-hubv2-dialog local-dimensions-hubv2-movedialog",
       initialFocus: field,
-      returnTo: "item",
+      returnTo: props.returnTo ?? "item",
       onClose,
       onLostFocus,
       children: [
         /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-dialog-head", children: [
           /* @__PURE__ */ jsxDEV("h2", { id: titleid, className: "local-dimensions-hubv2-dialog-title", children: titleOf(labels, subjects) }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 385,
+            lineNumber: 388,
             columnNumber: 17
           }),
           /* @__PURE__ */ jsxDEV(
@@ -272,7 +272,7 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
               onClick: onClose,
               children: /* @__PURE__ */ jsxDEV("i", { className: "fa fa-xmark", "aria-hidden": "true" }, void 0, false, {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                lineNumber: 390,
+                lineNumber: 393,
                 columnNumber: 21
               })
             },
@@ -280,24 +280,24 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
             false,
             {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 388,
+              lineNumber: 391,
               columnNumber: 17
             }
           )
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-          lineNumber: 384,
+          lineNumber: 387,
           columnNumber: 13
         }),
         /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-dialog-body", children: [
           /* @__PURE__ */ jsxDEV(BulkLines, { labels, subjects, skipped: target ? plan.skipped.length : 0 }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 394,
+            lineNumber: 397,
             columnNumber: 17
           }),
           /* @__PURE__ */ jsxDEV("label", { className: "visually-hidden", htmlFor: `${id}-search`, children: labels.hubv2_moveto_search }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 395,
+            lineNumber: 398,
             columnNumber: 17
           }),
           /* @__PURE__ */ jsxDEV(
@@ -321,24 +321,24 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
             false,
             {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 396,
+              lineNumber: 399,
               columnNumber: 17
             }
           ),
           /* @__PURE__ */ jsxDEV("p", { id: `${id}-parent`, className: "local-dimensions-hubv2-dialog-label", children: labels.hubv2_moveto_parent }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 412,
+            lineNumber: 415,
             columnNumber: 17
           }),
           searching ? /* @__PURE__ */ jsxDEV(Fragment, { children: [
             /* @__PURE__ */ jsxDEV("div", { className: "visually-hidden", "aria-live": "polite", children: hits !== null ? fillCount(labels, "hubv2_searchresults", hits.total) : "" }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 415,
+              lineNumber: 418,
               columnNumber: 25
             }),
             hits !== null && hits.items.length === 0 ? /* @__PURE__ */ jsxDEV("p", { className: "text-muted small mb-0", children: labels.hubv2_searchnone }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 419,
+              lineNumber: 422,
               columnNumber: 29
             }) : null,
             /* @__PURE__ */ jsxDEV(
@@ -366,12 +366,12 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
                       children: [
                         /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pick-name", children: item.shortname }, void 0, false, {
                           fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                          lineNumber: 438,
+                          lineNumber: 441,
                           columnNumber: 41
                         }),
                         item.path ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pick-note", children: item.path }, void 0, false, {
                           fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                          lineNumber: 439,
+                          lineNumber: 442,
                           columnNumber: 54
                         }) : null
                       ]
@@ -380,7 +380,7 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
                     true,
                     {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                      lineNumber: 426,
+                      lineNumber: 429,
                       columnNumber: 37
                     }
                   );
@@ -390,13 +390,13 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
               false,
               {
                 fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                lineNumber: 421,
+                lineNumber: 424,
                 columnNumber: 25
               }
             )
           ] }, void 0, true, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 414,
+            lineNumber: 417,
             columnNumber: 21
           }) : /* @__PURE__ */ jsxDEV(
             "ul",
@@ -437,7 +437,7 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
                         },
                         children: /* @__PURE__ */ jsxDEV("i", { className: `fa ${chevron(row.expanded, rtl)}` }, void 0, false, {
                           fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                          lineNumber: 476,
+                          lineNumber: 479,
                           columnNumber: 41
                         })
                       },
@@ -445,27 +445,27 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
                       false,
                       {
                         fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                        lineNumber: 465,
+                        lineNumber: 468,
                         columnNumber: 37
                       }
                     ) : /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-otoggle", "aria-hidden": "true" }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                      lineNumber: 478,
+                      lineNumber: 481,
                       columnNumber: 37
                     }),
                     /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pick-name", children: row.kind === "more" ? fill(labels.hubv2_loadmore, String(row.remaining)) : row.name }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                      lineNumber: 479,
+                      lineNumber: 482,
                       columnNumber: 33
                     }),
                     row.current ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pick-note", children: labels.hubv2_moveto_current }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                      lineNumber: 483,
+                      lineNumber: 486,
                       columnNumber: 37
                     }) : null,
                     row.kind === "competency" && ids.includes(row.id) ? /* @__PURE__ */ jsxDEV("span", { className: "local-dimensions-hubv2-pick-note", children: bulk ? labels.hubv2_bulk_moveto_picked : labels.hubv2_moveto_self }, void 0, false, {
                       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                      lineNumber: 486,
+                      lineNumber: 489,
                       columnNumber: 37
                     }) : null
                   ]
@@ -474,7 +474,7 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
                 true,
                 {
                   fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-                  lineNumber: 449,
+                  lineNumber: 452,
                   columnNumber: 29
                 }
               ))
@@ -483,44 +483,44 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
             false,
             {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 446,
+              lineNumber: 449,
               columnNumber: 21
             }
           ),
           notes.length > 0 ? /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-dialog-note", children: [
             /* @__PURE__ */ jsxDEV("i", { className: "fa fa-circle-info", "aria-hidden": "true" }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 496,
+              lineNumber: 499,
               columnNumber: 25
             }),
             /* @__PURE__ */ jsxDEV("div", { children: notes.map((note) => /* @__PURE__ */ jsxDEV("p", { className: "mb-0", children: note }, note, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 497,
+              lineNumber: 500,
               columnNumber: 51
             })) }, void 0, false, {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 497,
+              lineNumber: 500,
               columnNumber: 25
             })
           ] }, void 0, true, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 495,
+            lineNumber: 498,
             columnNumber: 21
           }) : null
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-          lineNumber: 393,
+          lineNumber: 396,
           columnNumber: 13
         }),
         /* @__PURE__ */ jsxDEV("div", { className: "local-dimensions-hubv2-dialog-foot", children: [
           canpick ? /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-sm btn-outline-secondary me-auto", onClick: onPick, children: labels.hubv2_moveto_pick }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 503,
+            lineNumber: 506,
             columnNumber: 21
           }) : null,
           /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn btn-sm btn-secondary", onClick: onClose, children: labels["core:cancel"] }, void 0, false, {
             fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-            lineNumber: 507,
+            lineNumber: 510,
             columnNumber: 17
           }),
           /* @__PURE__ */ jsxDEV(
@@ -540,13 +540,13 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
             false,
             {
               fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-              lineNumber: 508,
+              lineNumber: 511,
               columnNumber: 17
             }
           )
         ] }, void 0, true, {
           fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-          lineNumber: 501,
+          lineNumber: 504,
           columnNumber: 13
         })
       ]
@@ -555,7 +555,7 @@ const MoveDialog = /* @__PURE__ */ __name((props) => {
     true,
     {
       fileName: "public/local/dimensions/js/esm/src/hubv2/MoveDialog.tsx",
-      lineNumber: 382,
+      lineNumber: 385,
       columnNumber: 9
     }
   );
