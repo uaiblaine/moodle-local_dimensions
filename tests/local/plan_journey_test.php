@@ -58,6 +58,8 @@ final class plan_journey_test extends \advanced_testcase {
         parent::setUp();
         $this->resetAfterTest();
         $this->setTimezone('UTC');
+        // 3 November 2026: the first page's windows start from a fixed month, so no fixture ages out of them.
+        $this->mock_clock_with_frozen(self::OCTOBER + 20 * DAYSECS);
         set_config('enabled', 1, 'core_competency');
     }
 
@@ -119,6 +121,44 @@ final class plan_journey_test extends \advanced_testcase {
         $DB->set_field('competency_evidence', 'timecreated', $time, ['id' => $id]);
 
         return $id;
+    }
+
+    /**
+     * Write a template log row of another component and, below it in time, more rows copied from it.
+     *
+     * @param int $userid The learner.
+     * @param int $competencyid The competency.
+     * @param int $time The newest row's time.
+     * @param int $count Rows in all, the template included.
+     * @param int $step Seconds between one row and the next, older.
+     * @return void
+     */
+    private function foreign_logs(int $userid, int $competencyid, int $time, int $count, int $step): void {
+        global $DB;
+
+        $first = $this->evidence($userid, $competencyid, $time, [
+            'desccomponent' => 'local_dimensions',
+            'descidentifier' => 'pluginname',
+        ]);
+        $template = $DB->get_record('competency_evidence', ['id' => $first], '*', MUST_EXIST);
+        unset($template->id);
+        $records = [];
+        for ($i = 1; $i < $count; $i++) {
+            $row = clone $template;
+            $row->timecreated = $time - $i * $step;
+            $records[] = $row;
+        }
+        $DB->insert_records('competency_evidence', $records);
+    }
+
+    /**
+     * The total of a page's folds.
+     *
+     * @param array $page A page of plan_journey::page().
+     * @return int
+     */
+    private static function folded(array $page): int {
+        return array_sum(array_column($page['folds'], 'count'));
     }
 
     /**
@@ -350,6 +390,320 @@ final class plan_journey_test extends \advanced_testcase {
     }
 
     /**
+     * Folded rows take none of a page's places: a page of listed records is full however many logs sit between them.
+     *
+     * Every log is counted on exactly one page, and every listed record shows once.
+     *
+     * @return void
+     */
+    public function test_folded_rows_do_not_take_the_pages_places(): void {
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $expected = [];
+        for ($i = 0; $i < 12; $i++) {
+            $expected[] = $this->evidence($ownerid, $f->alpha, self::OCTOBER - $i * 600);
+        }
+        $this->foreign_logs($ownerid, $f->bravo, self::OCTOBER - 30, 500, 13);
+
+        $this->setUser($f->owner);
+        $seen = [];
+        $counted = 0;
+        $sizes = [];
+        [$time, $id] = [0, 0];
+        do {
+            $page = plan_journey::page($f->planid, $time, $id, 5);
+            $seen = array_merge($seen, self::ids($page));
+            $counted += self::folded($page);
+            $sizes[] = count($page['entries']);
+            [$time, $id] = [$page['nexttime'], $page['nextid']];
+        } while ($page['hasmore'] && count($sizes) < 10);
+
+        $this->assertSame([5, 5, 2], $sizes);
+        $this->assertSame($expected, $seen);
+        $this->assertSame(500, $counted);
+    }
+
+    /**
+     * A folded row that shares the page's last record's time is counted on exactly one page.
+     *
+     * The two rows that sort before the record (higher ids) belong to the page that lists it; the one that sorts
+     * after it (lower id) to the next page, whose cursor is that record.
+     *
+     * @return void
+     */
+    public function test_a_folded_row_on_the_boundary_is_counted_once(): void {
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $other = ['desccomponent' => 'local_dimensions', 'descidentifier' => 'pluginname'];
+        $newest = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 100);
+        $this->evidence($ownerid, $f->alpha, self::OCTOBER, $other);
+        $last = $this->evidence($ownerid, $f->alpha, self::OCTOBER);
+        $this->evidence($ownerid, $f->alpha, self::OCTOBER, $other);
+        $this->evidence($ownerid, $f->alpha, self::OCTOBER, $other);
+        $oldest = $this->evidence($ownerid, $f->alpha, self::OCTOBER - 100);
+
+        $this->setUser($f->owner);
+        $first = plan_journey::page($f->planid, 0, 0, 2);
+        $this->assertSame([$newest, $last], self::ids($first));
+        $this->assertTrue($first['hasmore']);
+        $this->assertSame(2, self::folded($first));
+
+        $second = plan_journey::page($f->planid, $first['nexttime'], $first['nextid'], 2);
+        $this->assertSame([$oldest], self::ids($second));
+        $this->assertFalse($second['hasmore']);
+        $this->assertSame(1, self::folded($second));
+    }
+
+    /**
+     * Rows older than the windows are still counted, in one line of their own; a page of only logs is a page.
+     *
+     * @return void
+     */
+    public function test_rows_older_than_the_cap_are_still_counted(): void {
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $this->assertSame(24, plan_journey::FOLD_MONTHS);
+        $times = [
+            self::OCTOBER - DAYSECS,
+            self::SEPTEMBER,
+            make_timestamp(2024, 10, 14, 12),
+            make_timestamp(2020, 3, 2, 12),
+        ];
+        foreach ($times as $time) {
+            $this->evidence($ownerid, $f->alpha, $time, ['desccomponent' => 'local_dimensions', 'descidentifier' => 'pluginname']);
+        }
+
+        $this->setUser($f->owner);
+        $page = plan_journey::page($f->planid, 0, 0);
+
+        $this->assertSame([], $page['entries']);
+        $this->assertFalse($page['hasmore']);
+        $this->assertSame(
+            [['2026-10', 1, false], ['2026-09', 1, false], ['older', 2, true]],
+            array_map(static fn(array $fold): array => [$fold['monthkey'], $fold['count'], $fold['older']], $page['folds'])
+        );
+    }
+
+    /**
+     * The fold's cost does not grow with the foreign rows it counts.
+     *
+     * @return void
+     */
+    public function test_the_fold_costs_the_same_for_five_rows_and_five_hundred(): void {
+        global $DB;
+
+        $plans = [];
+        foreach ([5, 500] as $rows) {
+            $f = $this->create_plan();
+            for ($i = 0; $i < 3; $i++) {
+                $this->evidence((int) $f->owner->id, $f->alpha, self::OCTOBER - $i * DAYSECS * 40);
+            }
+            $this->foreign_logs((int) $f->owner->id, $f->bravo, self::OCTOBER - 60, $rows, 7);
+            $plans[$rows] = $f->planid;
+        }
+
+        $this->setAdminUser();
+        foreach ($plans as $planid) {
+            plan_journey::page($planid, 0, 0);
+        }
+        $reads = [];
+        foreach ($plans as $rows => $planid) {
+            $start = $DB->perf_get_reads();
+            $page = plan_journey::page($planid, 0, 0);
+            $reads[$rows] = $DB->perf_get_reads() - $start;
+            $this->assertSame($rows, self::folded($page));
+            $this->assertCount(3, $page['entries']);
+        }
+
+        $this->assertSame($reads[5], $reads[500]);
+    }
+
+    /**
+     * Another component's row that rates or completes is listed, never folded; only its plain log is.
+     *
+     * @return void
+     */
+    public function test_a_non_log_row_of_another_component_is_listed(): void {
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $other = ['desccomponent' => 'local_dimensions', 'descidentifier' => 'pluginname'];
+        $override = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 3, $other + [
+            'action' => evidence::ACTION_OVERRIDE,
+            'grade' => 1,
+        ]);
+        $complete = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 2, $other + [
+            'action' => evidence::ACTION_COMPLETE,
+            'grade' => 1,
+        ]);
+        $suggest = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 1, $other + ['action' => evidence::ACTION_SUGGEST]);
+        $this->evidence($ownerid, $f->alpha, self::OCTOBER, $other);
+
+        $this->setUser($f->owner);
+        $page = plan_journey::page($f->planid, 0, 0);
+
+        $this->assertSame([$override, $complete, $suggest], self::ids($page));
+        $this->assertSame(1, self::folded($page));
+    }
+
+    /**
+     * A reader of ANOTHER user's plan, by a role at the system or at the owner's user context, is answered.
+     *
+     * @return void
+     */
+    public function test_a_manager_reads_another_users_plan(): void {
+        $f = $this->create_plan();
+        $id = $this->evidence((int) $f->owner->id, $f->alpha, self::OCTOBER);
+        $capabilities = ['moodle/competency:planview', 'moodle/competency:usercompetencyview'];
+
+        $contexts = [\context_system::instance(), \context_user::instance((int) $f->owner->id)];
+        foreach ($contexts as $context) {
+            $manager = $this->getDataGenerator()->create_user();
+            $roleid = (int) $this->getDataGenerator()->create_role();
+            foreach ($capabilities as $capability) {
+                assign_capability($capability, CAP_ALLOW, $roleid, \context_system::instance()->id);
+            }
+            role_assign($roleid, $manager->id, $context->id);
+            accesslib_clear_all_caches_for_unit_testing();
+
+            $this->setUser($manager);
+            $this->assertNotEquals($f->owner->id, $manager->id);
+            $this->assertSame([$id], self::ids(plan_journey::page($f->planid, 0, 0)), $context->contextlevel . '');
+        }
+    }
+
+    /**
+     * An address that is not http(s) comes back without one, whatever is stored.
+     *
+     * @return void
+     */
+    public function test_a_stored_script_address_is_dropped(): void {
+        global $DB;
+
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $good = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 3, ['url' => 'https://example.com/ok']);
+        $script = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 2);
+        $data = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 1);
+        $DB->set_field('competency_evidence', 'url', 'javascript:alert(1)', ['id' => $script]);
+        $DB->set_field('competency_evidence', 'url', 'data:text/html,<script>alert(1)</script>', ['id' => $data]);
+
+        $this->setUser($f->owner);
+        $entries = array_column(plan_journey::page($f->planid, 0, 0)['entries'], null, 'id');
+
+        $this->assertSame('https://example.com/ok', $entries[$good]['url']);
+        $this->assertTrue($entries[$good]['hasurl']);
+        foreach ([$script, $data] as $bad) {
+            $this->assertSame('', $entries[$bad]['url']);
+            $this->assertFalse($entries[$bad]['hasurl']);
+        }
+    }
+
+    /**
+     * A row of a component that does not exist is listed or folded by the rule, without an exception or a notice.
+     *
+     * @return void
+     */
+    public function test_a_row_of_a_missing_component_does_not_break_the_page(): void {
+        global $DB;
+
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $listed = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 1, [
+            'action' => evidence::ACTION_OVERRIDE,
+            'grade' => 1,
+        ]);
+        $folded = $this->evidence($ownerid, $f->alpha, self::OCTOBER);
+        // Core refuses such a row at creation, so the component goes away afterwards, as an uninstall leaves it.
+        foreach ([$listed, $folded] as $id) {
+            $DB->set_field('competency_evidence', 'desccomponent', 'local_nosuchcomponent', ['id' => $id]);
+            $DB->set_field('competency_evidence', 'descidentifier', 'nosuchstring', ['id' => $id]);
+        }
+
+        $this->setUser($f->owner);
+        $page = plan_journey::page($f->planid, 0, 0);
+
+        $this->assertSame([$listed], self::ids($page));
+        $this->assertSame('', $page['entries'][0]['description']);
+        $this->assertSame(1, self::folded($page));
+        $this->assertDebuggingNotCalled();
+    }
+
+    /**
+     * A plan with no competency answers an empty page, with the plan's own start.
+     *
+     * @return void
+     */
+    public function test_a_plan_without_competencies_is_an_empty_page(): void {
+        $owner = $this->getDataGenerator()->create_user();
+        $plan = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan(['userid' => $owner->id]);
+
+        $this->setUser($owner);
+        $page = plan_journey::page((int) $plan->get('id'), 0, 0);
+
+        $this->assertSame([], $page['entries']);
+        $this->assertSame([], $page['folds']);
+        $this->assertFalse($page['hasmore']);
+        $this->assertSame(get_string('journey_planstarted', 'local_dimensions'), $page['planstart']['label']);
+    }
+
+    /**
+     * Another user's plan the viewer may not read is refused as an unreadable draft of one's own is.
+     *
+     * @return void
+     */
+    public function test_the_refusals_for_an_unreadable_plan_are_one(): void {
+        global $DB;
+
+        $stranger = $this->create_plan();
+        $this->setUser($this->getDataGenerator()->create_user());
+        try {
+            plan_journey::page($stranger->planid, 0, 0);
+            $this->fail('A stranger read a plan.');
+        } catch (\moodle_exception $e) {
+            $other = [get_class($e), $e->errorcode];
+        }
+
+        $own = $this->create_plan(plan::STATUS_DRAFT);
+        $userrole = (int) $DB->get_field('role', 'id', ['shortname' => 'user']);
+        foreach (['moodle/competency:planviewowndraft', 'moodle/competency:planmanageowndraft'] as $capability) {
+            assign_capability($capability, CAP_PROHIBIT, $userrole, \context_system::instance()->id, true);
+        }
+        accesslib_clear_all_caches_for_unit_testing();
+        $this->setUser($own->owner);
+        try {
+            plan_journey::page($own->planid, 0, 0);
+            $this->fail('An owner read a draft plan they may not see.');
+        } catch (\moodle_exception $e) {
+            $this->assertSame($other, [get_class($e), $e->errorcode]);
+        }
+    }
+
+    /**
+     * Plain texts are their own PARAM_TEXT cleaning: the service's return check leaves them as they are.
+     *
+     * @return void
+     */
+    public function test_plain_texts_are_unchanged_by_the_returns_cleaning(): void {
+        global $DB;
+
+        $f = $this->create_plan();
+        $ownerid = (int) $f->owner->id;
+        $notes = ['a < b', 'R & D'];
+        foreach ($notes as $index => $note) {
+            $id = $this->evidence($ownerid, $f->alpha, self::OCTOBER - $index, ['note' => 'x']);
+            $DB->set_field('competency_evidence', 'note', $note, ['id' => $id]);
+        }
+
+        $this->setUser($f->owner);
+        $page = plan_journey::page($f->planid, 0, 0);
+
+        $this->assertSame($notes, array_column($page['entries'], 'note'));
+        foreach ($page['entries'] as $entry) {
+            $this->assertSame(clean_param($entry['note'], PARAM_TEXT), $entry['note']);
+        }
+    }
+
+    /**
      * A record as the reader sees it: core's words for what happened, the rating's name, who did it, the note.
      *
      * Every text is plain (the client writes it as text), an address only when it is http(s).
@@ -436,6 +790,8 @@ final class plan_journey_test extends \advanced_testcase {
             $this->assertCount($rows, $page['entries']);
         }
 
+        // Equal at both sizes: a page is the plan's reads, the listing, the fold's one aggregate and one lookup
+        // per distinct competency, user and scale, none of them per record.
         $this->assertSame($reads[3], $reads[12]);
     }
 

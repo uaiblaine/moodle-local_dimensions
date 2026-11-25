@@ -64,8 +64,14 @@ final class plan_journey_js_source_test extends \basic_testcase {
      * @return string
      */
     private function body(string $source, string $name, string $indent = ''): string {
+        // Inside define() only a declaration at the module's own indentation counts: a same-named local elsewhere
+        // (the filter tabs' applyFilter) is deeper and must not be matched first.
+        $head = '\n' . $indent . 'function ' . $name . '\(';
+        if ($indent === '') {
+            $head = '(?:function ' . $name . '\(|const ' . $name . ' = )';
+        }
         $found = preg_match(
-            '/(?:function ' . $name . '\(|const ' . $name . ' = )(.*?)(?=\n' . $indent . '(?:function |const |export |let )|\z)/s',
+            '/' . $head . '(.*?)(?=\n' . $indent . '(?:function |const |export |let )|\z)/s',
             $source,
             $match
         );
@@ -149,6 +155,38 @@ final class plan_journey_js_source_test extends \basic_testcase {
         $this->assertLessThan($shown, strpos($toggle, 'if (journeyArmed) {'));
         $this->assertStringContainsString('Journey.refilter();', $this->body($code, 'applyFilter', '        '));
         $this->assertStringContainsString('openDetailModal(item, planId);', $this->body($code, 'armJourney', '        '));
+    }
+
+    /**
+     * The list is hidden only under a class written after the Journey armed and showed its frame.
+     *
+     * A stored Journey the module could not arm (a script error after jsenabled) must leave the list on the page.
+     *
+     * @return void
+     */
+    public function test_the_list_is_hidden_only_after_the_journey_armed(): void {
+        $apply = $this->body($this->code($this->js_source('accordion')), 'applyViewMode', '        ');
+
+        $shown = strpos($apply, 'journeyOn = Journey.show();');
+        $this->assertNotFalse($shown, 'The class follows what the module answered when it was shown.');
+        $toggle = strpos($apply, "summary.classList.toggle('local-dimensions-journey-on', journeyOn);");
+        $this->assertNotFalse($toggle);
+        $this->assertLessThan($toggle, $shown, 'The class is written after the Journey is shown.');
+
+        $show = $this->body($this->code($this->js_source('plan_journey')), 'show');
+        $this->assertLessThan(strpos($show, 'return true;'), strpos($show, 'frame.region.hidden = false;'));
+        $this->assertStringContainsString('return false;', $show, 'A module without a frame answers false.');
+
+        $css = (string) file_get_contents(dirname(__DIR__, 2) . '/styles.css');
+        $this->assertStringContainsString(
+            'body.jsenabled .local-dimensions-plan-summary.local-dimensions-journey-on > .local-dimensions-competency-accordion',
+            $css
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/\[data-viewmode="journey"\][^{]*competency-accordion\s*\{/',
+            $css,
+            'The stored layout alone never hides the list.'
+        );
     }
 
     /**

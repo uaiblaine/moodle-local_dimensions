@@ -944,6 +944,7 @@ $string['journey_fold'] = 'Records from other plugins: {$a}';
 $string['journey_link'] = 'Open the evidence';
 $string['journey_loading'] = 'Loading the journey';
 $string['journey_more'] = 'Load more';
+$string['journey_older'] = 'Earlier months';
 $string['journey_planstarted'] = 'The plan started.';
 $string['journey_retry'] = 'Try again';
 $string['learn_more'] = 'Learn more';

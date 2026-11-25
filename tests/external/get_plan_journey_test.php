@@ -164,6 +164,39 @@ final class get_plan_journey_test extends \advanced_testcase {
     }
 
     /**
+     * Notes with a bare angle bracket or ampersand pass the return's own cleaning, and the quiet lines' shape too.
+     *
+     * @return void
+     */
+    public function test_notes_with_markup_characters_and_the_remainder_line_are_answered(): void {
+        global $DB;
+
+        $f = $this->create_plan();
+        $DB->set_field('competency_evidence', 'note', 'a < b', ['id' => $f->evidenceid]);
+        $uc = user_competency::get_record(['userid' => $f->owner->id, 'competencyid' => $f->competencyid]);
+        $log = (int) $this->getDataGenerator()->get_plugin_generator('core_competency')->create_evidence([
+            'usercompetencyid' => $uc->get('id'),
+            'action' => evidence::ACTION_LOG,
+            'descidentifier' => 'pluginname',
+            'desccomponent' => 'local_dimensions',
+            'note' => 'R & D',
+        ])->get('id');
+        // Years before any clock, so the line is the remainder whatever day this runs.
+        $DB->set_field('competency_evidence', 'timecreated', 946728000, ['id' => $log]);
+
+        $this->setUser($f->owner);
+        $result = $this->call(['planid' => $f->planid]);
+
+        $this->assertFalse($result['error'], json_encode($result['exception'] ?? null));
+        $this->assertSame('a < b', $result['data']['entries'][0]['note']);
+        $this->assertCount(1, $result['data']['folds']);
+        $this->assertSame(['monthkey', 'monthlabel', 'count', 'timecreated', 'older'], array_keys($result['data']['folds'][0]));
+        $this->assertSame('older', $result['data']['folds'][0]['monthkey']);
+        $this->assertTrue($result['data']['folds'][0]['older']);
+        $this->assertSame(1, $result['data']['folds'][0]['count']);
+    }
+
+    /**
      * Somebody who may not read the plan is refused with core's error; the owner is the control.
      *
      * @return void

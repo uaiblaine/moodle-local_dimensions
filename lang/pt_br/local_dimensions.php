@@ -944,6 +944,7 @@ $string['journey_fold'] = 'Registros de outros plugins: {$a}';
 $string['journey_link'] = 'Abrir a evidência';
 $string['journey_loading'] = 'Carregando a jornada';
 $string['journey_more'] = 'Carregar mais';
+$string['journey_older'] = 'Meses anteriores';
 $string['journey_planstarted'] = 'O plano começou.';
 $string['journey_retry'] = 'Tentar de novo';
 $string['learn_more'] = 'Saiba mais';

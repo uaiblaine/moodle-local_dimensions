@@ -198,7 +198,9 @@ mutations/             one spec per area (plan_access, detail_access, sec_*, fol
   `amd/src/plan_journey.js`): read only after `plan_access::read_plan()` and `require_owner_readable()`
   (the `candetail` rule); competencies from `plan::get_competencies()`, never the request; one keyset
   statement on (timecreated, id), lookups in bulk (`perf_get_reads` constant in rows); a completed plan
-  stops at `timemodified` as `api::list_evidence()` does; non-core `ACTION_LOG` rows are counted per month.
+  stops at `timemodified` as `api::list_evidence()` does; non-core `ACTION_LOG` rows are left out of that
+  statement in SQL and counted by ONE bounded aggregate (24 month windows plus a remainder, a boundary row
+  counted on the page that lists the record after it).
   Its buttons are drawn hidden and shown by `accordion.js` only once `Journey.arm()` found the frame; a
   stored `journey` paints the list for a viewer without the detail and stays stored. Spec
   `mutations/plan_journey.conf`.
