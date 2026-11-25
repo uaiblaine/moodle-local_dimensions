@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The plan overview's Journey view
+
+Version `2026100545`. Phase C of the competency pages: the "evidence journey" study as a third view of the
+learner's plan overview, beside the list and the cards.
+
+- **Journey** reads the plan's evidence over time, newest first, by month: each record's day, the competency
+  it belongs to (a button that opens the competency's detail dialogue, as a card does), the rating it brought,
+  core's own words for what happened, who did it, the note and a link to its address (http or https only).
+  Logs written by other components than core (the evidence hub's validity log) are counted into one quiet line
+  per month; the plan's start is the last marker. Older records come with "Load more".
+- The view is offered only to a viewer who may open the competencies' detail (the overview's `candetail`), and
+  its buttons are drawn hidden until the new module `local_dimensions/plan_journey` is armed. The stored layout
+  (`local_dimensions_learner_view`) accepts `journey`; a viewer the view is not offered to is painted the list,
+  with the stored choice kept. Without JavaScript the overview stays the list.
+- The line's scope, favourites star, chip filters and search apply to the Journey as to the list (a record of a
+  competency the list would hide is hidden); the sort menu is not offered there.
+- New read web service `local_dimensions_get_plan_journey` (`ajax`, read-only session): the plan read through
+  core's `api::read_plan()`, the owner's competencies readable (`user_competency::can_read_user()`), one keyset
+  paged statement over `competency_evidence` for the plan's own competencies (the archive for a completed plan,
+  stopped at its completion as core's `api::list_evidence()` stops).
+- Tests: `plan_journey_test`, `get_plan_journey_test`, `learner_view_test`, `view_plan_summary_journey_test`,
+  `plan_journey_js_source_test`, `view_plan_journey.feature`; gates in `mutations/plan_journey.conf`.
 ### Fixed: a type or tag label holding markup could stop the tree from loading
 
 Version `2026100544`.

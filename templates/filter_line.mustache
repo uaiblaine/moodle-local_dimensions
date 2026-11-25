@@ -57,7 +57,8 @@
     * haschipfilters (bool), chipfilters (object) - The chip panel's context
     * showcount (int) - How many items the list shows at first paint, on the panel's "Show N"
     * hasorganise (bool), sortoptions (array) - value, label, checked
-    * hasviews (bool), views (array) - value, label, icon, current
+    * hasviews (bool), views (array) - value, label, icon, current, hidden (drawn hidden until a page module arms
+      the view it stands for, the plan overview's Journey)
 
     @copyright  2026 Anderson Blaine
     @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -98,8 +99,9 @@
         ],
         "hasviews": true,
         "views": [
-            {"value": "list", "label": "List", "icon": "fa-list", "current": true},
-            {"value": "grid", "label": "Cards", "icon": "fa-th-large", "current": false}
+            {"value": "list", "label": "List", "icon": "fa-list", "current": true, "hidden": false},
+            {"value": "grid", "label": "Cards", "icon": "fa-th-large", "current": false, "hidden": false},
+            {"value": "journey", "label": "Journey", "icon": "fa-history", "current": false, "hidden": true}
         ]
     }
 }}
@@ -151,7 +153,7 @@
                 <div class="local-dimensions-line-showas" role="group" aria-labelledby="{{id}}-showas" data-region="local-dimensions-line-showas">
                     <span class="local-dimensions-sort-heading" id="{{id}}-showas">{{#str}}line_show_as, local_dimensions{{/str}}</span>
                     {{#views}}
-                    <button type="button" class="local-dimensions-line-showasbtn" data-view="{{value}}" aria-pressed="{{#current}}true{{/current}}{{^current}}false{{/current}}"><i class="fa {{icon}}" aria-hidden="true"></i> {{label}}</button>
+                    <button type="button" class="local-dimensions-line-showasbtn" data-view="{{value}}" aria-pressed="{{#current}}true{{/current}}{{^current}}false{{/current}}"{{#hidden}} hidden{{/hidden}}><i class="fa {{icon}}" aria-hidden="true"></i> {{label}}</button>
                     {{/views}}
                 </div>
                 {{/hasviews}}
@@ -161,7 +163,7 @@
         {{#hasviews}}
         <div class="local-dimensions-view-toggle local-dimensions-line-view local-dimensions-line-slides" role="group" aria-label="{{#str}}line_view, local_dimensions{{/str}}" data-region="local-dimensions-line-view">
             {{#views}}
-            <button type="button" data-view="{{value}}" aria-pressed="{{#current}}true{{/current}}{{^current}}false{{/current}}" aria-label="{{label}}" title="{{label}}"><i class="fa {{icon}}" aria-hidden="true"></i></button>
+            <button type="button" data-view="{{value}}" aria-pressed="{{#current}}true{{/current}}{{^current}}false{{/current}}" aria-label="{{label}}" title="{{label}}"{{#hidden}} hidden{{/hidden}}><i class="fa {{icon}}" aria-hidden="true"></i></button>
             {{/views}}
         </div>
         {{/hasviews}}

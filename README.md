@@ -385,6 +385,26 @@ line when the current scope hides it. The row is shown for this view only: the l
 to show it, nothing is saved, and the reader's stored view is unchanged. Only a competency of this plan, for a viewer who may open its
 detail; any other value shows the plain overview.
 
+#### Journey
+
+A third layout beside the list and the cards: what happened in the plan, newest first, by month. Each
+record shows its day, the competency it belongs to (pressing the name opens that competency's detail, as
+a card does), the rating it brought, Moodle's own words for what happened, who did it, the note, and a link
+to its address when it has an http or https one. Every record of the plan's competencies is there, the
+ones from before the plan began included, as on Moodle's plan page; a completed plan stops at its
+completion, as Moodle's own list does. Records that other plugins write as plain logs (the evidence hub's
+validity log, for example) are not listed one by one: each month says how many there were. The plan's
+start is the last marker, and older records come with *Load more*.
+
+- Offered only to a viewer who may open the competencies' detail (the owner, or whoever Moodle lets read
+  the owner's competencies), and only with JavaScript; without it the overview stays the list.
+- The layout is remembered with the others (the `local_dimensions_learner_view` preference).
+- The scope, the favourites star, the chip filters and the search apply as in the list: a record of a
+  competency the list would hide is hidden. The sort menu is not offered there; the order is the date.
+- It reads through the read web service `local_dimensions_get_plan_journey` (one page of records at a
+  time), which checks again that the viewer may read the plan and the owner's competencies. It reads
+  Moodle's competency evidence (`competency_evidence`, `competency_usercomp`) and stores nothing.
+
 ### The filter line
 
 Both learner views share one line, in this order: the scope (*To do* and *All*, with counts), a
