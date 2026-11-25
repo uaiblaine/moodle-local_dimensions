@@ -79,6 +79,28 @@ final class plan_access {
     }
 
     /**
+     * Which review actions core offers the current user on a plan.
+     *
+     * Core's own rule, as core_competency\external\plan_exporter computes isrequestreviewallowed and
+     * iscancelreviewrequestallowed for tool_lp's plan page, from the same plan methods: never a plan
+     * based on a template, only for a viewer core lets request a review, and only from the status the
+     * action leaves. The actions themselves are core's web services, which check all of it again.
+     * view_plan_summary_actions_test pins both flags against the exporter's.
+     *
+     * @param plan $plan The plan being viewed.
+     * @return array Keys: isrequestreviewallowed, iscancelreviewrequestallowed (bool).
+     */
+    public static function review_actions(plan $plan): array {
+        $status = (int) $plan->get('status');
+        $allowed = !$plan->is_based_on_template() && $plan->can_request_review();
+
+        return [
+            'isrequestreviewallowed' => $allowed && $status === plan::STATUS_DRAFT,
+            'iscancelreviewrequestallowed' => $allowed && $status === plan::STATUS_WAITING_FOR_REVIEW,
+        ];
+    }
+
+    /**
      * Read a plan the current user may view.
      *
      * A missing plan comes out of api::read_plan() as a dml_missing_record_exception: from the plan
