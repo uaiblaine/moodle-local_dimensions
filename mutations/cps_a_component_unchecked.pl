@@ -1,0 +1,1 @@
+s/if \(\n            \$component === ''\n            \|\| clean_param\(\$component, PARAM_COMPONENT\) !== \$component\n            \|\| \\core_component::get_component_directory\(\$component\) === null\n        \) \{/if (false) {/;

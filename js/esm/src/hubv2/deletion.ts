@@ -27,6 +27,34 @@ import type {Labels} from './strings';
 import type {DeleteCheck} from './types';
 
 /**
+ * Why core will refuse a deletion, one reason per kind of use: counted for a site-level manager, otherwise which
+ * reasons apply, without a number. The bulk dock's confirmation lists them per competency too.
+ *
+ * @param {object} labels The labels.
+ * @param {object} check The server's answer.
+ * @returns {Array} The reasons, plain text, none when core would delete.
+ */
+export const blockedReasons = (labels: Labels, check: DeleteCheck): string[] => {
+    /**
+     * One reason: counted for a site-level manager, otherwise which reason applies, without a number.
+     *
+     * @param {string} kind The reason's kind: templates, plans, courses or users.
+     * @param {number} count The count.
+     * @returns {string} The reason.
+     */
+    const reason = (kind: string, count: number): string => (check.exact
+        ? fillCount(labels, `hubv2_delete_blocked_${kind}`, count)
+        : labels[`hubv2_delete_blocked_${kind}_some`]);
+    return [
+        check.templates > 0 ? reason('templates', check.templates) : '',
+        check.plans > 0 ? reason('plans', check.plans) : '',
+        check.courses > 0 ? reason('courses', check.courses) : '',
+        check.users > 0 ? reason('users', check.users) : '',
+        check.badges ? labels.hubv2_delete_blocked_badges : '',
+    ].filter((reason) => reason !== '');
+};
+
+/**
  * The body of the dialogue saying why core will refuse the deletion.
  *
  * @param {object} labels The labels.
@@ -41,23 +69,7 @@ export const blockedBody = (labels: Labels, name: string, check: DeleteCheck): s
         const key = check.descendants === 1 ? 'hubv2_delete_blocked_intro_tree_one' : 'hubv2_delete_blocked_intro_tree';
         intro = fillObject(labels[key], {name: safe, count: String(check.descendants)});
     }
-    /**
-     * One reason: counted for a site-level manager, otherwise which reason applies, without a number.
-     *
-     * @param {string} kind The reason's kind: templates, plans, courses or users.
-     * @param {number} count The count.
-     * @returns {string} The reason.
-     */
-    const reason = (kind: string, count: number): string => (check.exact
-        ? fillCount(labels, `hubv2_delete_blocked_${kind}`, count)
-        : labels[`hubv2_delete_blocked_${kind}_some`]);
-    const reasons = [
-        check.templates > 0 ? reason('templates', check.templates) : '',
-        check.plans > 0 ? reason('plans', check.plans) : '',
-        check.courses > 0 ? reason('courses', check.courses) : '',
-        check.users > 0 ? reason('users', check.users) : '',
-        check.badges ? labels.hubv2_delete_blocked_badges : '',
-    ].filter((reason) => reason !== '');
+    const reasons = blockedReasons(labels, check);
     const list = reasons.length > 0 ? `<ul>${reasons.map((reason) => `<li>${reason}</li>`).join('')}</ul>` : '';
     // What to do: links can be removed, a user's record cannot.
     const links = check.templates > 0 || check.plans > 0 || check.courses > 0 || check.badges;

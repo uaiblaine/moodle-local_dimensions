@@ -61,43 +61,210 @@ templates*, opens the hub for a manager holding `competencymanage` or `templatem
 category only. It is locked to the category: no switch, the category and its subcategories listed
 (as core's own category pages do), and nothing from that visit written into the remembered context.
 
-The hub has three tabs: **Structures** (frameworks), **Competencies** and **Learning plans**. The
-selected row's actions sit in a bar at the foot of the page.
+The hub has two tabs: **Competencies**, the workspace described below, and **Learning plans**. The
+framework's own management (edit, taxonomies, scale, visibility, duplicate, CSV export, delete) is on
+the workspace's root, and creating or importing a framework is in the **Structures** menu beside the
+framework select.
 
-### Competency hub v2 (preview)
+**The classic hub** is kept for one release behind the **Classic view** link at the end of the
+context bar: the **Structures** tab (the list of frameworks) comes back first in the strip, and the
+Competencies tab offers its **Classic** view (the tree and its detail pane, the default in that mode)
+beside the workspace's three. **Workspace view** in the same place goes back. The choice is saved in
+the viewer's `local_dimensions_central_display` preference; `classic=1` or `classic=0` on the hub's
+address applies to that visit only. It changes which tabs and views are offered, never who may open
+them: each tab still admits its viewers as before, and the category entry and the unlisted-category
+rules are the same in both modes. A link to `tab=frameworks` outside classic mode opens Competencies,
+and one to `view=list` the workspace. In the classic hub the selected row's actions sit in a bar at
+the foot of the page.
 
-**Site administration > Competencies > Competency Dimensions > Competency hub v2**
-(`local/dimensions/hubv2.php`, same capability as the hub, site entry only) draws one framework's
-tree as a canvas of nodes, beside the hub it does not replace while it is being validated: the
-framework at the left, a column per level, each card with its colour, name, taxonomy or rule and a
-count, parent-child edges in the rule's colour under a competency with a rule, and dotted edges to
-the selected competency's related ones. The tree loads lazily (25 children at a time), pans and
-zooms, and has an overview map. The panel beside it shows the selected competency (path, where it
-is used, scale and rule, appearance, description, related competencies) and its actions, which are
-the hub's own dialogues: edit, add a child, rule, courses and activities, relate, move (pick the
-new parent on the canvas), move up or down, and delete. Delete first asks the page's read-only
-`local_dimensions_competency_delete_check` service: when core would refuse (the competency or one
-of its descendants is in a learning plan template, a learning plan or a course, has a user's record
-or rating, or is a badge criterion) a dialogue lists the reasons, with counts that are exact only for a
-site-level manager (a course category's manager sees which reasons apply); otherwise the confirmation says
-that the competency and every descendant, their relations and their prior-learning links are
-deleted permanently; the hub's Competencies tab deletes through the same check and dialogues. *List view* opens the same framework in the
-hub's Competencies tab, the accessible alternative to the canvas. The page keeps nothing of its own:
-no table, no preference written, the layout recomputed on every visit.
+### The Competencies tab's workspace
 
-The canvas is a React component built into one file, `js/esm/build/bundle.js`, which inlines
-**React Flow** (`@xyflow/react` 12.12.1, MIT), vendored under `js/esm/vendor/xyflow` and declared in
+The Competencies tab has three views, switched beside the framework select: **Outline**, **Map** and
+**Both** (the default). They are one workspace over one selection, with the panel described below at
+their side; switching among them keeps the opened branches and the selection, and does not reload
+the tab.
+
+- **Outline**: the framework as a real tree (an ARIA tree view) of 32 px rows (40 px on a touch
+  screen), indented by level, each with an expand chevron, the competency's colour, its name and,
+  at the end, its number of children, its rule and, for the selected one, its related competencies.
+  It is one Tab stop: the arrow keys walk it (Right opens a branch or goes into it, Left closes it or
+  goes to its parent, Up and Down, Home and End; Left and Right swap in a language written right to
+  left), Enter or Space selects, and typing a letter jumps to the next name it starts. A partly loaded
+  branch ends in a "Load more" row. **Expand all** opens every branch level by level and stops at
+  500 competencies, saying so; **Collapse all** closes them all.
+- **Map**: the tree as a canvas of nodes, below.
+- **Both**: the outline at the left (about 264 px, resizable by dragging its splitter or with the
+  arrow keys, Home and End, the width kept in the browser) and the map beside it. Selecting in the
+  outline selects on the map and brings the node into view; selecting on the map scrolls the
+  outline to the row. Below 992 px wide the outline, the map and the panel are stacked.
+
+The map draws the selected framework's tree as a canvas of nodes: the framework at the left (at the right in a language written right to
+left), a column per level, headed by the level's taxonomy term as the framework names it (core's own
+words; a manager's pencil on a heading opens the framework's form, where the terms are edited), each
+card with its colour, name, taxonomy or rule and a count,
+parent-child edges in the rule's colour under a competency with a rule, and dotted edges to the
+selected competency's related ones. The tree loads lazily (25 children at a time), pans and zooms,
+and has an overview map. The panel beside it shows the selected competency (path, where it is used,
+scale and rule, appearance, description, related competencies) and its actions, which are the hub's
+own dialogues: add (the panel's own button, which knows the selection, takes the place of the tab's),
+edit, add a child, rule, courses and activities, relate, move (pick the new parent in the outline or
+on the map, by click or Enter; the confirmation names the current or new parent whose rule core
+resets), move up or down, and delete. The panel lists every related competency in words, each a
+button that reveals it; the map also draws a dotted edge to those it shows. The map is one Tab stop
+too, walked by the same keys as the outline, each node named with its level, its position among its
+siblings, whether it is open, its children, its rule and its relation to the selected competency. Delete first asks the read-only `local_dimensions_competency_delete_check` service: when
+core would refuse (the competency or one of its descendants is in a learning plan template, a
+learning plan or a course, has a user's record or rating, or is a badge criterion) a dialogue lists
+the reasons, with counts that are exact only for a site-level manager (a course category's manager
+sees which reasons apply); otherwise the confirmation says that the competency and every
+descendant, their relations and their prior-learning links are deleted permanently; the list view
+deletes through the same check and dialogues.
+
+#### The framework on the root
+
+The framework is the root of the outline and of the map. Selected (as it is when nothing else is), the
+panel shows its name, ID number, context (the site or the category), visibility, scale with the
+values it counts as proficient and its default one, the taxonomy term of each level and its summary;
+then **Edit structure** and **More actions**, the root's menu: **Configure scale**, **Hide structure**
+or **Show structure**, **Duplicate**, **Export to CSV** and **Delete structure**. They are the
+Structures tab's own dialogues and services, offered to whoever manages competencies in the
+framework's context. After an edit, the scale, the visibility or a duplicate the tab shows the same
+framework again with the branches that were open and the selection; a duplicate's copy is listed in
+the framework select. After a delete the tab shows the next framework of the select, or says there is
+none. The **Structures** menu beside the framework select holds **New structure** and **Import from
+CSV** (each then shows the new framework), **Show hidden structures** and **Manage scales** (the
+scales page, for whoever may open it); the palette offers the first two as well.
+
+#### Lenses and the structure check
+
+A **Lens** switch in the workspace's bar answers one question at a time over the same tree: **None**,
+**Usage**, **Rules** or **Relations**. Each lens says its answer in words as well as in the drawing: a
+line under each card's name, a quiet mark at each outline row's end, the same words in what a screen
+reader reads of the card and the row, and, first in the panel, a sentence, a legend with how many
+competencies carry each mark and the list of them, each a button that reveals it. No answer is given
+by colour alone: an unused competency has a dashed edge, a rule that can never fire a dashed warning
+edge and a triangle, a related one the relation edges' colour and an icon.
+
+- **Usage**: each competency's own use (a parent's does not add its children's), counted by courses,
+  activities, plan templates or learning plans (a switch in the panel), in four steps of the brand's
+  colour (none; 1 to 2; 3 to 5; 6 or more), and the competencies no course (or activity, template,
+  plan) uses.
+- **Rules**: each rule on its parent ("6 of 8 points" for a points rule), what each child gives and
+  whether it is required, the edges of the children the rule counts in the rule's style, and a rule
+  that can never fire; in the panel one block per rule with what it asks, what is available, the
+  required children by name, its outcome and, for a manager, **Set the rule…**.
+- **Relations**: every relation between two competencies of the framework, drawn as a dotted line when
+  both are on the map; a competency whose related one is not on the map says "+2 elsewhere". The
+  panel lists the related pairs.
+
+**Check** in the bar (with the number of findings) opens the structure check in the panel: rules that
+can never fire, rules over a single child or over no child, competencies no course, activity,
+template or plan uses, missing ID numbers, empty descriptions, and custom colours whose text is hard
+to read. Each finding names its competency, says what is wrong, reveals it in both panes and, for a
+manager, offers the action that fixes it (the rule, the competency's form, or its courses and
+activities). **F8** and **Shift+F8** go to the next and the previous finding from anywhere in the
+workspace, and say which one it is. **Check again** reads the framework afresh; the answers are also
+read again after any change made in the workspace. While a delete or a move waits for its
+confirmation, the competencies it touches are outlined on the map and in the outline.
+
+What each viewer is shown: a viewer holding at the site every capability core's own usage lists ask
+(course and activity visibility, template management, plan reading), with no role on the site refusing
+one of them anywhere, sees exact counts; a manager of the framework's competencies who lacks one of
+them, or on a site where a role refuses one, sees only whether each competency is used, and the
+panel says so; a viewer who only reads the framework is told that usage is not shown, and the check
+lists no unused competency. The rules, relations and other findings are shown to whoever may read the
+framework. The chosen lens is remembered in `local_dimensions_central_display` and carried by the
+address (`&lens=usage`, `rules`, `relations`).
+
+#### Commands and keys of the workspace
+
+Every action is in three places that run the same thing: the panel (**Edit**, **Add child**, and **More
+actions**, which opens the node's menu under it), the node's menu and the command palette. A viewer who may not manage a competency is offered none of them on it, and its keys
+do nothing; core checks the right again on every change.
+
+| Where | Key | What it does |
+|---|---|---|
+| Anywhere in the workspace | Ctrl+K (Cmd+K on a Mac), or **Commands** | The command palette: the actions on the selected competency, "Go to" a competency by name or ID number, and the views, the lenses, Check structure, Expand all, Collapse all, Add competency and the framework summary |
+| | F8, Shift+F8 | The next or the previous finding of the structure check, revealed and selected |
+| On an item of the outline or the map | Shift+F10 or the context-menu key | The item's menu (also the "more" button on the selected row or card); on the root, the framework's |
+| | Alt+Up, Alt+Down | Move the competency up or down among its siblings |
+| | Delete | Delete the competency, after the usual check and confirmation |
+| On a row of the outline | F2 | Rename the competency in place |
+| | Ctrl+Enter (Cmd+Enter), Insert | Type a new sibling right below: a name and an ID number (the next one is offered when the siblings' numbers show a pattern); Enter saves and opens the next one, Escape stops |
+| | Ctrl+Shift+Enter | Type a new first child |
+
+#### Acting on several competencies at once
+
+A manager of the framework's competencies can pick several of them and act on them from a dock under the
+panes; a reader has no boxes, no dock and no picking keys.
+
+| Where | Key or gesture | What it does |
+|---|---|---|
+| On a competency of the outline or the map | Space, or the box at the start of its row (on its card's corner on the map) | Pick it, or release it; Enter still shows it in the panel |
+| | Shift+Up, Shift+Down | Move and pick every competency between the last one picked and the new one |
+| | Ctrl+A (Cmd+A) | Pick the competencies shown at its level under the same parent |
+| On a card of the map | Ctrl+click (Cmd+click) | Pick it, or release it |
+| Anywhere in the workspace | Escape | Release every pick |
+
+The dock says how many are picked and offers:
+
+- **Set appearance…**: background colour, text colour, tag 1, tag 2 and the competency label, each
+  left as it is unless a value or **Clear** is chosen. A colour is a hex value (`#rgb` or `#rrggbb`);
+  with both colours set, the dialogue previews them and says their contrast ratio, warning under 4.5:1.
+  The change goes through `local_dimensions_set_competencies_appearance` (at most 200 competencies a
+  call, all of one framework): it requires `moodle/competency:competencymanage` in the framework's
+  context, checks every value as the competency form does, writes all or nothing, and logs one
+  "Competency custom fields updated" event per competency that changed.
+- **Move under…**: the **Move to** dialogue for every picked competency whose parent is not picked too;
+  those already under the chosen parent are skipped, the others move one by one, in the tree's order,
+  and the first one core refuses stops the run and is named.
+- **Delete…**: asks core first, for each picked competency whose parent is not picked too, then one
+  confirmation says how many can be deleted, what goes with them, and which core will refuse and why;
+  only those core allows are deleted.
+
+What core refuses stays picked; everything else is released when the action is done.
+
+**Move to…** in the menu or the palette opens a dialogue to choose the new parent from a tree of the
+framework or by searching; it cannot offer the competency itself or one of its descendants, marks the
+current parent, and says which parent's rule core will reset before the move is confirmed. The
+outline's **Display options** (identifiers, taxonomy) are the classic list's, saved in the same
+preference.
+
+The read-only `local_dimensions_get_framework_insights` service answers, for one framework, how each
+competency is used (courses, activities, learning plan templates, learning plans), what its rule
+asks and whether a learner could ever meet it, its relations (each pair of the framework once, and a
+count per competency), and what "Check
+structure" finds: a rule that can never fire, a rule over a single child or with no children, an
+empty description or ID number, a competency nothing uses, custom colours under a 4.5:1 contrast.
+Usage counts are exact only for a viewer who may list every use at the site and whom no role refuses
+any of the capabilities core's lists ask in any context (the administrator excepted); a manager of the
+framework's competencies learns which kinds of use apply, and any other reader nothing about usage.
+
+The workspace is a view of the tab, not a page: it lists exactly the frameworks the list does, in the
+same context, so it is reached from Site administration and from a course category's menu alike,
+locked to that category with its subcategories, and keeps the category rules of
+`local_unlistedcourses`. The chosen view is remembered in `local_dimensions_central_display`, and
+the address carries it: `central.php?tab=structure&frameworkid=N&view=map` opens the map
+(`view=outline`, `view=both`, `view=list` the others), and `&competencyid=M` selects and reveals
+that competency when it belongs to the framework shown (anything else is ignored). Selecting a
+competency keeps it in the address, without adding a history entry. The map moves the view without animation for a viewer who asks the system
+for reduced motion, and leaves its edges out of what a screen reader reads. The former address of
+the map, `local/dimensions/hubv2.php`, redirects to the map view for whoever the hub's Site
+administration entry admits.
+
+The workspace is a React component built into one file, `js/esm/build/bundle.js`, which inlines
+**React Flow** (`@xyflow/react` 13.0.3, MIT), vendored under `js/esm/vendor/xyflow` and declared in
 `thirdpartylibs.xml`; its README says how it was built. Nothing needs to be installed on the site.
 
-### Structures
+### Structures (classic view)
 
-Frameworks are created and edited natively, with scale configuration, duplication, a visibility
-toggle, a delete that asks for a reason, and CSV import and export. Each row counts its
-competencies.
+The classic hub's Structures tab lists the frameworks: each is created and edited natively, with
+scale configuration, duplication, a visibility toggle, a delete that asks for a reason, and CSV
+import and export. Each row counts its competencies. The same actions are on the workspace's root.
 
 ### Competencies and their rules
 
-The Competencies tab shows one framework as a lazy tree with search-and-reveal and drag-and-drop
+The classic view of the Competencies tab shows one framework as a lazy tree with search-and-reveal and drag-and-drop
 to reorder and reparent. *Show competency rule* puts each parent's completion rule beside it as a
 chip ("All children are complete", "Points required are met"); *Show taxonomy* and *Show
 identifiers* add the rest. Selecting a competency opens its detail: its label, ID number,
@@ -287,6 +454,68 @@ $callbacks = [
 ];
 ```
 
+### For developers: sections in the Competency hub's panel
+
+Another plugin can add sections of its own under the panel of the Competency hub's workspace, for the
+competency selected there, by listening to `\local_dimensions\hook\competency_panel_sections`
+(`local_evidencehub` adds a competency's validity policy this way). Neither plugin needs the other: when
+no plugin listens, the page says so and the panel never asks.
+
+- The hook is dispatched by the read web service `local_dimensions_get_competency_panel_sections`, once
+  per selection and after every change made in the workspace, only after the service has checked that
+  the viewer is logged in, not a guest, and may read the competency in its framework's context (as
+  core's `read_competency()` requires). It carries `get_competencyid()`, `get_frameworkid()`,
+  `get_context()` (the framework's, system or a course category) and `can_manage()` (whether the viewer
+  manages competencies there). A listener still decides by its own capabilities what the viewer may see.
+- `add_section(string $component, string $key, string $title, array $rows, string $note = '',
+  moodle_url|string|null $link = null, string $linklabel = '')`: `$component` is the listener's own
+  frankenstyle name, which prefixes the key (`local_evidencehub-policy`); `$key` is lower case letters,
+  digits and underscores, at most 30, once per component. Each row is `['label' => ..., 'value' => ...,
+  'tone' => ...]`, the tone one of the five of `competency_status_badges` or none.
+- Everything is plain text: entities are decoded and tags stripped until nothing changes, so a value
+  run through `format_string()` arrives the same whatever `formatstringstriptags` says. At most 6
+  sections a call, 12 rows a section; a title or label is cut at 100 characters, a value at 255, a note
+  at 500, a link label at 100.
+- The link is a page of this site only: a `moodle_url` or address under `$CFG->wwwroot`, or a
+  root-relative path. An external, `javascript:` or protocol-relative address is dropped, not repaired,
+  and a link without a label is dropped. It opens in the same tab.
+- There is no HTML on purpose: the panel belongs to this plugin, and plain text drawn as text keeps a
+  listener from injecting markup into a page it does not own. Zero-width and bidirectional control
+  characters are removed, and a text with nothing visible left is empty.
+- Nothing passed to `add_section()` throws, so one listener cannot blank the others' sections: a section
+  whose component is not one or whose key is malformed is dropped, a second section under a taken
+  `<component>-<key>` is dropped (the first wins), and an unknown tone is dropped from its row, each with
+  a developer `debugging()` message. The component is a claim the hook cannot bind to the listener. A
+  listener that throws by itself fails the read, and the panel shows its quiet line instead of the sections.
+- With no listener the service sends no statement beyond its checks. A failed read leaves the rest of
+  the panel as it is and says "Some details could not be loaded." in one muted line.
+
+```php
+// db/hooks.php
+$callbacks = [
+    [
+        'hook' => \local_dimensions\hook\competency_panel_sections::class,
+        'callback' => [\my_plugin\hook_callbacks::class, 'competency_panel_sections'],
+    ],
+];
+
+// classes/hook_callbacks.php
+public static function competency_panel_sections(\local_dimensions\hook\competency_panel_sections $hook): void {
+    if (!has_capability('my/plugin:view', $hook->get_context())) {
+        return;
+    }
+    $hook->add_section(
+        'my_plugin',
+        'summary',
+        get_string('summary', 'my_plugin'),
+        [['label' => get_string('state', 'my_plugin'), 'value' => get_string('ready', 'my_plugin'), 'tone' => 'success']],
+        '',
+        new \moodle_url('/my/plugin/view.php', ['competencyid' => $hook->get_competencyid()]),
+        get_string('open', 'my_plugin')
+    );
+}
+```
+
 ### Dark mode and the family theme
 
 ![The plan overview in Moodle's dark mode, the plan's own colours kept on the hero and the course cards](docs/screenshots/plan-dark.png)
@@ -345,8 +574,8 @@ no branch.
 
 - Core competencies enabled (`core_competency`).
 - No required plugin: `version.php` declares no dependency.
-- Bundled, not installed: React Flow (`@xyflow/react` 12.12.1, MIT) for the Competency hub v2's
-  canvas, vendored under `js/esm/vendor/xyflow`.
+- Bundled, not installed: React Flow (`@xyflow/react` 13.0.3, MIT) for the canvas of the
+  Competencies tab's map view, vendored under `js/esm/vendor/xyflow`.
 - Optional, each reached only through a runtime guard, so the plugin installs and behaves the same
   without them:
   - `enrol_apply`: a locked course card recognises an application as a way in and shows one
@@ -523,7 +752,8 @@ Data stored
 The plugin has no database tables of its own (no `db/install.xml`). It keeps:
 
 - **Five user preferences**: `local_dimensions_central_nav` and `local_dimensions_central_display`
-  (the Competency hub's last tab, context, selection and display toggles),
+  (the Competency hub's last tab, context, selection, display toggles, the Competencies tab's
+  view and lens and whether the hub opens in its classic view),
   `local_dimensions_learner_view` (each learner view's scope, sort and layout),
   `local_dimensions_learner_fav` (the favourite competencies, per plan) and
   `local_dimensions_learner_hero` (which headers are folded). They are kept until the user changes
@@ -540,8 +770,8 @@ The plugin has no database tables of its own (no `db/install.xml`). It keeps:
   changes; and `returncontext`, a session cache of the plan a learner came from, which expires
   after four hours.
 - **Browser storage**, in the user's own browser only and never sent to the site: the widths of
-  the Competency hub's two resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
-  `local_dimensions_plans_master_width`), and the position of the *Return to plan* button in
+  the Competency hub's resizable panes in `localStorage` (`local_dimensions_structure_master_width`,
+  `local_dimensions_plans_master_width`, `local_dimensions_hubv2_outline_width`), and the position of the *Return to plan* button in
   `sessionStorage` (`local_dimensions_fab_pos`), which the browser drops when the tab closes.
 - **Events** in the standard log for the hub's administrative decisions (cohort attach and detach,
   links, duplication, cohort roles, bulk enrolment methods, custom field changes). The log store

@@ -120,11 +120,12 @@ final class hub_unlisted_children_test extends advanced_testcase {
      * @param string $tabclass The tab class.
      * @param int $categoryid The category id.
      * @param string $listkey The export key holding the list.
+     * @param array $extra Further pane data (the hub's mode, `classic`).
      * @return array
      */
-    private function names(string $tabclass, int $categoryid, string $listkey): array {
+    private function names(string $tabclass, int $categoryid, string $listkey, array $extra = []): array {
         global $PAGE;
-        $tab = new $tabclass(['contexttype' => 'coursecat', 'categoryid' => $categoryid, 'locked' => 1]);
+        $tab = new $tabclass(['contexttype' => 'coursecat', 'categoryid' => $categoryid, 'locked' => 1] + $extra);
         $data = $tab->export_for_template($PAGE->get_renderer('core'));
         $names = array_map(static fn(array $row): string => (string) ($row['shortname'] ?? $row['name']), $data[$listkey]);
         sort($names);
@@ -187,6 +188,43 @@ final class hub_unlisted_children_test extends advanced_testcase {
         $this->setUser($f['user']);
         $this->assertSame(['Framework in parent'], $this->names(frameworks::class, $parentid, 'frameworks'));
         $this->assertSame(['Framework in parent'], $this->names(structure::class, $parentid, 'frameworks'));
+        // The hub's mode changes the views, not the list: the workspace and the classic list withhold alike.
+        foreach ([0, 1] as $classic) {
+            $this->assertSame(
+                ['Framework in parent'],
+                $this->names(structure::class, $parentid, 'frameworks', ['classic' => $classic]),
+                "classic={$classic}"
+            );
+        }
+    }
+
+    /**
+     * The map draws only what the list lists: asked for the unlisted child's framework, an unrelated
+     * viewer's map falls back to the parent's, as the administrator's (the control) does not.
+     *
+     * @return void
+     */
+    public function test_the_map_withholds_the_unlisted_child_framework(): void {
+        global $PAGE;
+        $this->resetAfterTest();
+        $f = $this->fixture();
+        $childfw = \core_competency\competency_framework::get_record(['shortname' => 'Framework in child']);
+        $parentfw = \core_competency\competency_framework::get_record(['shortname' => 'Framework in parent']);
+        $mapped = function () use ($f, $childfw, $PAGE): int {
+            $tab = new structure([
+                'contexttype' => 'coursecat',
+                'categoryid' => (int) $f['parent']->id,
+                'locked' => 1,
+                'frameworkid' => (int) $childfw->get('id'),
+                'view' => 'map',
+            ]);
+            $data = $tab->export_for_template($PAGE->get_renderer('core'));
+            return (int) json_decode($data['mapprops'], true)['framework']['id'];
+        };
+
+        $this->assertSame((int) $childfw->get('id'), $mapped(), 'Control: the administrator');
+        $this->setUser($f['user']);
+        $this->assertSame((int) $parentfw->get('id'), $mapped());
     }
 
     /**

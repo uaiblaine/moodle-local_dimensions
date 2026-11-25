@@ -31,6 +31,7 @@ import {getString} from 'core/str';
 import {enhance} from 'core/form-autocomplete';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as Preferences from 'local_dimensions/central/preferences';
+import {setUrlParams} from 'local_dimensions/central/deeplink';
 import * as Categories from 'local_dimensions/central/category_datasource';
 
 /**
@@ -162,7 +163,8 @@ const showHiddenCats = (bar) => {
 
 /**
  * Push the shared context onto every tab pane, resetting the per-tab selection
- * (framework / template) that a context change invalidates.
+ * (framework / template / the map's competency) that a context change invalidates. The
+ * Competencies tab's view is not a selection: it stays.
  *
  * @param {String} contexttype
  * @param {Number} categoryid
@@ -178,7 +180,11 @@ const applyContextToPanes = (contexttype, categoryid) => {
         if ('competencyids' in pane.dataset) {
             pane.dataset.competencyids = '';
         }
+        if ('competencyid' in pane.dataset) {
+            pane.dataset.competencyid = 0;
+        }
     });
+    setUrlParams({competencyid: null});
 };
 
 /**
@@ -346,6 +352,38 @@ const applyHiddenCats = (bar) => {
 };
 
 /**
+ * Point the link to the hub's other mode at the place shown now: the Competencies pane's context and framework,
+ * which the context bar and the framework select change without a page load.
+ *
+ * Only the server-built address is rewritten, through URL, and only three parameters, each from a number or one
+ * of the two context words: the link stays on the hub's own page, whatever the panes carry. The locked category
+ * entry names its context itself (pagecontextid), so it takes the framework only.
+ *
+ * @param {HTMLAnchorElement} link The link.
+ */
+const followModeLink = (link) => {
+    const pane = document.querySelector('[data-tab-content="structure"]');
+    if (!pane) {
+        return;
+    }
+    const url = new URL(link.href);
+    if (url.origin !== window.location.origin) {
+        return;
+    }
+    const frameworkid = Number(pane.dataset.frameworkid) || 0;
+    if (frameworkid > 0) {
+        url.searchParams.set('frameworkid', String(frameworkid));
+    } else {
+        url.searchParams.delete('frameworkid');
+    }
+    if (!url.searchParams.has('pagecontextid')) {
+        url.searchParams.set('contexttype', pane.dataset.contexttype === 'coursecat' ? 'coursecat' : 'system');
+        url.searchParams.set('categoryid', String(Number(pane.dataset.categoryid) || 0));
+    }
+    link.href = url.href;
+};
+
+/**
  * Initialise the shared context selector. Runs once on page load (the bar lives outside
  * the tab panes, so it is not re-rendered on tab refresh).
  */
@@ -365,6 +403,12 @@ export const init = () => {
         const refreshbtn = event.target.closest(SELECTORS.refresh);
         if (refreshbtn) {
             refresh(refreshbtn).catch(notifyError);
+            return;
+        }
+        // The browser follows the link after this; only its address is brought up to date.
+        const modelink = event.target.closest('[data-region="mode-link"]');
+        if (modelink) {
+            followModeLink(modelink);
         }
     });
 

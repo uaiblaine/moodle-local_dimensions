@@ -1,0 +1,1 @@
+s#\$a === null \|\| \$b === null#\$a === null && \$b === null#;

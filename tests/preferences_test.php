@@ -75,6 +75,9 @@ final class preferences_test extends advanced_testcase {
         $this->assertFalse($prefs['display']['structure']['tax']);
         $this->assertFalse($prefs['display']['frameworksshowhidden']);
         $this->assertFalse($prefs['display']['modalexpanded']);
+        $this->assertFalse($prefs['display']['classic']);
+        $this->assertSame('', $prefs['display']['structure']['view']);
+        $this->assertSame('', $prefs['display']['structure']['lens']);
         $this->assertTrue($prefs['display']['panels']['structure']);
         $this->assertTrue($prefs['display']['panels']['planslist']);
         $this->assertTrue($prefs['display']['panels']['plansdetail']);
@@ -98,6 +101,7 @@ final class preferences_test extends advanced_testcase {
             'panels' => ['structure' => false, 'plansdetail' => 0],
             'plansshowdisabled' => true,
             'modalexpanded' => true,
+            'classic' => 1,
         ]), $USER->id);
         $prefs = helper::get_central_prefs();
         $this->assertSame('plans', $prefs['nav']['tab']);
@@ -113,6 +117,7 @@ final class preferences_test extends advanced_testcase {
         $this->assertTrue($prefs['display']['panels']['planslist']);
         $this->assertTrue($prefs['display']['plansshowdisabled']);
         $this->assertTrue($prefs['display']['modalexpanded']);
+        $this->assertTrue($prefs['display']['classic']);
     }
 
     /**
@@ -144,6 +149,93 @@ final class preferences_test extends advanced_testcase {
         $this->setAdminUser();
         set_user_preference(constants::PREF_CENTRAL_NAV, json_encode(['tab' => 'bogus']), $USER->id);
         $this->assertSame('frameworks', helper::get_central_prefs()['nav']['tab']);
+    }
+
+    /**
+     * The Competencies tab's saved view is none ('') by default, any of the four views when stored, and
+     * none for anything else stored, whatever its type: the tab's default for the hub's mode then applies.
+     *
+     * @return void
+     */
+    public function test_get_central_prefs_sanitises_the_saved_view(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $this->assertSame('', helper::get_central_prefs()['display']['structure']['view']);
+
+        $stored = static function ($view) use ($USER): string {
+            set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['view' => $view]]), $USER->id);
+            return helper::get_central_prefs()['display']['structure']['view'];
+        };
+        foreach (['list', 'outline', 'map', 'both'] as $view) {
+            $this->assertSame($view, $stored($view));
+        }
+        foreach (['MAP', 'canvas', '', '<b>map</b>', 'Both', 'classic', 1, true, null, ['map'], ['both']] as $value) {
+            $this->assertSame('', $stored($value), 'Stored ' . json_encode($value));
+        }
+        // The other structure toggles are read beside it, untouched.
+        set_user_preference(
+            constants::PREF_CENTRAL_DISPLAY,
+            json_encode(['structure' => ['view' => 'map', 'tax' => true]]),
+            $USER->id
+        );
+        $structure = helper::get_central_prefs()['display']['structure'];
+        $this->assertSame('map', $structure['view']);
+        $this->assertTrue($structure['tax']);
+        $this->assertTrue($structure['rule']);
+    }
+
+    /**
+     * The workspace's saved lens is none ('') by default, any of the four lenses when stored, and none for anything
+     * else stored, whatever its type; the toggles beside it are read untouched.
+     *
+     * @return void
+     */
+    public function test_get_central_prefs_sanitises_the_saved_lens(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $stored = static function ($lens) use ($USER): string {
+            set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['lens' => $lens]]), $USER->id);
+            return helper::get_central_prefs()['display']['structure']['lens'];
+        };
+        foreach (['none', 'usage', 'rules', 'relations'] as $lens) {
+            $this->assertSame($lens, $stored($lens));
+        }
+        foreach (['Usage', 'heatmap', '', '<b>usage</b>', 1, true, null, ['rules'], 'usage '] as $value) {
+            $this->assertSame('', $stored($value), 'Stored ' . json_encode($value));
+        }
+        set_user_preference(
+            constants::PREF_CENTRAL_DISPLAY,
+            json_encode(['structure' => ['lens' => 'rules', 'view' => 'map', 'tax' => true]]),
+            $USER->id
+        );
+        $structure = helper::get_central_prefs()['display']['structure'];
+        $this->assertSame('rules', $structure['lens']);
+        $this->assertSame('map', $structure['view']);
+        $this->assertTrue($structure['tax']);
+    }
+
+    /**
+     * The hub's mode is off unless stored true; any stored value is read as a boolean, a missing one as off.
+     *
+     * @return void
+     */
+    public function test_get_central_prefs_sanitises_the_classic_mode(): void {
+        global $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $stored = static function ($value) use ($USER): bool {
+            set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['classic' => $value]), $USER->id);
+            return helper::get_central_prefs()['display']['classic'];
+        };
+        $this->assertTrue($stored(true));
+        $this->assertTrue($stored(1));
+        $this->assertFalse($stored(false));
+        $this->assertFalse($stored(0));
+        $this->assertFalse($stored(null));
+        set_user_preference(constants::PREF_CENTRAL_DISPLAY, json_encode(['structure' => ['tax' => true]]), $USER->id);
+        $this->assertFalse(helper::get_central_prefs()['display']['classic']);
     }
 
     /**

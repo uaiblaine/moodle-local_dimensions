@@ -10,6 +10,10 @@ Feature: Manage competency structures from the Competency hub
     And the following "core_competency > frameworks" exist:
       | shortname        | idnumber |
       | Behat framework  | BF1      |
+    # The classic hub (the Structures tab and the classic list), kept one release behind the context bar's link.
+    And the following "user preferences" exist:
+      | user       | preference                       | value            |
+      | admin      | local_dimensions_central_display | {"classic":true} |
     And I log in as "admin"
 
   Scenario: The Structures tab lists structures with management actions

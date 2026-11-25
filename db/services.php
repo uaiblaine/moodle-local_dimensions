@@ -115,6 +115,17 @@ $functions = [
         'readonlysession' => true,
     ],
 
+    // Competency hub map view — usage, rules, relations and the structure's findings of one framework.
+    'local_dimensions_get_framework_insights' => [
+        'classname' => 'local_dimensions\external\get_framework_insights',
+        'methodname' => 'execute',
+        'description' => 'Tell how a framework\'s competencies are used, ruled and related, and what its structure gets wrong.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+        'readonlysession' => true,
+    ],
+
     // Competency hub Structure tab — in-tree search with ancestor path.
     'local_dimensions_search_structure' => [
         'classname' => 'local_dimensions\external\search_structure',
@@ -157,6 +168,16 @@ $functions = [
         'classname' => 'local_dimensions\external\list_related_competencies',
         'methodname' => 'execute',
         'description' => 'List a competency\'s related competencies (same framework) with ancestor path.',
+        'type' => 'read',
+        'capabilities' => 'moodle/competency:competencyview',
+        'ajax' => true,
+        'readonlysession' => true,
+    ],
+    // Competency hub workspace: the sections other plugins add to the panel (hook competency_panel_sections).
+    'local_dimensions_get_competency_panel_sections' => [
+        'classname' => 'local_dimensions\external\get_competency_panel_sections',
+        'methodname' => 'execute',
+        'description' => 'List the sections other plugins add to the Competency hub panel for one competency.',
         'type' => 'read',
         'capabilities' => 'moodle/competency:competencyview',
         'ajax' => true,
@@ -338,6 +359,14 @@ $functions = [
         'classname' => 'local_dimensions\external\set_framework_visibility',
         'methodname' => 'execute',
         'description' => 'Toggle a competency framework\'s visibility.',
+        'type' => 'write',
+        'capabilities' => 'moodle/competency:competencymanage',
+        'ajax' => true,
+    ],
+    'local_dimensions_set_competencies_appearance' => [
+        'classname' => 'local_dimensions\external\set_competencies_appearance',
+        'methodname' => 'execute',
+        'description' => 'Set or clear the appearance custom fields of several competencies of one framework at once.',
         'type' => 'write',
         'capabilities' => 'moodle/competency:competencymanage',
         'ajax' => true,

@@ -130,13 +130,15 @@ final class bundle_test extends basic_testcase {
     }
 
     /**
-     * The page's template mounts the bundle, and no template names a per-file module.
+     * The Competencies tab's template mounts the bundle in its map view, and no template names a
+     * per-file module.
      *
      * @return void
      */
     public function test_the_templates_mount_the_bundle_and_nothing_else(): void {
-        $page = (string) file_get_contents(self::ROOT . '/templates/hubv2.mustache');
-        $this->assertStringContainsString('"component": "@moodle/lms/local_dimensions/bundle"', $page);
+        $tab = (string) file_get_contents(self::ROOT . '/templates/central/structure.mustache');
+        $this->assertStringContainsString('"component": "@moodle/lms/local_dimensions/bundle"', $tab);
+        $this->assertFileDoesNotExist(self::ROOT . '/templates/hubv2.mustache');
 
         $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(self::ROOT . '/templates'));
         foreach ($iterator as $template) {

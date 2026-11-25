@@ -17,19 +17,42 @@
 {{!
     @template local_dimensions/central/structure
 
-    Structure tab: a framework sub-header (structure picker, item count and a level-sensitive
-    "Add competency") over a master/detail body. The left panel holds the tree toolbar,
-    display toggles, search and the lazy competency tree; a resizable divider separates it
-    from the sticky detail panel (local_dimensions/central/structure_detail_content), which
-    is filled client-side from the selected node's data attributes. The node actions live
-    in the page's sticky footer (local_dimensions/central/structure_footer_actions).
+    Structure tab: a framework sub-header (structure picker, item count, the view switch: Classic,
+    Outline, Map, Both; and, in the classic list, a level-sensitive "Add competency") over one of two
+    bodies.
+
+    The list: a master/detail body. The left panel holds the tree toolbar, display toggles, search
+    and the lazy competency tree; a resizable divider separates it from the sticky detail panel
+    (local_dimensions/central/structure_detail_content), which is filled client-side from the
+    selected node's data attributes. The node actions live in the page's sticky footer
+    (local_dimensions/central/structure_footer_actions).
+
+    The workspace (Outline, Map and Both): one React mount (the bundle built from
+    js/esm/src/hubv2/Hub.tsx) with the props local_dimensions\output\hub_map builds, the view as its
+    first layout. Core mounts it wherever the markup lands, a pane re-rendered over AJAX included. The
+    switch moves among the three layouts without a reload, telling the mount by an event; only a move
+    to or from the classic list reloads the pane. The workspace's panel carries its own "Add
+    competency", which knows the selection, so the sub-header's is left out there. The mount's inner
+    content shows until React commits, and stays when the client cannot load.
+
+    The Structures menu beside the framework select carries what is not about one framework: New structure
+    and Import from CSV (the Structures tab's own dialogues, for whoever manages competencies in the tab's
+    context), "Show hidden structures" (a menuitemcheckbox over the tab's saved toggle) and the scales page.
+    Outside classic mode it replaces the Structures tab, so it is drawn with no framework at all, too; in
+    classic mode the workspace's views carry it and the list keeps the standalone toggle. A Bootstrap dropdown:
+    its keys (arrows, Escape back to the button) are Bootstrap's; amd/src/central/structure.js runs the items.
 
     The System / Course category context selector is rendered once at page level
     (local_dimensions/central/contextbar); this tab receives the resolved context via its
     data attributes and shows the guided empty state when a category is still needed.
 
     Context variables required:
-    * contexttype (string) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
+    * contexttype (string) · contextid (int) · selectedcategoryid (int) · selectedframeworkid (int) · showhidden (bool)
+    * classic (bool) · the hub's mode for the visit
+    * structuresmenu (object|null) {cancreate, canscalespage, scalesurl, hashidden, showhidden, sepbeforehidden,
+      sepbeforescales} · the Structures menu
+    * view (string: list, outline, map or both) · views (array) {value, label, icon, pressed} · the view switch
+    * isworkspace (bool) · mapprops (string json) · whether the workspace is drawn, and its props
     * hashiddenframeworks (bool)
     * showhiddentoggle (object|null) {id, label, action, checked} · standalone "show hidden" pill
     * rulesmodulesjson (string json) · courseoutcomesjson (string json) · moduleoutcomesjson (string json)
@@ -45,6 +68,21 @@
     Example context (json):
     {
         "contexttype": "system",
+        "contextid": 1,
+        "classic": true,
+        "structuresmenu": {
+            "cancreate": true, "canscalespage": true, "scalesurl": "https://example.com/grade/edit/scale/index.php",
+            "hashidden": true, "showhidden": false, "sepbeforehidden": true, "sepbeforescales": true
+        },
+        "view": "list",
+        "views": [
+            {"value": "list", "label": "Classic", "icon": "fa-list", "pressed": true},
+            {"value": "outline", "label": "Outline", "icon": "fa-folder-tree", "pressed": false},
+            {"value": "map", "label": "Map", "icon": "fa-sitemap", "pressed": false},
+            {"value": "both", "label": "Both", "icon": "fa-table-columns", "pressed": false}
+        ],
+        "isworkspace": false,
+        "mapprops": "",
         "detailconfig": {"linksclickable": true, "showrelated": true},
         "selectedcategoryid": 0,
         "selectedframeworkid": 5,
@@ -88,7 +126,8 @@
 }}
 <div class="local-dimensions-central-structure" data-region="structure"
      data-contexttype="{{contexttype}}" data-categoryid="{{selectedcategoryid}}" data-frameworkid="{{selectedframeworkid}}"
-     data-canmanage="{{canmanage}}">
+     data-contextid="{{contextid}}" data-canmanage="{{canmanage}}" data-view="{{view}}"
+     data-canscalespage="{{#structuresmenu}}{{#canscalespage}}1{{/canscalespage}}{{/structuresmenu}}">
     <script type="application/json" data-region="rules-modules">{{{rulesmodulesjson}}}</script>
     <script type="application/json" data-region="course-outcomes">{{{courseoutcomesjson}}}</script>
     <script type="application/json" data-region="module-outcomes">{{{moduleoutcomesjson}}}</script>
@@ -115,11 +154,21 @@
                     {{/frameworks}}
                 </select>
             </div>
+            {{> local_dimensions/central/structures_menu }}
             <span class="local-dimensions-central-structure-fwcount">
                 {{#str}}managecompetencies_items, local_dimensions{{/str}}: <strong>{{competencycount}}</strong>
             </span>
+            <div class="local-dimensions-central-viewswitch" role="group" aria-label="{{#str}}managecompetencies_view, local_dimensions{{/str}}">
+                {{#views}}
+                <button type="button" class="local-dimensions-central-viewswitch-cell" data-action="switch-view" data-view="{{value}}"
+                        aria-pressed="{{#pressed}}true{{/pressed}}{{^pressed}}false{{/pressed}}">
+                    <i class="fa {{icon}}" aria-hidden="true"></i>{{label}}
+                </button>
+                {{/views}}
+            </div>
         </div>
         {{#canmanage}}
+        {{^isworkspace}}
         <div class="local-dimensions-central-structure-subheader-actions">
             <button type="button" class="local-dimensions-central-plans-new" data-action="add">
                 <i class="fa fa-plus" aria-hidden="true"></i>{{#str}}managecompetencies_addcompetency, local_dimensions{{/str}}
@@ -128,9 +177,23 @@
                 {{#str}}managecompetencies_addhint_root, local_dimensions{{/str}}
             </span>
         </div>
+        {{/isworkspace}}
         {{/canmanage}}
     </div>
 
+    {{#isworkspace}}
+    <div class="local-dimensions-hubv2" data-region="hubv2">
+        {{#react}}
+        {
+            "component": "@moodle/lms/local_dimensions/bundle",
+            "props": {{{mapprops}}}
+        }
+        <p class="local-dimensions-hubv2-fallback text-muted">{{#str}}hubv2_loading, local_dimensions{{/str}}</p>
+        {{/react}}
+    </div>
+    {{/isworkspace}}
+
+    {{^isworkspace}}
     {{#hascompetencies}}
     <div class="local-dimensions-central-structure-body" data-region="structure-body">
         <section class="local-dimensions-central-structure-tree-pane" data-region="tree-pane">
@@ -221,9 +284,17 @@
     {{^hascompetencies}}
     <div class="alert alert-info" role="status">{{#str}}nocompetencies, local_dimensions{{/str}}</div>
     {{/hascompetencies}}
+    {{/isworkspace}}
     {{/hasframeworks}}
 
     {{^hasframeworks}}
+    {{#structuresmenu}}
+    <div class="local-dimensions-central-structure-subheader">
+        <div class="local-dimensions-central-structure-subheader-main">
+            {{> local_dimensions/central/structures_menu }}
+        </div>
+    </div>
+    {{/structuresmenu}}
     <div class="alert alert-info" role="status">{{#str}}noframeworks, local_dimensions{{/str}}</div>
     {{/hasframeworks}}
     {{/needscategoryselection}}

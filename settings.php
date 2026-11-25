@@ -343,15 +343,6 @@ if (get_config('core_competency', 'enabled')) {
         'moodle/competency:competencymanage'
     ));
 
-    // Competency hub v2: the framework's tree as a canvas of nodes, a page beside the hub. Same
-    // capability as the hub's site entry; unlike the hub, it has no course category entry.
-    $ADMIN->add('local_dimensions', new admin_externalpage(
-        'local_dimensions_centralv2',
-        get_string('hubv2', 'local_dimensions'),
-        new moodle_url('/local/dimensions/hubv2.php'),
-        'moodle/competency:competencymanage'
-    ));
-
     if ($hassiteconfig) {
         // Competency custom fields configuration.
         $ADMIN->add('local_dimensions', new admin_externalpage(
