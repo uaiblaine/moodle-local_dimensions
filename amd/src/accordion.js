@@ -24,9 +24,10 @@
 define(
     ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
         'local_dimensions/collapsible_description', 'local_dimensions/chip_filters',
-        'local_dimensions/learner_prefs', 'local_dimensions/central/modal_expander', 'local_dimensions/filter_line'],
+        'local_dimensions/learner_prefs', 'local_dimensions/central/modal_expander', 'local_dimensions/filter_line',
+        'core/pending'],
     function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters,
-        LearnerPrefs, ModalExpander, Line) {
+        LearnerPrefs, ModalExpander, Line, Pending) {
         'use strict';
 
         /* Which pane holds each competency's detail, rendered or on its way. It describes the DOM,
@@ -88,7 +89,8 @@ define(
             showevidence: true,
             enableevidencesubmitbutton: false,
             showlockeddate: false,
-            lockedcardmode: 'blocked'
+            lockedcardmode: 'blocked',
+            opencompetencyid: 0
         };
 
         /**
@@ -3133,6 +3135,90 @@ define(
             if (accordionContainer) {
                 accordionContainer.classList.add('local-dimensions-filter-initialized');
             }
+
+            // The competency the address named, once every row is armed and filtered.
+            openRequested(planId);
+        }
+
+        /**
+         * Open the competency the address named (view-plan.php's competencyid), the way a press would.
+         *
+         * The server hands over only a competency this page lists to a viewer who gets its detail, so a
+         * missing row means nothing to open. In the list the row's toggle is pressed, then the row is
+         * brought into view with the focus on its toggle (openItem); in the grid the detail dialogue
+         * opens, with the reader's stored width. Runs once per page load, under a pending token.
+         *
+         * @param {number} planId The plan id
+         */
+        function openRequested(planId) {
+            const competencyId = Number.parseInt(displaySettings.opencompetencyid, 10);
+            if (!(competencyId > 0)) {
+                return;
+            }
+            const item = document.querySelector('.local-dimensions-accordion-item[data-competency-id="' + competencyId + '"]');
+            if (!item) {
+                return;
+            }
+            const pending = new Pending('local_dimensions/accordion:openrequested');
+            revealItem(item);
+
+            const container = document.getElementById('local-dimensions-viewplan-accordion');
+            if (container && container.classList.contains('local-dimensions-grid-mode')) {
+                openDetailModal(item, planId).then(function() {
+                    pending.resolve();
+                    return null;
+                }).catch(Notification.exception);
+                return;
+            }
+
+            const toggle = item.querySelector('button.local-dimensions-accordion-toggle');
+            if (toggle && toggle.getAttribute('aria-expanded') !== 'true') {
+                toggle.click();
+            }
+            openItem(item);
+            pending.resolve();
+        }
+
+        /**
+         * Show a row the line's filters hide, for this view only.
+         *
+         * Reached from the address, so it is a GET: it sets the controls the way a press would (the "All"
+         * cell checked, the star released, the chips cleared), so the line, its counts and the list agree
+         * and the reader undoes it with a press, but it saves nothing. A press of the reader saves as
+         * ever, and the stored view stays what the reader chose. Only what hides this row is changed:
+         * "All" for a completed row under "To do", the star for a row outside the favourites, and as a
+         * last resort the typed text and the chips cleared.
+         *
+         * @param {HTMLElement} item The accordion item
+         */
+        function revealItem(item) {
+            const hidden = function() {
+                return item.classList.contains('local-dimensions-hidden');
+            };
+            if (!hidden()) {
+                return;
+            }
+            const allCell = document.querySelector(SCOPE_CELL_SELECTOR + '[data-filter="all"]');
+            if (item.classList.contains('completed') && allCell && allCell.getAttribute('aria-checked') !== 'true') {
+                setScope(allCell);
+                applyFilter();
+            }
+            if (hidden() && isFavouritesOnly()) {
+                setFavouriteFilter(false);
+                applyFilter();
+            }
+            if (!hidden()) {
+                return;
+            }
+            const input = document.querySelector('.local-dimensions-search-input');
+            if (input) {
+                input.value = '';
+            }
+            const chipClear = document.querySelector('[data-chip-clear]');
+            if (chipClear) {
+                chipClear.click();
+            }
+            applyFilter();
         }
 
         // Active chip filter selection (shortname => string[]).
@@ -3170,6 +3256,17 @@ define(
         }
 
         /**
+         * Check one scope cell and uncheck the others, without filtering or saving.
+         *
+         * @param {HTMLElement} chosen The cell to check
+         */
+        function setScope(chosen) {
+            document.querySelectorAll(SCOPE_CELL_SELECTOR).forEach(function(other) {
+                other.setAttribute('aria-checked', other === chosen ? 'true' : 'false');
+            });
+        }
+
+        /**
          * Wire the scope's cells: the chosen one carries aria-checked, and the choice is remembered.
          *
          * The arrow keys and the roving focus are the line's (filter_line), which presses the cell it
@@ -3180,9 +3277,7 @@ define(
 
             cells.forEach(function(cell) {
                 cell.addEventListener('click', function() {
-                    cells.forEach(function(other) {
-                        other.setAttribute('aria-checked', other === cell ? 'true' : 'false');
-                    });
+                    setScope(cell);
                     applyFilter();
                     LearnerPrefs.save({filter: cell.dataset.filter});
                 });
@@ -3721,6 +3816,7 @@ define(
          *
          * @param {HTMLElement} item The accordion item whose detail to show
          * @param {number} planId The plan id
+         * @return {Promise} Resolved once the dialogue is open, or at once when there is none to open
          */
         function openDetailModal(item, planId) {
             const competencyId = Number.parseInt(item.dataset.competencyId, 10);
@@ -3728,10 +3824,10 @@ define(
             const shell = content && content.querySelector('.local-dimensions-accordion-body');
             const title = item.querySelector('.local-dimensions-accordion-title');
             if (!shell) {
-                return;
+                return Promise.resolve();
             }
 
-            Modal.create({
+            return Modal.create({
                 // Plain text read from the page; core/modal writes its title as HTML.
                 title: title ? escapeHtml(title.textContent.trim()) : '',
                 body: '',

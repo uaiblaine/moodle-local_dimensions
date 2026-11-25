@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### The plan overview's actions and an address that opens one competency
+
+Version `2026100543`. Phase 2a of the competency pages: what the learner's plan overview needs before a
+theme sends plan owners there from Moodle's own plan pages.
+
+- `view-plan.php` takes an optional `competencyid`. The page opens that competency on load the way a press
+  would (the row in the list, the dialog in the card layout), once, after the rows are armed. When the
+  stored scope or the favourites filter hides its row, the line's own controls are set to show it, so the
+  reader undoes it with a press, but nothing is saved: a link never changes the stored view. The id is
+  handed over only for a competency the page itself lists, and only to a viewer who may open its detail;
+  any other value is ignored and the page is the plain overview. The page's own address stays the plan's.
+- An actions row between the hero and the filter line: the plan's status in its draft states (a status
+  label), **Request review** or **Cancel review request** exactly when core's plan exporter allows them
+  (`plan_access::review_actions()`), calling core's `core_competency_plan_request_review` and
+  `core_competency_plan_cancel_review_request` (no web service of the plugin's own), drawn hidden until the
+  new module `local_dimensions/plan_actions` arms them; and a link to core's plan page with `noredirect=1`,
+  labelled "Manage plan" or "Plan page in Moodle" after `plan::can_manage()`.
+- Tests: `view_plan_summary_actions_test`, `plan_actions_js_source_test`, `view_plan_actions.feature`; gates
+  in `mutations/plan_overview_actions.conf`.
 ### Fixed: the hub's display choices were refused in classic mode
 
 Version `2026100542`.

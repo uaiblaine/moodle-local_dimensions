@@ -255,6 +255,7 @@ class behat_local_dimensions extends behat_base {
      * Recognised page names are:
      * | Page type       | Identifier meaning                               | Description            |
      * | View plan       | Learning plan name                               | The plan overview      |
+     * | View plan competency | Learning plan name > competency idnumber    | The plan overview, opening that competency |
      * | View competency | Learning plan name > competency idnumber         | The competency tracker |
      * | Competency hub  | Course category idnumber                         | The hub's category entry |
      *
@@ -268,6 +269,12 @@ class behat_local_dimensions extends behat_base {
             case 'view plan':
                 return new moodle_url('/local/dimensions/view-plan.php', [
                     'id' => $this->get_plan_id_by_name($identifier),
+                ]);
+            case 'view plan competency':
+                [$planname, $idnumber] = array_map('trim', array_pad(explode('>', $identifier, 2), 2, ''));
+                return new moodle_url('/local/dimensions/view-plan.php', [
+                    'id' => $this->get_plan_id_by_name($planname),
+                    'competencyid' => $this->get_competency_id_by_idnumber($idnumber),
                 ]);
             case 'view competency':
                 [$planname, $idnumber] = array_map('trim', array_pad(explode('>', $identifier, 2), 2, ''));
