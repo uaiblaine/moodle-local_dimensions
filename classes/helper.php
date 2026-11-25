@@ -3082,8 +3082,9 @@ class helper {
         $taxonomies = competency_framework::get_taxonomies_list();
 
         // The select labels are admin text read raw from the option list, so they go through
-        // format_string() like the names: filters apply and no tag reaches a PARAM_TEXT return
-        // field, where it would fail the whole response.
+        // format_string() like the names (filters apply) and then through plain_text(): with
+        // formatstringstriptags off format_string() keeps a label's tags, and one tag in a PARAM_TEXT
+        // return field fails the whole response.
         $plain = ['context' => $context, 'escape' => false];
         $nodes = [];
         foreach ($records as $record) {
@@ -3122,14 +3123,37 @@ class helper {
                 'ruleoutcome' => (int) $record->get('ruleoutcome'),
                 'ruleconfig' => $record->get('ruleconfig'),
                 'rulelabel' => self::get_competency_rule_label($record->get('ruletype')),
-                'type' => format_string((string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''), true, $plain),
-                'tag1' => format_string((string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''), true, $plain),
-                'tag2' => format_string((string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''), true, $plain),
+                'type' => self::plain_text(format_string((string) ($cfdata[$id][constants::CFIELD_TYPE] ?? ''), true, $plain)),
+                'tag1' => self::plain_text(format_string((string) ($cfdata[$id][constants::CFIELD_TAG1] ?? ''), true, $plain)),
+                'tag2' => self::plain_text(format_string((string) ($cfdata[$id][constants::CFIELD_TAG2] ?? ''), true, $plain)),
                 'bgcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMBGCOLOR] ?? ''),
                 'textcolor' => (string) ($cfdata[$id][constants::CFIELD_CUSTOMTEXTCOLOR] ?? ''),
             ];
         }
         return $nodes;
+    }
+
+    /**
+     * Text a PARAM_TEXT return field accepts whatever the site's settings, and the client can show as plain text.
+     *
+     * format_string() strips every tag only while formatstringstriptags is on; off, it returns cleaned HTML with its
+     * entities, and the response's own check (clean_param() must leave the value unchanged) refuses a text holding
+     * a tag. So entities are decoded and the text is cleaned as PARAM_TEXT until cleaning changes nothing; a text
+     * that never settles is answered empty, never as an error.
+     *
+     * @param string $text The formatted text.
+     * @return string The plain text.
+     */
+    public static function plain_text(string $text): string {
+        $text = clean_param(html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'), PARAM_TEXT);
+        for ($pass = 0; $pass < 3; $pass++) {
+            $clean = clean_param($text, PARAM_TEXT);
+            if ($clean === $text) {
+                return $text;
+            }
+            $text = $clean;
+        }
+        return '';
     }
 
     /**
