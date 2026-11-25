@@ -2087,7 +2087,9 @@ body {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-    margin-top: 1rem;
+    /* The plan summary's own column (.local-dimensions-plan-summary), so the row starts where the list does. */
+    max-width: 800px;
+    margin: 1rem auto 0;
 }
 
 /* The plan's status (fleet Design System, status-label.md): a rectangle in one tone triple, neutral by default. */
