@@ -17,6 +17,10 @@ Version `2026100542`.
   which stores the cleaned value, as its PHPUnit tests already did.
 - A scheduled preference write keeps the page pending until the server answers, so a Behat step cannot leave the
   page before it.
+- An HTTP 4xx answer is no longer shown as "Connection lost": it is the server refusing the request, and it now
+  reaches the error dialogue, which says what the server said (`Error('HTTP 4xx: ...')` from core/ajax, or the
+  bare text core's REST helper rejects with, where Moodle writes its own message). A request timeout (408), a
+  5xx and a dropped connection keep the toast.
 
 ### Sections other plugins add to the workspace's panel
 

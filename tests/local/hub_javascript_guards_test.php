@@ -219,9 +219,37 @@ final class hub_javascript_guards_test extends \basic_testcase {
         $check = $this->body($source, 'isNetworkError');
         $this->assertStringContainsString("'AbortError'", $check, 'The timeout shape (AbortError) is not recognised.');
         $this->assertStringContainsString("startsWith('HTTP ')", $check, 'The non-2xx shape (Error HTTP n) is not recognised.');
+        // A 4xx is the server refusing the request: it reaches the dialogue, as Error('HTTP 4xx') or as the bare
+        // text core's REST helper rejects with (Moodle's own message). A timeout and a 5xx stay connectivity
+        // failures, by status or by their status text.
+        $this->assertStringContainsString(
+            "return !isRefusalStatus(parseInt(error.message.slice('HTTP '.length), 10));",
+            $check,
+            'An HTTP 4xx answer is counted as a lost connection.'
+        );
+        $this->assertStringContainsString(
+            'return status >= 400 && status < 500 && status !== 408;',
+            $this->body($source, 'isRefusalStatus'),
+            'The refusal statuses are not the 4xx other than 408.'
+        );
+        $this->assertStringContainsString(
+            'return TRANSPORT_STATUS_TEXTS.includes(error);',
+            $check,
+            'A bare string that is no timeout or 5xx status text is counted as a lost connection.'
+        );
+        $texts = $this->between($source, 'const TRANSPORT_STATUS_TEXTS = [', '];');
+        foreach (['Request Timeout', 'Bad Gateway', 'Service Unavailable', 'Gateway Timeout', 'Gateway Time-out'] as $text) {
+            $this->assertStringContainsString("'{$text}'", $texts, "The status text '{$text}' is not a connectivity failure.");
+        }
+        $this->assertStringNotContainsString("'Bad Request'", $texts, 'A refusal is listed as a connectivity failure.');
+        $this->assertStringContainsString(
+            "Notification.exception(typeof error === 'string' ? new Error(error) : error);",
+            $this->body($source, 'notifyError'),
+            'A refusal that arrives as a bare string is not shown.'
+        );
         $this->assertStringContainsString('isFetchFailure(error)', $check, 'The dropped-connection shape is not checked.');
         $this->assertStringContainsString('error.errorcode', $check, 'A web-service exception is not excluded.');
-        $this->assertStringContainsString("typeof error === 'string'", $check, 'The legacy string rejection is not kept.');
+        $this->assertStringContainsString("typeof error === 'string'", $check, 'A string rejection is not classified.');
 
         $fetch = $this->body($source, 'isFetchFailure');
         $this->assertStringContainsString('instanceof TypeError', $fetch, 'A fetch failure is not required to be a TypeError.');
