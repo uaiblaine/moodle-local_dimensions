@@ -50,6 +50,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 #[CoversClass(\local_dimensions\external\get_fontawesome_icons::class)]
 #[CoversClass(\local_dimensions\external\get_competency_courses::class)]
 #[CoversClass(\local_dimensions\external\get_user_competency_summary_in_plan::class)]
+#[CoversClass(\local_dimensions\external\get_plan_journey::class)]
 #[CoversClass(\local_dimensions\external\get_competency_rule_data::class)]
 #[CoversClass(\local_dimensions\external\search_competencies::class)]
 #[CoversClass(\local_dimensions\external\competency_usage::class)]
@@ -94,6 +95,7 @@ final class readonly_session_test extends \advanced_testcase {
         'local_dimensions_get_courses_completion_status',
         'local_dimensions_get_competency_courses',
         'local_dimensions_get_user_competency_summary_in_plan',
+        'local_dimensions_get_plan_journey',
         'local_dimensions_get_competency_rule_data',
     ];
 
@@ -101,6 +103,7 @@ final class readonly_session_test extends \advanced_testcase {
     private const FIXTURE_KEYS = [
         'frameworkid', 'parentid', 'childid', 'relatedid', 'templateid', 'planid', 'course1', 'course2',
         'cm1', 'cm2', 'cohortid', 'roleid', 'categoryid', 'learnerid', 'freeuserid', 'draftitemid',
+        'evidenceid',
     ];
 
     /**
@@ -134,6 +137,7 @@ final class readonly_session_test extends \advanced_testcase {
                 'planid' => $f['planid'],
             ],
             'local_dimensions_get_competency_rule_data' => ['competencyid' => $f['parentid'], 'planid' => $f['planid']],
+            'local_dimensions_get_plan_journey' => ['planid' => $f['planid']],
             'local_dimensions_search_competencies' => ['query' => 'Probe child'],
             'local_dimensions_competency_usage' => ['competencyid' => $f['childid']],
             'local_dimensions_competency_delete_check' => ['competencyid' => $f['parentid']],
@@ -237,7 +241,7 @@ final class readonly_session_test extends \advanced_testcase {
         $exercised = array_keys(self::read_only_calls(array_fill_keys(self::FIXTURE_KEYS, 0)));
         sort($exercised);
 
-        $this->assertCount(30, $declared);
+        $this->assertCount(31, $declared);
         $this->assertSame($exercised, $declared);
     }
 
@@ -337,6 +341,9 @@ final class readonly_session_test extends \advanced_testcase {
                 $summary = json_decode($data, true);
                 $this->assertSame($f['planid'], (int) $summary['plan']['id'], $name);
                 $this->assertSame($f['childid'], (int) $summary['usercompetencysummary']['competency']['competency']['id'], $name);
+                break;
+            case 'get_plan_journey':
+                $this->assertSame([$f['evidenceid']], self::ids($data['entries'], 'id'), $name);
                 break;
             case 'get_competency_rule_data':
                 $rule = json_decode($data, true);
@@ -445,7 +452,8 @@ final class readonly_session_test extends \advanced_testcase {
      * owns an active plan from it and is enrolled in the first course. The child is linked to that
      * course and to one of its two activities; the second course is not linked. The cohort carries
      * a role rule with a custom role and a cohort-sync instance in the first course. A user named
-     * Gamma has no plan, and the admin's draft area holds a template CSV that links the child.
+     * Gamma has no plan, and the admin's draft area holds a template CSV that links the child. The learner has
+     * one evidence on the child, the plan's Journey.
      *
      * @return array Ids, keyed as self::FIXTURE_KEYS.
      */
@@ -507,6 +515,10 @@ final class readonly_session_test extends \advanced_testcase {
             'templateid' => $templateid,
             'status' => plan::STATUS_ACTIVE,
         ])->get('id');
+        $evidenceid = (int) $ccg->create_evidence([
+            'usercompetencyid' => $ccg->create_user_competency(['userid' => $learner->id, 'competencyid' => $childid])->get('id'),
+            'descidentifier' => 'evidence_competencyrule',
+        ])->get('id');
         $freeuserid = (int) $generator->create_user(['firstname' => 'Gamma', 'lastname' => 'Free'])->id;
 
         // No archetype: the role is assignable at every level, the user and course ones included.
@@ -545,6 +557,7 @@ final class readonly_session_test extends \advanced_testcase {
             'learnerid' => (int) $learner->id,
             'freeuserid' => $freeuserid,
             'draftitemid' => $this->upload_template_csv(),
+            'evidenceid' => $evidenceid,
         ];
     }
 

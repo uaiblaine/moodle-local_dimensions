@@ -25,9 +25,9 @@ define(
     ['core/ajax', 'core/templates', 'core/notification', 'core/str', 'core/modal', 'core/log',
         'local_dimensions/collapsible_description', 'local_dimensions/chip_filters',
         'local_dimensions/learner_prefs', 'local_dimensions/central/modal_expander', 'local_dimensions/filter_line',
-        'core/pending'],
+        'core/pending', 'local_dimensions/plan_journey'],
     function(Ajax, Templates, Notification, Str, Modal, Log, CollapsibleDescription, ChipFilters,
-        LearnerPrefs, ModalExpander, Line, Pending) {
+        LearnerPrefs, ModalExpander, Line, Pending, Journey) {
         'use strict';
 
         /* Which pane holds each competency's detail, rendered or on its way. It describes the DOM,
@@ -3105,7 +3105,7 @@ define(
             initSearch();
             initSort();
             initFavourites();
-            initViewToggle(planId);
+            initViewToggle(planId, armJourney(summary, planId));
 
             // Wire up custom-field chip filters (no-op when none rendered).
             ChipFilters.init(CHIP_CONTAINER_ID, function(selection) {
@@ -3162,8 +3162,7 @@ define(
             const pending = new Pending('local_dimensions/accordion:openrequested');
             revealItem(item);
 
-            const container = document.getElementById('local-dimensions-viewplan-accordion');
-            if (container && container.classList.contains('local-dimensions-grid-mode')) {
+            if (opensInDialogue()) {
                 openDetailModal(item, planId).then(function() {
                     pending.resolve();
                     return null;
@@ -3476,6 +3475,8 @@ define(
                 return countWith(chip, true);
             });
             Line.repaint();
+            // The Journey shows the records of the competencies the list shows.
+            Journey.refilter();
         }
 
         /**
@@ -3805,6 +3806,60 @@ define(
             }
             tearDownAccordionPanes();
             container.classList.toggle('local-dimensions-grid-mode', mode === 'grid');
+            /* The stylesheet hides the list while the summary says journey, so a stored Journey is never
+               painted as the list first; the Journey's own region is shown by its module. */
+            const summary = document.querySelector('.local-dimensions-plan-summary');
+            if (summary) {
+                summary.dataset.viewmode = mode;
+            }
+            if (mode === 'journey') {
+                Journey.show();
+            } else {
+                Journey.hide();
+            }
+        }
+
+        /**
+         * Whether a competency opens in the detail dialogue rather than in its row: the grid and the Journey.
+         *
+         * @return {boolean}
+         */
+        function opensInDialogue() {
+            const summary = document.querySelector('.local-dimensions-plan-summary');
+            const container = document.getElementById('local-dimensions-viewplan-accordion');
+            return Boolean((summary && summary.dataset.viewmode === 'journey')
+                || (container && container.classList.contains('local-dimensions-grid-mode')));
+        }
+
+        /**
+         * Arm the Journey view (local_dimensions/plan_journey) on this page.
+         *
+         * It finds its frame only where the server drew one, for a viewer who gets the competencies' detail. A
+         * record's competency opens through the detail dialogue, the entry a card of the grid uses; a record is
+         * shown while the line's filters leave its competency's row in the list.
+         *
+         * @param {HTMLElement|null} summary The overview's container
+         * @param {number} planId The plan id
+         * @return {boolean} Whether the Journey is armed, so its view may be offered
+         */
+        function armJourney(summary, planId) {
+            const row = function(competencyId) {
+                return document.querySelector(
+                    '.local-dimensions-accordion-item[data-competency-id="' + Number(competencyId) + '"]'
+                );
+            };
+            return Journey.arm(summary, {
+                openCompetency: function(competencyId) {
+                    const item = row(competencyId);
+                    if (item) {
+                        openDetailModal(item, planId);
+                    }
+                },
+                isShown: function(competencyId) {
+                    const item = row(competencyId);
+                    return Boolean(item) && !item.classList.contains('local-dimensions-hidden');
+                },
+            });
         }
 
         /**
@@ -3964,25 +4019,47 @@ define(
         }
 
         /**
-         * Wire the list/grid toggle and the grid's card clicks.
+         * Wire the view toggle (list, grid and, when armed, Journey) and the grid's card clicks.
+         *
+         * The Journey's buttons are drawn hidden and shown only once its module is armed and their handler is
+         * attached, so a reader never meets a view that cannot open. A stored Journey the module could not arm
+         * is painted as the list, without saving: the reader's choice stays theirs.
          *
          * @param {number} planId The plan id
+         * @param {boolean} journeyArmed Whether local_dimensions/plan_journey found its frame
          */
-        function initViewToggle(planId) {
+        function initViewToggle(planId, journeyArmed) {
             const container = document.getElementById('local-dimensions-viewplan-accordion');
             if (!container) {
                 return;
             }
 
+            const press = function(view) {
+                document.querySelectorAll('[data-view]').forEach(function(other) {
+                    other.setAttribute('aria-pressed', other.dataset.view === view ? 'true' : 'false');
+                });
+            };
             document.querySelectorAll('[data-view]').forEach(function(button) {
                 button.addEventListener('click', function() {
-                    document.querySelectorAll('[data-view]').forEach(function(other) {
-                        other.setAttribute('aria-pressed', other === button ? 'true' : 'false');
-                    });
+                    press(button.dataset.view);
                     applyViewMode(button.dataset.view);
                     LearnerPrefs.save({view: button.dataset.view});
                 });
             });
+
+            const summary = document.querySelector('.local-dimensions-plan-summary');
+            const stored = summary ? summary.dataset.viewmode : 'list';
+            if (journeyArmed) {
+                document.querySelectorAll('[data-view="journey"]').forEach(function(button) {
+                    button.hidden = false;
+                });
+                if (stored === 'journey') {
+                    applyViewMode('journey');
+                }
+            } else if (stored === 'journey') {
+                press('list');
+                applyViewMode('list');
+            }
 
             /* Capture phase on the container: in grid mode a click anywhere on a card opens the
                modal and never reaches the header button's own pane handler. The star is let through. */

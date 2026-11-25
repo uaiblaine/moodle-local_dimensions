@@ -204,8 +204,10 @@ class view_plan_summary_page implements renderable, templatable {
      *
      * The scope is "To do" then "All"; the star is drawn for the plan's owner and hidden until a
      * favourite exists; the organise menu is the sort menu, "Favourites first" only beside the
-     * star; the view toggle is List then Cards. Every starting state is the one the export already
-     * resolved from the stored preference, so the line and the list below it agree at first paint.
+     * star; the view toggle is List, Cards and, for a viewer who gets the competencies' detail, Journey,
+     * drawn hidden until local_dimensions/plan_journey is armed (a view that needs JavaScript is never a
+     * dead button). Every starting state is the one the export already resolved from the stored
+     * preference, so the line and the list below it agree at first paint.
      *
      * @param array $data The page's export, with its counts, flags and chip filters set.
      * @return array The partial's context.
@@ -222,6 +224,33 @@ class view_plan_summary_page implements renderable, templatable {
         $sortoptions = [];
         foreach ($sorts as $value => $label) {
             $sortoptions[] = ['value' => $value, 'label' => $label, 'checked' => ($data['sortmode'] === $value)];
+        }
+
+        $views = [
+            [
+                'value' => 'list',
+                'label' => get_string('line_view_list', 'local_dimensions'),
+                'icon' => 'fa-list',
+                'current' => $data['view_is_list'],
+                'hidden' => false,
+            ],
+            [
+                'value' => 'grid',
+                'label' => get_string('line_view_cards', 'local_dimensions'),
+                'icon' => 'fa-th-large',
+                'current' => $data['view_is_grid'],
+                'hidden' => false,
+            ],
+        ];
+        if ($data['candetail']) {
+            // The Journey reads the competencies' evidence: the overview's detail rule (plan_journey::page()).
+            $views[] = [
+                'value' => 'journey',
+                'label' => get_string('line_view_journey', 'local_dimensions'),
+                'icon' => 'fa-history',
+                'current' => $data['view_is_journey'],
+                'hidden' => true,
+            ];
         }
 
         return [
@@ -261,20 +290,7 @@ class view_plan_summary_page implements renderable, templatable {
             'hasorganise' => true,
             'sortoptions' => $sortoptions,
             'hasviews' => true,
-            'views' => [
-                [
-                    'value' => 'list',
-                    'label' => get_string('line_view_list', 'local_dimensions'),
-                    'icon' => 'fa-list',
-                    'current' => $data['view_is_list'],
-                ],
-                [
-                    'value' => 'grid',
-                    'label' => get_string('line_view_cards', 'local_dimensions'),
-                    'icon' => 'fa-th-large',
-                    'current' => $data['view_is_grid'],
-                ],
-            ],
+            'views' => $views,
         ];
     }
 
@@ -503,9 +519,15 @@ class view_plan_summary_page implements renderable, templatable {
         $data['sort_is_favourites'] = ($sort === 'favourites');
         $data['filter_is_incomplete'] = ($view['filter'] === 'incomplete');
         $data['filter_is_all'] = ($view['filter'] === 'all');
-        $data['viewmode'] = $view['view'];
-        $data['view_is_list'] = ($view['view'] === 'list');
-        $data['view_is_grid'] = ($view['view'] === 'grid');
+        /* Journey reads the competencies' evidence, so a viewer without the detail is painted the list; the
+           stored choice itself is seeded below untouched, so a save on this page does not overwrite it. */
+        $layout = ($view['view'] === 'journey' && !$data['candetail']) ? 'list' : $view['view'];
+        $data['viewmode'] = $layout;
+        $data['view_is_list'] = ($layout === 'list');
+        $data['view_is_grid'] = ($layout === 'grid');
+        $data['view_is_journey'] = ($layout === 'journey');
+        $data['hasjourney'] = $data['candetail'];
+        $data['journey'] = ['planid' => (int) $this->plan->get('id')];
         $data['showstar'] = $showfavourites;
         /* The filter appears only once there is something to filter to - the rule the
            companion block applies to its own favourites pill. */
