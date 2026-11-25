@@ -46,6 +46,12 @@ class learner_view {
     const SORTS = ['planorder', 'name', 'completed', 'favourites'];
 
     /**
+     * @var array The plan overview's layouts: the list, the card grid and the dated Journey. Journey is offered only to a
+     *     viewer who gets the competencies' detail; view_plan_summary_page paints the list for any other viewer.
+     */
+    const VIEWS = ['list', 'grid', 'journey'];
+
+    /**
      * The stored state, each key validated against what the views offer.
      *
      * Anything unrecognised falls back to the default rather than being trusted: the preference
@@ -64,7 +70,7 @@ class learner_view {
             'sort' => in_array($sort, self::SORTS, true) ? $sort : 'planorder',
             'filter' => (($stored['filter'] ?? '') === 'all') ? 'all' : 'incomplete',
             'favonly' => !empty($stored['favonly']),
-            'view' => (($stored['view'] ?? '') === 'grid') ? 'grid' : 'list',
+            'view' => in_array($stored['view'] ?? '', self::VIEWS, true) ? $stored['view'] : 'list',
             'expanded' => !empty($stored['expanded']),
             'trackerfilter' => (($stored['trackerfilter'] ?? '') === 'all') ? 'all' : 'incomplete',
         ];

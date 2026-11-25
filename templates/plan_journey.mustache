@@ -1,0 +1,70 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_dimensions/plan_journey
+
+    The plan overview's third view, Journey: the plan's evidence over time, newest first, grouped by
+    month. The server draws only the frame, hidden; local_dimensions/plan_journey fills the list from
+    local_dimensions_get_plan_journey when the reader chooses the view, and writes every record as text.
+    Drawn only for a viewer who gets the competencies' detail, the rule the service asks again.
+
+    The frame holds: the list (a heading and an ordered list per month, written by the module); the
+    skeleton while a page loads (aria-busy, one visually hidden status line); the empty state when the
+    plan has no record; a compact line when the line's filters hide every record loaded so far; the
+    error with its retry; and "Load more" for the next page. Words the module places come from here, in
+    data attributes: the link to an evidence's address.
+
+    Context variables required:
+    * planid (int) - The plan id the module asks the service for
+
+    @copyright  2026 Anderson Blaine
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "planid": 10
+    }
+}}
+<section class="local-dimensions-journey" id="local-dimensions-viewplan-journey" data-region="local-dimensions-journey"
+         data-planid="{{planid}}" data-label-link="{{#str}}journey_link, local_dimensions{{/str}}"
+         aria-labelledby="local-dimensions-viewplan-journey-title" hidden>
+    <h2 class="local-dimensions-line-sronly" id="local-dimensions-viewplan-journey-title">{{#str}}line_view_journey, local_dimensions{{/str}}</h2>
+    <div class="local-dimensions-journey-list" data-region="local-dimensions-journey-list"></div>
+    <div class="local-dimensions-journey-loading" data-region="local-dimensions-journey-loading" hidden>
+        <div class="local-dimensions-sk" aria-hidden="true">
+            <span class="local-dimensions-sk-row"><span class="local-dimensions-sk-block local-dimensions-sk-block--ring"></span><span class="local-dimensions-sk-block local-dimensions-sk-block--line"></span></span>
+            <span class="local-dimensions-sk-row"><span class="local-dimensions-sk-block local-dimensions-sk-block--ring"></span><span class="local-dimensions-sk-block local-dimensions-sk-block--line"></span></span>
+            <span class="local-dimensions-sk-row"><span class="local-dimensions-sk-block local-dimensions-sk-block--ring"></span><span class="local-dimensions-sk-block local-dimensions-sk-block--line"></span></span>
+        </div>
+        <span class="local-dimensions-line-sronly" role="status">{{#str}}journey_loading, local_dimensions{{/str}}</span>
+    </div>
+    <div class="local-dimensions-empty" data-region="local-dimensions-journey-empty" role="status" hidden>
+        <span class="local-dimensions-empty-icon">
+            <i class="fa fa-history" aria-hidden="true"></i>
+        </span>
+        <span class="local-dimensions-empty-title">{{#str}}journey_empty, local_dimensions{{/str}}</span>
+        <span class="local-dimensions-empty-text">{{#str}}journey_empty_note, local_dimensions{{/str}}</span>
+    </div>
+    <p class="local-dimensions-journey-filtered" data-region="local-dimensions-journey-filtered" role="status" hidden>{{#str}}journey_filtered, local_dimensions{{/str}}</p>
+    <div class="local-dimensions-journey-error" data-region="local-dimensions-journey-error" role="alert" hidden>
+        <span>{{#str}}journey_error, local_dimensions{{/str}}</span>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-action="local-dimensions-journey-retry">{{#str}}journey_retry, local_dimensions{{/str}}</button>
+    </div>
+    <div class="local-dimensions-journey-foot">
+        <button type="button" class="btn btn-outline-secondary" data-action="local-dimensions-journey-more" hidden>{{#str}}journey_more, local_dimensions{{/str}}</button>
+    </div>
+</section>

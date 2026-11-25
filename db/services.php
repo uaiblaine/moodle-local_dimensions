@@ -72,6 +72,14 @@ $functions = [
         'ajax' => true,
         'readonlysession' => true,
     ],
+    'local_dimensions_get_plan_journey' => [
+        'classname' => 'local_dimensions\external\get_plan_journey',
+        'methodname' => 'execute',
+        'description' => 'One page of a plan\'s evidence over time, newest first, for the plan overview\'s Journey view.',
+        'type' => 'read',
+        'ajax' => true,
+        'readonlysession' => true,
+    ],
     'local_dimensions_get_competency_rule_data' => [
         'classname' => 'local_dimensions\external\get_competency_rule_data',
         'methodname' => 'execute',
