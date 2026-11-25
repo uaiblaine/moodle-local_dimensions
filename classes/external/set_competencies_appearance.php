@@ -397,26 +397,14 @@ class set_competencies_appearance extends external_api {
     }
 
     /**
-     * Text a PARAM_TEXT return field accepts whatever the site's settings, and the client can show as plain text.
-     *
-     * format_string() strips every tag only while formatstringstriptags is on; off, it returns cleaned HTML with its
-     * entities, and the response's own check (clean_param() must leave the value unchanged) would refuse a label
-     * holding a tag after the transaction committed. So entities are decoded and the text is cleaned as PARAM_TEXT
-     * until cleaning changes nothing; a label that never settles is answered empty, never as an error.
+     * Text a PARAM_TEXT return field accepts whatever the site's settings ({@see helper::plain_text()}): a label
+     * holding a tag would otherwise be refused by the response's own check after the transaction committed.
      *
      * @param string $text The formatted text.
      * @return string The plain text.
      */
     private static function plain_text(string $text): string {
-        $text = clean_param(html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8'), PARAM_TEXT);
-        for ($pass = 0; $pass < 3; $pass++) {
-            $clean = clean_param($text, PARAM_TEXT);
-            if ($clean === $text) {
-                return $text;
-            }
-            $text = $clean;
-        }
-        return '';
+        return helper::plain_text($text);
     }
 
     /**

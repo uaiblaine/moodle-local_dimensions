@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed: a type or tag label holding markup could stop the tree from loading
+
+Version `2026100544`.
+
+- With `formatstringstriptags` off, a type, tag 1 or tag 2 option label holding a tag ("Core <b>skills</b>") failed
+  the answer of `local_dimensions_browse_structure` and `local_dimensions_get_structure_node`, so the Competencies
+  tab's tree and the workspace did not load for a framework using that label. The node's labels now travel as the
+  same plain text whatever the setting says (`helper::plain_text()`, the rule the bulk appearance service already
+  applied to its own answer).
+- Tests: the reader of a framework sees the root's facts and none of its actions (a Behat scenario, with the
+  manager's scenario as its control); the Jest test of the delete texts no longer trips the camelcase rule.
+
 ### The plan overview's actions and an address that opens one competency
 
 Version `2026100543`. Phase 2a of the competency pages: what the learner's plan overview needs before a
