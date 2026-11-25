@@ -92,7 +92,12 @@ final class plan_actions_js_source_test extends \basic_testcase {
         $functions = [];
         include($CFG->dirroot . '/local/dimensions/db/services.php');
         foreach (array_keys($functions) as $name) {
-            $this->assertStringNotContainsString('review', $name, 'The plugin adds no review service of its own.');
+            // The word between underscores: "preview_import_templates" is not a review service.
+            $this->assertDoesNotMatchRegularExpression(
+                '/(^|_)review(_|$)/',
+                $name,
+                'The plugin adds no review service of its own.'
+            );
         }
     }
 
