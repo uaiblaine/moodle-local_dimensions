@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Hub de competências: lentes</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="./hub.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#0a4f8f}a:hover{color:#073560}
+</style>
+</helmet>
+<div class="hb" style="min-height: 1120px;">
+  <nav class="nav" aria-label="Site">
+    <span class="brand">Dimensions</span>
+    <a href="#">Painel</a>
+    <a class="on" href="#" aria-current="page">Administração do site</a>
+    <span class="grow"></span>
+    <span class="avatar">AU</span>
+  </nav>
+
+  <header class="hdr">
+    <nav class="crumb" aria-label="Você está em"><a href="#">Administração do site</a><span>/</span><a href="#">Competências</a><span>/</span><span>Hub de competências</span></nav>
+    <h1 class="h1">Hub de competências</h1>
+    <nav class="tabs" aria-label="Seções do hub">
+      <a href="#">Estruturas</a>
+      <a class="on" href="#" aria-current="page">Competências</a>
+      <a href="#">Planos de aprendizagem</a>
+    </nav>
+  </header>
+
+  <main class="ws">
+    <div class="sline">
+      <button type="button" class="ctx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"></path></svg>Sistema</button>
+      <button type="button" class="sel" aria-label="Estrutura: DigCompEdu, competência digital dos educadores"><b>DigCompEdu: competência digital dos educadores</b><span class="id">DIGCOMPEDU</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></button>
+      <span class="small num">28 competências · 2 níveis · 3 regras · 4 relações</span>
+      <span class="grow"></span>
+      <button type="button" class="btn primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Adicionar competência</button>
+    </div>
+
+    <div class="tb">
+      <div class="seg" role="radiogroup" aria-label="Visão">
+        <button type="button" role="radio" aria-checked="false" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.5M4 12h.5M4 18h.5"></path></svg>Outline</button>
+        <button type="button" role="radio" aria-checked="true" tabindex="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="9" width="6" height="6" rx="1"></rect><rect x="15" y="3" width="6" height="6" rx="1"></rect><rect x="15" y="15" width="6" height="6" rx="1"></rect><path d="M9 12h3M12 6v12M12 6h3M12 18h3"></path></svg>Mapa</button>
+        <button type="button" role="radio" aria-checked="false" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M10 4v16"></path></svg>Ambos</button>
+      </div>
+      <span class="lbl" id="lens-label-3">Lente</span>
+      <div class="seg" role="radiogroup" aria-labelledby="lens-label-3">
+        <button type="button" role="radio" aria-checked="false" tabindex="-1">Nenhuma</button>
+        <button type="button" role="radio" aria-checked="{{ usoChecked }}" onClick="{{ pickUso }}">Uso</button>
+        <button type="button" role="radio" aria-checked="{{ regrasChecked }}" onClick="{{ pickRegras }}">Regras</button>
+        <button type="button" role="radio" aria-checked="false" tabindex="-1">Relações</button>
+      </div>
+      <span class="grow"></span>
+      <label class="srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span class="vh">Buscar por nome ou número de identificação</span><input type="search" placeholder="Buscar por nome ou ID"></label>
+      <button type="button" class="btn line"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg>Verificar<span class="badge" aria-label="6 achados">6</span></button>
+      <button type="button" class="btn line">Comandos<span class="kbd">Ctrl K</span></button>
+    </div>
+
+    <div class="panes">
+      <section class="pane map" aria-label="Mapa da estrutura">
+        <div class="ph">
+          <h2>Mapa</h2>
+          <span class="small">Uma lente responde a uma pergunta sobre a mesma árvore. A resposta também está em texto, no painel.</span>
+        </div>
+        <div class="mapwrap">
+          <div class="stagebox">
+            <div style="position: relative; width: 784px; height: 712px;">
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 232px; top: 422px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="8" height="468" viewBox="0 0 8 468" preserveAspectRatio="none" style="position: absolute; left: 256px; top: 192px; width: 8px; height: 468px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 4 0 L 4 468"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 260px; top: 188px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 260px; top: 368px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 260px; top: 440px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 260px; top: 512px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 260px; top: 584px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 260px; top: 656px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 496px; top: 188px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="8" height="216" viewBox="0 0 8 216" preserveAspectRatio="none" style="position: absolute; left: 520px; top: 84px; width: 8px; height: 216px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 4 0 L 4 216"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 80px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 152px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 224px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 296px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #8a93a8; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+
+              <div class="colh" style="position: absolute; left: 24px; top: 16px;">Estrutura</div>
+              <div class="colh" style="position: absolute; left: 288px; top: 16px;">Nível 1 · Área</div>
+              <div class="colh" style="position: absolute; left: 552px; top: 16px;">Nível 2 · Competência</div>
+
+              <sc-if value="{{ isUso }}" hint-placeholder-val="{{ true }}">
+              <button type="button" class="nd leaf" aria-label="DigCompEdu, estrutura, usada em 14 cursos" style="position: absolute; left: 24px; top: 398px; width: 208px; height: 56px;"><span class="tile" style="background: #1d2433;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1"></rect><rect x="3" y="16" width="6" height="5" rx="1"></rect><rect x="15" y="16" width="6" height="5" rx="1"></rect><path d="M12 8v4M6 16v-4h12v4"></path></svg></span><span class="tx"><span class="one">DigCompEdu</span><span class="sub">14 cursos · 3 modelos</span></span></button>
+              <button type="button" class="nd u3" aria-label="Área 1: Envolvimento profissional, 9 cursos nas filhas, 2 modelos de plano" style="position: absolute; left: 288px; top: 164px; width: 208px; height: 56px;"><span class="tile" style="background: #2456b8;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 1: Envolvimento profissional</span><span class="sub">9 cursos · 2 modelos</span></span></button>
+              <button type="button" class="nd u2" aria-label="Área 2: Recursos digitais, 5 cursos nas filhas, 1 modelo de plano" style="position: absolute; left: 288px; top: 344px; width: 208px; height: 56px;"><span class="tile" style="background: #0f766e;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 2: Recursos digitais</span><span class="sub">5 cursos · 1 modelo</span></span></button>
+              <button type="button" class="nd u3" aria-label="Área 3: Ensino e aprendizagem, 12 cursos nas filhas, 3 modelos de plano" style="position: absolute; left: 288px; top: 416px; width: 208px; height: 56px;"><span class="tile" style="background: #9a3412;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 3: Ensino e aprendizagem</span><span class="sub">12 cursos · 3 modelos</span></span></button>
+              <button type="button" class="nd u1" aria-label="Área 4: Avaliação, 2 cursos nas filhas, 1 modelo de plano" style="position: absolute; left: 288px; top: 488px; width: 208px; height: 56px;"><span class="tile" style="background: #6d28d9;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 4: Avaliação</span><span class="sub">2 cursos · 1 modelo</span></span></button>
+              <button type="button" class="nd unused" aria-label="Área 5: Capacitação dos aprendentes, sem uso em cursos nem em modelos" style="position: absolute; left: 288px; top: 560px; width: 208px; height: 56px;"><span class="tile" style="background: #a16207;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 5: Capacitação dos aprendentes</span><span class="sub">Sem uso</span></span></button>
+              <button type="button" class="nd u1" aria-label="Área 6: Promoção da competência digital dos aprendentes, 1 curso nas filhas, nenhum modelo" style="position: absolute; left: 288px; top: 632px; width: 208px; height: 56px;"><span class="tile" style="background: #be185d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 6: Promoção da competência digital</span><span class="sub">1 curso · 0 modelos</span></span></button>
+              <button type="button" class="nd leaf u2" aria-label="1.1 Comunicação institucional, 3 cursos, 1 modelo de plano" style="position: absolute; left: 552px; top: 56px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.1 Comunicação institucional</span><span class="sub">3 cursos · 1 modelo</span></span></button>
+              <button type="button" class="nd leaf u2" aria-label="1.2 Colaboração profissional, 4 cursos, 2 modelos de plano" style="position: absolute; left: 552px; top: 128px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.2 Colaboração profissional</span><span class="sub">4 cursos · 2 modelos</span></span></button>
+              <button type="button" class="nd leaf u1" aria-label="1.3 Prática reflexiva, 2 cursos, 1 modelo de plano" style="position: absolute; left: 552px; top: 200px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.3 Prática reflexiva</span><span class="sub">2 cursos · 1 modelo</span></span></button>
+              <button type="button" class="nd leaf unused" aria-label="1.4 Desenvolvimento profissional contínuo, sem uso em cursos nem em modelos" style="position: absolute; left: 552px; top: 272px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.4 Desenvolvimento profissional contínuo</span><span class="sub">Sem uso</span></span></button>
+              </sc-if>
+
+              <sc-if value="{{ isRegras }}" hint-placeholder-val="{{ false }}">
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 496px; top: 188px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #1d4fa8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="8" height="216" viewBox="0 0 8 216" preserveAspectRatio="none" style="position: absolute; left: 520px; top: 84px; width: 8px; height: 216px; overflow: visible; fill: none; stroke: #1d4fa8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round"><path d="M 4 0 L 4 216"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 80px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #1d4fa8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 152px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #1d4fa8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 224px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #1d4fa8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <svg aria-hidden="true" width="28" height="8" viewBox="0 0 28 8" preserveAspectRatio="none" style="position: absolute; left: 524px; top: 296px; width: 28px; height: 8px; overflow: visible; fill: none; stroke: #1d4fa8; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round"><path d="M 0 4 L 28 4"></path></svg>
+              <button type="button" class="nd leaf dim" aria-label="DigCompEdu, estrutura, sem regra" style="position: absolute; left: 24px; top: 398px; width: 208px; height: 56px;"><span class="tile" style="background: #1d2433;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1"></rect><rect x="3" y="16" width="6" height="5" rx="1"></rect><rect x="15" y="16" width="6" height="5" rx="1"></rect><path d="M12 8v4M6 16v-4h12v4"></path></svg></span><span class="tx"><span class="one">DigCompEdu</span><span class="sub">Sem regra</span></span></button>
+              <button type="button" class="nd ruled" aria-label="Área 1: Envolvimento profissional, regra por pontos, 6 para concluir, 8 disponíveis" style="position: absolute; left: 288px; top: 164px; width: 208px; height: 56px;"><span class="tile" style="background: #2456b8;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 1: Envolvimento profissional</span><span class="sub">Pontos: 6 de 8 concluem</span></span></button>
+              <button type="button" class="nd ruled" aria-label="Área 2: Recursos digitais, regra: todas as filhas" style="position: absolute; left: 288px; top: 344px; width: 208px; height: 56px;"><span class="tile" style="background: #0f766e;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 2: Recursos digitais</span><span class="sub">Todas as 3 filhas</span></span></button>
+              <button type="button" class="nd dim" aria-label="Área 3: Ensino e aprendizagem, sem regra" style="position: absolute; left: 288px; top: 416px; width: 208px; height: 56px;"><span class="tile" style="background: #9a3412;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 3: Ensino e aprendizagem</span><span class="sub">Sem regra</span></span></button>
+              <button type="button" class="nd flagged" aria-label="Área 4: Avaliação, regra por pontos que não dispara: pede 6, as filhas somam 4" style="position: absolute; left: 288px; top: 488px; width: 208px; height: 56px;"><span class="tile" style="background: #6d28d9;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 4: Avaliação</span><span class="sub" style="color: #7a4a00; font-weight: 600;">Pede 6, filhas somam 4</span></span></button>
+              <button type="button" class="nd dim" aria-label="Área 5: Capacitação dos aprendentes, sem regra" style="position: absolute; left: 288px; top: 560px; width: 208px; height: 56px;"><span class="tile" style="background: #a16207;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 5: Capacitação dos aprendentes</span><span class="sub">Sem regra</span></span></button>
+              <button type="button" class="nd dim" aria-label="Área 6: Promoção da competência digital dos aprendentes, sem regra" style="position: absolute; left: 288px; top: 632px; width: 208px; height: 56px;"><span class="tile" style="background: #be185d;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">Área 6: Promoção da competência digital</span><span class="sub">Sem regra</span></span></button>
+              <button type="button" class="nd leaf" aria-label="1.1 Comunicação institucional, vale 3 pontos na regra da Área 1" style="position: absolute; left: 552px; top: 56px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.1 Comunicação institucional</span><span class="sub">3 pontos</span></span></button>
+              <button type="button" class="nd leaf" aria-label="1.2 Colaboração profissional, vale 2 pontos na regra da Área 1, obrigatória" style="position: absolute; left: 552px; top: 128px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.2 Colaboração profissional</span><span class="sub">2 pontos · obrigatória</span></span></button>
+              <button type="button" class="nd leaf" aria-label="1.3 Prática reflexiva, vale 2 pontos na regra da Área 1" style="position: absolute; left: 552px; top: 200px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.3 Prática reflexiva</span><span class="sub">2 pontos</span></span></button>
+              <button type="button" class="nd leaf" aria-label="1.4 Desenvolvimento profissional contínuo, vale 1 ponto na regra da Área 1" style="position: absolute; left: 552px; top: 272px; width: 208px; height: 56px;"><span class="tile" style="background: #dbe6f8; color: #1a4391;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle></svg></span><span class="tx"><span class="one">1.4 Desenvolvimento profissional contínuo</span><span class="sub">1 ponto</span></span></button>
+              </sc-if>
+
+              <button type="button" class="tg" aria-label="Recolher Área 1: Envolvimento profissional" aria-expanded="true" style="position: absolute; left: 466px; top: 180px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+              <button type="button" class="tg" aria-label="Expandir Área 2: Recursos digitais" aria-expanded="false" style="position: absolute; left: 466px; top: 360px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+              <button type="button" class="tg" aria-label="Expandir Área 3: Ensino e aprendizagem" aria-expanded="false" style="position: absolute; left: 466px; top: 432px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+              <button type="button" class="tg" aria-label="Expandir Área 4: Avaliação" aria-expanded="false" style="position: absolute; left: 466px; top: 504px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+              <button type="button" class="tg" aria-label="Expandir Área 5: Capacitação dos aprendentes" aria-expanded="false" style="position: absolute; left: 466px; top: 576px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+              <button type="button" class="tg" aria-label="Expandir Área 6: Promoção da competência digital dos aprendentes" aria-expanded="false" style="position: absolute; left: 466px; top: 648px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+            </div>
+          </div>
+          <div class="zoom" role="group" aria-label="Controles do mapa">
+            <button type="button" class="ib" aria-label="Afastar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+            <span class="pc">100%</span>
+            <button type="button" class="ib" aria-label="Aproximar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+            <button type="button" class="ib" aria-label="Ajustar a estrutura à tela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="pane det" aria-label="Lente">
+        <sc-if value="{{ isUso }}" hint-placeholder-val="{{ true }}">
+        <div class="sec">
+          <p class="kick">Lente</p>
+          <h2 class="ttl">Uso</h2>
+          <p class="small">Onde cada competência está ligada. Uma área soma as suas filhas.</p>
+          <div class="seg" role="radiogroup" aria-label="Contar" style="align-self: flex-start;">
+            <button type="button" role="radio" aria-checked="true" tabindex="0">Cursos</button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1">Modelos</button>
+            <button type="button" role="radio" aria-checked="false" tabindex="-1">Atividades</button>
+          </div>
+        </div>
+        <div class="sec">
+          <h3>Legenda: cursos ligados</h3>
+          <ul class="leg">
+            <li><span class="box" style="border-style: dashed; border-color: #8a93a8;"></span>Sem uso<span class="cnt">5</span></li>
+            <li><span class="box" style="background: #eaf2fb;"></span>1 a 2<span class="cnt">9</span></li>
+            <li><span class="box" style="background: #c9dff4;"></span>3 a 5<span class="cnt">8</span></li>
+            <li><span class="box" style="background: #9cc3ea;"></span>6 ou mais<span class="cnt">6</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <h3>Sem uso (5)</h3>
+          <ul class="lst">
+            <li><a class="nm" href="#">Área 5: Capacitação dos aprendentes</a></li>
+            <li><a class="nm" href="#">5.1 Acessibilidade e inclusão</a></li>
+            <li><a class="nm" href="#">5.2 Diferenciação e personalização</a></li>
+            <li><a class="nm" href="#">5.3 Envolvimento ativo dos aprendentes</a></li>
+            <li><a class="nm" href="#">1.4 Desenvolvimento profissional contínuo</a></li>
+          </ul>
+          <p class="small">Uma competência sem uso pode ser excluída sem bloqueio do Moodle.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isRegras }}" hint-placeholder-val="{{ false }}">
+        <div class="sec">
+          <p class="kick">Lente</p>
+          <h2 class="ttl">Regras</h2>
+          <p class="small">O que conclui cada competência-mãe a partir das filhas, e quanto cada filha conta.</p>
+        </div>
+        <div class="sec">
+          <h3>Legenda</h3>
+          <ul class="leg">
+            <li><span class="box" style="background: #e7f1fa; border-color: #0f6cbf;"></span>Com regra<span class="cnt">3</span></li>
+            <li><span class="box" style="background: #fcefd6; border-color: #d9a94e;"></span>Regra que não dispara<span class="cnt">1</span></li>
+            <li><span class="box" style="opacity: 0.55;"></span>Sem regra<span class="cnt">4</span></li>
+          </ul>
+        </div>
+        <div class="sec">
+          <h3>Área 1: Envolvimento profissional</h3>
+          <dl class="kv">
+            <dt>Tipo</dt><dd>Pontos</dd>
+            <dt>Para concluir</dt><dd>6 pontos</dd>
+            <dt>Disponíveis nas filhas</dt><dd>8 pontos</dd>
+            <dt>Obrigatória</dt><dd>1.2 Colaboração profissional</dd>
+            <dt>Ao cumprir</dt><dd>Marcar como concluída</dd>
+          </dl>
+          <div class="acts"><button type="button" class="btn line sm">Editar regra</button></div>
+        </div>
+        <div class="sec">
+          <h3>Área 2: Recursos digitais</h3>
+          <dl class="kv">
+            <dt>Tipo</dt><dd>Todas as filhas</dd>
+            <dt>Ao cumprir</dt><dd>Anexar evidência</dd>
+          </dl>
+        </div>
+        <div class="sec">
+          <h3>Área 4: Avaliação</h3>
+          <div class="note" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 20h19L12 4z"></path><path d="M12 10v4M12 17v.5"></path></svg><span>A regra pede 6 pontos e as três filhas somam 4. Ela nunca dispara.</span></div>
+          <div class="acts"><button type="button" class="btn line sm">Corrigir regra</button></div>
+        </div>
+        </sc-if>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lente":{"editor":"enum","options":["Uso","Regras"],"default":"Uso"},"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+renderVals() {
+const state = this.state || {};
+const lens = state.lens || (this.props.lente === 'Regras' ? 'regras' : 'uso');
+return {
+isUso: lens === 'uso',
+isRegras: lens === 'regras',
+usoChecked: lens === 'uso' ? 'true' : 'false',
+regrasChecked: lens === 'regras' ? 'true' : 'false',
+pickUso: () => this.setState({ lens: 'uso' }),
+pickRegras: () => this.setState({ lens: 'regras' })
+};
+}
+}
+</script>
+</body>
+</html>
