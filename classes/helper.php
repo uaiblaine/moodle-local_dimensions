@@ -2630,6 +2630,16 @@ class helper {
                 'id' => $dispbool($structsrc, 'id', false),
                 'rule' => $dispbool($structsrc, 'rule', true),
                 'showhidden' => $dispbool($structsrc, 'showhidden', false),
+                // The Competencies tab's view; anything but a known one is none saved (''), and the tab's
+                // default for the hub's mode applies (structure::resolve_view()).
+                'view' => in_array($structsrc['view'] ?? null, \local_dimensions\output\dynamictabs\structure::VIEWS, true)
+                    ? (string) $structsrc['view']
+                    : '',
+                // The workspace's lens; anything but a known one is none saved (''), and the workspace opens
+                // without a lens unless the address names one (hub_map::resolve_lens()).
+                'lens' => in_array($structsrc['lens'] ?? null, \local_dimensions\output\hub_map::LENSES, true)
+                    ? (string) $structsrc['lens']
+                    : '',
             ],
             'planslist' => [
                 'id' => $dispbool($listsrc, 'id', false),
@@ -2648,6 +2658,9 @@ class helper {
             'plansshowdisabled' => $dispbool($displayraw, 'plansshowdisabled', false),
             'frameworksshowhidden' => $dispbool($displayraw, 'frameworksshowhidden', false),
             'modalexpanded' => $dispbool($displayraw, 'modalexpanded', false),
+            // The classic hub (the Structures tab and the classic list) instead of the workspace; off by
+            // default ({@see \local_dimensions\local\hub_mode}).
+            'classic' => $dispbool($displayraw, 'classic', false),
         ];
 
         return ['nav' => $nav, 'display' => $display];
@@ -3447,12 +3460,20 @@ class helper {
      * @param \core_customfield\handler $handler The area's handler.
      * @param array $data Submitted data, carrying the instance id under 'id' (0 on create).
      * @param array $files Submitted files.
+     * @param array|null $editable The handler's editable fields for the instance, when the caller has just read them
+     *     (keyed by field id); null reads them here.
      * @return array Errors keyed by form element name.
      */
-    public static function validate_present_customfields(\core_customfield\handler $handler, array $data, array $files): array {
+    public static function validate_present_customfields(
+        \core_customfield\handler $handler,
+        array $data,
+        array $files,
+        ?array $editable = null
+    ): array {
         $instanceid = (int) ($data['id'] ?? 0);
+        $editable = $editable ?? $handler->get_editable_fields($instanceid);
         $errors = [];
-        foreach ($handler->get_instance_fields_data($handler->get_editable_fields($instanceid), $instanceid) as $field) {
+        foreach ($handler->get_instance_fields_data($editable, $instanceid) as $field) {
             $name = $field->get_form_element_name();
             if (!array_key_exists($name, $data) && !array_key_exists($name . '_editor', $data)) {
                 continue;

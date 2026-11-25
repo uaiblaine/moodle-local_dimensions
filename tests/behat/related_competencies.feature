@@ -17,6 +17,10 @@ Feature: See a competency's related competencies in the Competency hub
     And the following "core_competency > related_competencies" exist:
       | competency | relatedcompetency |
       | AC1        | BC1               |
+    # The classic hub (the Structures tab and the classic list), kept one release behind the context bar's link.
+    And the following "user preferences" exist:
+      | user       | preference                       | value            |
+      | admin      | local_dimensions_central_display | {"classic":true} |
     And I log in as "admin"
 
   Scenario: Open the Related competencies modal and see a related competency

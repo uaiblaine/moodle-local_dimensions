@@ -51,6 +51,9 @@ class competency_handler extends handler {
     /** @var context|null Context a form is creating a competency in, set before the fields are rendered. */
     protected $editcontexthint = null;
 
+    /** @var context[] Contexts of competencies a bulk write has proved, by competency id, for that write only. */
+    protected $knowncontexts = [];
+
     /**
      * Returns the singleton instance.
      *
@@ -166,6 +169,22 @@ class competency_handler extends handler {
     }
 
     /**
+     * Tell the handler the context of each competency a bulk write acts on, for the length of that write.
+     *
+     * The bulk appearance service ({@see \local_dimensions\external\set_competencies_appearance}) proves with one
+     * query that every competency is its framework's, so each one's context is the framework's: remembering it spares
+     * can_edit() a competency and a framework read per field and per call (about 15 fields, three calls a competency).
+     * It also keeps a competency deleted during the write from falling back to the system context below; the service
+     * re-reads the set before it commits. The caller clears it, with an empty array, in a finally block.
+     *
+     * @param array $contexts Context by competency id; an empty array forgets them.
+     * @return void
+     */
+    public function remember_edit_contexts(array $contexts): void {
+        $this->knowncontexts = $contexts;
+    }
+
+    /**
      * The context a competency's custom-field editing rights are resolved against.
      *
      * The competency's framework context when an instance is known (given, or latched while
@@ -178,6 +197,9 @@ class competency_handler extends handler {
      */
     protected function resolve_edit_context(int $instanceid): context {
         $instanceid = $instanceid > 0 ? $instanceid : $this->savinginstanceid;
+        if (isset($this->knowncontexts[$instanceid])) {
+            return $this->knowncontexts[$instanceid];
+        }
         if ($instanceid > 0) {
             $competency = \core_competency\competency::get_record(['id' => $instanceid]);
             if ($competency) {

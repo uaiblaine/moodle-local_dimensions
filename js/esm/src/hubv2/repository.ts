@@ -25,7 +25,8 @@
 
 import {load} from './amd';
 import type {AjaxRequest, RuleConfig} from './amd';
-import type {DeleteCheck, NodePage, PathItem, StructureNode, Usage} from './types';
+import type {FieldEntry} from './bulk';
+import type {AppearanceAnswer, DeleteCheck, Insights, NodePage, PathItem, StructureNode, Usage} from './types';
 
 /** A child competency as the rule dialogue lists it. */
 type Child = {id: number, shortname: string};
@@ -93,6 +94,33 @@ export const getNode = (competencyid: number): Promise<NodeAnswer> =>
     call<NodeAnswer>('local_dimensions_get_structure_node', {competencyid});
 
 /**
+ * Several competencies, fresh, each with its ancestor chain, in one request: the names of findings and
+ * of unused competencies the tree has not loaded.
+ *
+ * @param {Array} ids The competencies.
+ * @returns {Promise} Resolves with the answers in the same order.
+ */
+export const getNodes = (ids: number[]): Promise<NodeAnswer[]> =>
+    (ids.length === 0
+        ? Promise.resolve([])
+        : callMany(ids.map((competencyid) => ({methodname: 'local_dimensions_get_structure_node', args: {competencyid}})))
+            .then((answers) => answers as NodeAnswer[]));
+
+/**
+ * What the lenses and the checker read of a framework, in one answer: usage, rules, relations, findings
+ * and the summary's numbers (local_dimensions_get_framework_insights).
+ *
+ * @param {number} frameworkid The framework.
+ * @returns {Promise} Resolves with the insights.
+ */
+export const insights = (frameworkid: number): Promise<Insights> =>
+    call<Insights>('local_dimensions_get_framework_insights', {frameworkid}).then((answer) => ({
+        ...answer,
+        // The pairs list is the newest field of the answer: an older server sends none.
+        pairs: answer.pairs ?? [],
+    }));
+
+/**
  * Competencies of the framework matching a text, by name or ID number.
  *
  * @param {number} frameworkid The framework.
@@ -116,6 +144,17 @@ export const selectionData = (competencyid: number): Promise<[Usage, PathItem[]]
     ]).then(([usage, related]) => [usage as Usage, (related as {items: PathItem[]}).items]);
 
 /**
+ * The sections other plugins add to the panel for one competency, as received: sections.ts readSections() reads
+ * them again before the panel draws them.
+ *
+ * @param {number} competencyid The competency.
+ * @returns {Promise} Resolves with the answer's sections.
+ */
+export const panelSections = (competencyid: number): Promise<unknown> =>
+    call<{competencyid: number, sections: unknown}>('local_dimensions_get_competency_panel_sections', {competencyid})
+        .then((answer) => answer.sections);
+
+/**
  * What deleting a competency would destroy, and whether core would refuse it, before anything is attempted.
  *
  * @param {number} competencyid The competency.
@@ -123,6 +162,31 @@ export const selectionData = (competencyid: number): Promise<[Usage, PathItem[]]
  */
 export const deleteCheck = (competencyid: number): Promise<DeleteCheck> =>
     call<DeleteCheck>('local_dimensions_competency_delete_check', {competencyid});
+
+/**
+ * What deleting each of several competencies would destroy, and whether core would refuse it, in one request.
+ *
+ * @param {Array} ids The competencies.
+ * @returns {Promise} Resolves with the checks in the same order.
+ */
+export const deleteChecks = (ids: number[]): Promise<DeleteCheck[]> =>
+    (ids.length === 0
+        ? Promise.resolve([])
+        : callMany(ids.map((competencyid) => ({methodname: 'local_dimensions_competency_delete_check', args: {competencyid}})))
+            .then((answers) => answers as DeleteCheck[]));
+
+/**
+ * Set or clear appearance fields of several competencies of the framework, all or nothing: the server checks the
+ * capability in the framework's context, that every id is the framework's, and each value as the competency form
+ * does (local_dimensions_set_competencies_appearance).
+ *
+ * @param {number} frameworkid The framework.
+ * @param {Array} competencyids The competencies, at most 200.
+ * @param {Array} fields The fields not left as they are.
+ * @returns {Promise} Resolves with the ids that changed and each competency's effective values.
+ */
+export const setAppearance = (frameworkid: number, competencyids: number[], fields: FieldEntry[]): Promise<AppearanceAnswer> =>
+    call<AppearanceAnswer>('local_dimensions_set_competencies_appearance', {frameworkid, competencyids, fields});
 
 /**
  * Delete a competency. Core answers false when it cannot be deleted (it is in use).
@@ -142,6 +206,44 @@ export const deleteCompetency = (id: number): Promise<boolean> =>
  */
 export const moveOne = (id: number, up: boolean): Promise<unknown> =>
     call(up ? 'core_competency_move_up_competency' : 'core_competency_move_down_competency', {id});
+
+/**
+ * Move a competency up several places among its siblings, in one request: core runs the calls in
+ * order, each one place.
+ *
+ * @param {number} id The competency.
+ * @param {number} times How many places.
+ * @returns {Promise} Resolves once moved.
+ */
+export const moveUpTimes = (id: number, times: number): Promise<unknown> => (times > 0
+    ? callMany(Array.from({length: times}, () => ({methodname: 'core_competency_move_up_competency', args: {id}})))
+    : Promise.resolve(null));
+
+/**
+ * Create a competency from a name and an ID number, as the outline's inline editor does. Core appends it
+ * after its parent's children, checks moodle/competency:competencymanage in the framework's context, and
+ * refuses an empty or taken ID number.
+ *
+ * @param {number} frameworkid The framework.
+ * @param {number} parentid The parent, 0 for the top level.
+ * @param {string} shortname The name.
+ * @param {string} idnumber The ID number.
+ * @returns {Promise} Resolves with the new competency's id.
+ */
+export const createCompetency = (frameworkid: number, parentid: number, shortname: string, idnumber: string): Promise<number> =>
+    call<{id: number}>('core_competency_create_competency', {
+        competency: {shortname, idnumber, competencyframeworkid: frameworkid, parentid},
+    }).then((record) => Number(record.id));
+
+/**
+ * Rename a competency. Only the id and the name are sent: core leaves every omitted field alone.
+ *
+ * @param {number} id The competency.
+ * @param {string} shortname The new name.
+ * @returns {Promise} Resolves once stored.
+ */
+export const renameCompetency = (id: number, shortname: string): Promise<unknown> =>
+    call('core_competency_update_competency', {competency: {id, shortname}});
 
 /**
  * Give a competency a new parent; core appends it after the new parent's children.

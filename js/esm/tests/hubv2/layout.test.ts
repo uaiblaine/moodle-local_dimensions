@@ -20,7 +20,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {layoutTree} from '../../src/hubv2/layout';
+import {layoutTree, mirrorLayout} from '../../src/hubv2/layout';
 
 const GRID = {columnWidth: 300, rowHeight: 100, groupGap: 40};
 
@@ -90,5 +90,39 @@ describe('the tidy tree', () => {
             {key: 'stray', parent: 'gone'},
         ], GRID);
         expect(positions.stray).toEqual({x: 0, y: 100});
+    });
+});
+
+describe('the tree right to left', () => {
+    const items = [
+        {key: 'f', parent: null},
+        {key: 'a', parent: 'f'},
+        {key: 'a1', parent: 'a'},
+        {key: 'a2', parent: 'a'},
+        {key: 'b', parent: 'f'},
+    ];
+
+    it('keeps the root at the origin and puts every depth one column further left', () => {
+        const positions = mirrorLayout(layoutTree(items, GRID));
+        expect(positions.f).toEqual({x: 0, y: positions.f.y});
+        expect(Object.is(positions.f.x, 0)).toBe(true);
+        expect(positions.a.x).toBe(-300);
+        expect(positions.a1.x).toBe(-600);
+        expect(positions.b.x).toBe(-300);
+    });
+
+    it('keeps every row, so siblings keep their order and parents stay between their children', () => {
+        const ltr = layoutTree(items, GRID);
+        const rtl = mirrorLayout(ltr);
+        Object.keys(ltr).forEach((key) => {
+            expect(rtl[key].y).toBe(ltr[key].y);
+            expect(rtl[key].x).toBe(0 - ltr[key].x);
+        });
+        expect(rtl.a.y).toBe((rtl.a1.y + rtl.a2.y) / 2);
+    });
+
+    it('is its own inverse', () => {
+        const ltr = layoutTree(items, GRID);
+        expect(mirrorLayout(mirrorLayout(ltr))).toEqual(ltr);
     });
 });

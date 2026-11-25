@@ -19,6 +19,10 @@ Feature: Link a competency to courses and activities in the Competency hub
     And the following "core_competency > course_competencies" exist:
       | course | competency |
       | LINK1  | AC1        |
+    # The classic hub (the Structures tab and the classic list), kept one release behind the context bar's link.
+    And the following "user preferences" exist:
+      | user       | preference                       | value            |
+      | admin      | local_dimensions_central_display | {"classic":true} |
     And I log in as "admin"
 
   Scenario: Open the Courses & activities modal and see a linked course

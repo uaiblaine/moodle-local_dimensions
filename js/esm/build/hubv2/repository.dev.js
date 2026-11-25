@@ -24,14 +24,28 @@ const allChildren = /* @__PURE__ */ __name(async (frameworkid, parentid, limitnu
   }
 }, "allChildren");
 const getNode = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_get_structure_node", { competencyid }), "getNode");
+const getNodes = /* @__PURE__ */ __name((ids) => ids.length === 0 ? Promise.resolve([]) : callMany(ids.map((competencyid) => ({ methodname: "local_dimensions_get_structure_node", args: { competencyid } }))).then((answers) => answers), "getNodes");
+const insights = /* @__PURE__ */ __name((frameworkid) => call("local_dimensions_get_framework_insights", { frameworkid }).then((answer) => ({
+  ...answer,
+  // The pairs list is the newest field of the answer: an older server sends none.
+  pairs: answer.pairs ?? []
+})), "insights");
 const search = /* @__PURE__ */ __name((frameworkid, query) => call("local_dimensions_search_structure", { frameworkid, query, limitfrom: 0, limitnum: 25 }), "search");
 const selectionData = /* @__PURE__ */ __name((competencyid) => callMany([
   { methodname: "local_dimensions_competency_usage", args: { competencyid } },
   { methodname: "local_dimensions_list_related_competencies", args: { competencyid } }
 ]).then(([usage, related]) => [usage, related.items]), "selectionData");
+const panelSections = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_get_competency_panel_sections", { competencyid }).then((answer) => answer.sections), "panelSections");
 const deleteCheck = /* @__PURE__ */ __name((competencyid) => call("local_dimensions_competency_delete_check", { competencyid }), "deleteCheck");
+const deleteChecks = /* @__PURE__ */ __name((ids) => ids.length === 0 ? Promise.resolve([]) : callMany(ids.map((competencyid) => ({ methodname: "local_dimensions_competency_delete_check", args: { competencyid } }))).then((answers) => answers), "deleteChecks");
+const setAppearance = /* @__PURE__ */ __name((frameworkid, competencyids, fields) => call("local_dimensions_set_competencies_appearance", { frameworkid, competencyids, fields }), "setAppearance");
 const deleteCompetency = /* @__PURE__ */ __name((id) => call("core_competency_delete_competency", { id }), "deleteCompetency");
 const moveOne = /* @__PURE__ */ __name((id, up) => call(up ? "core_competency_move_up_competency" : "core_competency_move_down_competency", { id }), "moveOne");
+const moveUpTimes = /* @__PURE__ */ __name((id, times) => times > 0 ? callMany(Array.from({ length: times }, () => ({ methodname: "core_competency_move_up_competency", args: { id } }))) : Promise.resolve(null), "moveUpTimes");
+const createCompetency = /* @__PURE__ */ __name((frameworkid, parentid, shortname, idnumber) => call("core_competency_create_competency", {
+  competency: { shortname, idnumber, competencyframeworkid: frameworkid, parentid }
+}).then((record) => Number(record.id)), "createCompetency");
+const renameCompetency = /* @__PURE__ */ __name((id, shortname) => call("core_competency_update_competency", { competency: { id, shortname } }), "renameCompetency");
 const setParent = /* @__PURE__ */ __name((competencyid, parentid) => call("core_competency_set_parent_competency", { competencyid, parentid }), "setParent");
 const updateRule = /* @__PURE__ */ __name((id, config) => call("core_competency_update_competency", {
   competency: { id, ruletype: config.ruletype, ruleoutcome: config.ruleoutcome, ruleconfig: config.ruleconfig }
@@ -43,12 +57,20 @@ export {
   allChildren,
   browse,
   countCompetencies,
+  createCompetency,
   deleteCheck,
+  deleteChecks,
   deleteCompetency,
   getNode,
+  getNodes,
+  insights,
   moveOne,
+  moveUpTimes,
+  panelSections,
+  renameCompetency,
   search,
   selectionData,
+  setAppearance,
   setParent,
   updateRule
 };

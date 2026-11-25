@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler", "jsx": "react-jsx",
+    "strict": true, "skipLibCheck": true, "noEmit": true, "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "typeRoots": ["/private/tmp/claude-501/-Users-uaiblaine-dev/e1be1b71-acfa-40d7-a9d9-6076e98b79fb/scratchpad/xyflow13-build/node_modules/@types"], "types": ["react", "react-dom", "requirejs"],
+    "paths": {
+      "@moodle/lms/core/*": ["/Users/uaiblaine/dev/moodle-503/public/lib/js/esm/src/*"],
+      "react": ["/private/tmp/claude-501/-Users-uaiblaine-dev/e1be1b71-acfa-40d7-a9d9-6076e98b79fb/scratchpad/xyflow13-build/node_modules/@types/react"], "react/*": ["/private/tmp/claude-501/-Users-uaiblaine-dev/e1be1b71-acfa-40d7-a9d9-6076e98b79fb/scratchpad/xyflow13-build/node_modules/@types/react/*"]
+    }
+  },
+  "files": ["/Users/uaiblaine/dev/wt-local_dimensions-hubv2-s6/js/esm/src/hubv2/Hub.tsx"]
+}

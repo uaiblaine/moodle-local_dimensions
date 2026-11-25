@@ -32,7 +32,10 @@ use PHPUnit\Framework\Attributes\CoversNothing;
 /**
  * Who finds what in the admin tree: the hub is gated by its capability, the rest by site config.
  *
- * settings.php runs inside admin_get_root(), so the assertions rebuild the tree as each user.
+ * settings.php runs inside admin_get_root(), so the assertions rebuild the tree as each user. The
+ * hub's page is also the gate of hubv2.php, the competency map's former address, which redirects to
+ * the hub's map view only after admin_externalpage_setup('local_dimensions_central') admits the
+ * viewer; the map itself has no entry of its own.
  */
 #[CoversNothing]
 final class settings_registration_test extends advanced_testcase {
@@ -49,7 +52,7 @@ final class settings_registration_test extends advanced_testcase {
     }
 
     /**
-     * A system-level competency manager without site configuration reaches both hubs, and nothing else.
+     * A system-level competency manager without site configuration reaches the hub, and nothing else.
      *
      * @return void
      */
@@ -66,10 +69,8 @@ final class settings_registration_test extends advanced_testcase {
         $hub = $this->locate('local_dimensions_central');
         $this->assertInstanceOf(admin_externalpage::class, $hub);
         $this->assertTrue($hub->check_access());
-        $hubv2 = $this->locate('local_dimensions_centralv2');
-        $this->assertInstanceOf(admin_externalpage::class, $hubv2);
-        $this->assertTrue($hubv2->check_access());
-        $this->assertStringEndsWith('/local/dimensions/hubv2.php', $hubv2->url->out(false));
+        $this->assertStringEndsWith('/local/dimensions/central.php', $hub->url->out(false));
+        $this->assertNull($this->locate('local_dimensions_centralv2'));
 
         $this->assertNull($this->locate('local_dimensions_settings'));
         $this->assertNull($this->locate('local_dimensions_customfield'));
@@ -77,7 +78,8 @@ final class settings_registration_test extends advanced_testcase {
     }
 
     /**
-     * A user without the capability finds the page in the tree but is refused by it.
+     * A user without the capability finds the page in the tree but is refused by it, and so by the
+     * map's former address, which asks the same page.
      *
      * The page is registered for everyone; the capability is what admits, exactly as tool_lp does.
      *
@@ -91,9 +93,7 @@ final class settings_registration_test extends advanced_testcase {
         $hub = $this->locate('local_dimensions_central');
         $this->assertInstanceOf(admin_externalpage::class, $hub);
         $this->assertFalse($hub->check_access());
-        $hubv2 = $this->locate('local_dimensions_centralv2');
-        $this->assertInstanceOf(admin_externalpage::class, $hubv2);
-        $this->assertFalse($hubv2->check_access());
+        $this->assertNull($this->locate('local_dimensions_centralv2'));
     }
 
     /**
@@ -108,18 +108,18 @@ final class settings_registration_test extends advanced_testcase {
         set_config('enabled', 1, 'core_competency');
         $pages = [
             'local_dimensions_central',
-            'local_dimensions_centralv2',
             'local_dimensions_customfield',
             'local_dimensions_customfield_template',
         ];
         foreach ($pages as $section) {
             $this->assertInstanceOf(admin_externalpage::class, $this->locate($section), $section);
         }
+        // The map is a view of the hub, with no admin entry of its own.
+        $this->assertNull($this->locate('local_dimensions_centralv2'));
         $this->assertNotNull($this->locate('local_dimensions_settings'));
 
         set_config('enabled', 0, 'core_competency');
         $this->assertNull($this->locate('local_dimensions_central'));
-        $this->assertNull($this->locate('local_dimensions_centralv2'));
         $this->assertNull($this->locate('local_dimensions_settings'));
     }
 }

@@ -6,6 +6,336 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Sections other plugins add to the workspace's panel
+
+Version `2026100541`. Stage S7 of the hub v2 record (idea I25, job J10, decision H9): a companion plugin adds
+sections of its own under the panel of the selected competency, as data only.
+
+- New hook `\local_dimensions\hook\competency_panel_sections`: the competency, its framework, the framework's
+  context and whether the viewer manages there, read-only; `add_section()` takes a component, a key, a title,
+  rows of a label, a value and an optional tone, a note and one link. Everything is plain text (decoded and
+  stripped until stable, so it survives `PARAM_TEXT` whatever `formatstringstriptags` says), the link is a page
+  of this site or nothing, and the hook bounds sections (6), rows (12) and every length. No HTML; zero-width and
+  bidirectional controls removed, and a text with nothing visible is empty. Nothing passed to `add_section()`
+  throws: a refused section (component, key, a taken key: the first wins) or tone is dropped with a
+  `debugging()` message, so one listener cannot blank the others.
+- New read web service `local_dimensions_get_competency_panel_sections` (`readonlysession`): the framework and
+  its context from the competency's row, `validate_context()`, a guest refused, competencies enabled, core's
+  read right on the competency, then the dispatch and an allowlisted answer. No statement beyond its checks
+  when no plugin listens.
+- The panel asks only when the page says a plugin listens (`hub_map::has_panel_sections()`), on every
+  selection and after every change; an answer for an earlier selection is dropped, and a failed read is one
+  muted line ("Some details could not be loaded.") under the rest of the panel. Each section is a heading, a
+  definition list (a tone drawn as a status label around its text) and one link in the same tab; two status
+  label tones, danger and info, join the workspace's sheet.
+- Mutation spec `mutations/competency_panel_sections.conf` (21 gates).
+- Fixed: closing the bulk dock's "Move under…" dialogue gives the focus back to the dock's button, as its two
+  other dialogues do; it went to the outline's item, where the picks' actions are a Tab away.
+
+### Acting on several competencies at once in the workspace
+
+Version `2026100540`. Stage S6 of the hub v2 record (idea I16, job J7): a manager picks several
+competencies in the outline or on the map and acts on them from a bulk dock, the fleet Design System's data
+report "Selection variant" and "Bulk dock" (D129 to D135). A reader gets none of it.
+
+- **Picking**: Space on an item, Shift+Up and Shift+Down from the anchor, Ctrl+A (Cmd+A) for the item's level,
+  a real check box at the start of each competency row ("Select <name>", out of the Tab order) and on a card's
+  corner (shown on hover, on focus and while anything is picked), Ctrl+click (Cmd+click) on a card, Escape to
+  release. For a manager the outline is a multi-select tree: `aria-selected` follows the box on every
+  competency row and the competency the panel shows is `aria-current`; a map node says "selected" in its name.
+  The picks survive opening and closing branches and lose the competencies that leave the tree.
+- **Dock**: after the panes, sticky 12 px above the viewport's bottom (the workspace now clips its overflow
+  instead of hiding it, so the dock can stick); the count in a polite live region, **Set appearance…**,
+  **Move under…**, **Clear selection** and **Delete…**, last and outlined. Each action opens a dialogue
+  titled with the action and the count, naming the first five competencies.
+- **Set appearance…** (background colour, text colour, tag 1, tag 2, competency label; each left as it is
+  by default) calls the new write service `local_dimensions_set_competencies_appearance`: at most 200
+  competencies of one framework, `moodle/competency:competencymanage` in the framework's own context, every
+  id the framework's (a foreign or missing id refuses the whole call before any write), the field
+  controllers' own validation and the select's own options, writes through the competency handler (so
+  `can_edit()` and the `competency_customfields_updated` event behave as a form save does), one transaction,
+  and the competency metadata cache invalidated after it. The dialogue previews the two colours and says
+  their contrast ratio, warning under 4.5:1.
+- **Move under…** is "Move to" with every topmost pick: a target inside a picked competency is refused,
+  competencies already under the target are skipped and said so, the others move one core call each in the
+  tree's order, the first refusal stops the run.
+- **Delete…** asks `local_dimensions_competency_delete_check` for every topmost pick, then one confirmation
+  says how many core will delete, what goes with them and which it will refuse and why; only those are
+  deleted.
+- After each action the touched branches and the insights are read again; what failed stays picked and the
+  outcome is said in the workspace's polite region.
+- "Export selection" is left out: the plugin's CSV exports neutralise spreadsheet formulas on the server
+  (`local\csv_formula`) and match the framework import's columns, which a copy built in the browser would not.
+
+### Lenses and the structure check in the workspace
+
+Version `2026100539`. Stage S5 of the hub v2 record (ideas I19, I20, I22, I26 to I28): the workspace reads a
+framework's usage, rules, relations and findings from `local_dimensions_get_framework_insights`, one answer
+per framework, and shows them in three lenses and a checker. No write path is added: every fix a finding
+offers is an existing action of the registry.
+
+- **Lens switch** in the workspace's bar (None, Usage, Rules, Relations; `aria-pressed` cells in a labelled
+  group), also in the palette ("No lens", "Lens: usage", ...). The lens is saved as `structure.lens` in
+  `local_dimensions_central_display` (sanitised by `helper::get_central_prefs()` and `preferences.js`),
+  kept in the address as `lens=` without a history entry and in the tab's pane data, and handed to the
+  workspace in its props, resolved like the view (`hub_map::resolve_lens()`: the address, the saved one,
+  none).
+- **Usage**: each card's ground steps through the brand's tint, edge and fill by the chosen measure (0; 1
+  to 2; 3 to 5; 6 or more), each under an ink that clears 4.5:1 in light and dark; an unused competency
+  has a dashed edge; the count in words under the name, as the outline's quiet counter, and in the names.
+  The panel holds the measure switch (courses, activities, plan templates, learning plans), the legend
+  with its counts and the unused competencies. Under presence counts only used and unused are shown and
+  the panel says why; with no usage the lens is not offered and the panel says why.
+- **Rules**: a ruled parent carries "6 of 8 points" (or its rule's label) and its children their points
+  and "required"; only the children a points rule counts take the rule edge; a rule that can never fire
+  is a dashed warning with a triangle and words; the rest is quieter. The panel lists the legend and one
+  block per rule with **Set the rule…** for a manager.
+- **Relations**: every related pair with both ends drawn is a dotted edge, one end alone shows "+N
+  elsewhere"; the panel lists the pairs, each end a button that reveals it.
+- **Check**: a button with the findings' count opens the checker in the panel (its own mode, closed by its
+  close button or by a selection): the codes present with their counts, **Check again**, each finding with
+  its words, **Reveal** and the action that fixes it, and the codes found nowhere. F8 and Shift+F8 walk
+  the findings, wrapping, and announce "Finding 2 of 6: ...". While the checker is open, an item with
+  findings carries a warning mark with their count, in its name too.
+- **Impact preview**: while a delete's confirmation or "Move to" is open, the competencies it touches are
+  outlined on the map and in the outline.
+- The framework's summary takes the service's numbers once read: levels, competencies with a rule,
+  related pairs and findings.
+- The insights are read shortly after the workspace mounts, when a lens or the checker is first asked
+  for, after any action of the registry marked as changing them, and on "Check again"; a stale answer is
+  dropped. Names of competencies the tree has not loaded are read in batches as the panel lists them.
+
+### The framework on the root: the workspace replaces the Structures tab and the classic list
+
+Version `2026100538`. Owner's decisions H2 and H3 of the hub v2 record: on 5.3 the workspace is the
+Competencies tab, and the hub's Structures tab and the tab's classic list stay one release behind a
+link. No web service was added: every write is the Structures tab's own form or service
+(`framework_dynamic_form`, `import_framework_dynamic_form`, `local_dimensions_set_framework_visibility`,
+`local_dimensions_export_framework`, core's `core_competency_duplicate_competency_framework` and
+`core_competency_delete_competency_framework`), each checking the capability in the framework's
+context or in the context the tab lists.
+
+- **The framework is the root node.** Selected in the outline or on the map, the panel shows its name,
+  ID number, context, visibility (a status label), scale with the proficient and default values, the
+  taxonomy term of each level, the competencies' total and the summary; then **Edit structure** and
+  **More actions** (Configure scale, Hide or Show structure, Duplicate, Export to CSV, Delete
+  structure), also the root's menu (its "more" button, Shift+F10) and the palette's actions on it.
+  They run `amd/src/central/frameworks.js`, whose actions are now exported for the Competencies tab
+  without changing them for the Structures tab. After an edit, the scale, the visibility or a
+  duplicate the tab is reloaded on the same framework with the opened branches and the selection
+  kept (`js/esm/src/hubv2/carry.ts`); after a delete it shows the next framework of the select or the
+  empty state.
+- **Taxonomy on the columns**: above each column of the map, the level's term as the framework names
+  it (core's strings, core's fallback past the named levels), following the view sideways, inside the
+  canvas, under no card at rest, hidden from assistive technology, which reads the levels once in the
+  canvas's description; a manager's pencil opens the framework's form. The outline's "Show taxonomy"
+  meta reads the same function (`columns.ts`).
+- **A Structures menu** beside the framework select (core's dropdown): New structure and Import from
+  CSV (each then selects the new framework), Show hidden structures (a `menuitemcheckbox` over the
+  tab's saved toggle) and Manage scales; the first two are palette commands too. It is drawn with no
+  framework at all, so a manager can create the first one.
+- **Classic mode**: a `classic` member of `local_dimensions_central_display` (off by default) and a
+  `classic=1|0` address parameter for the visit (`local\hub_mode`). Off: the strip offers
+  Competencies and Learning plans, `tab=frameworks` opens Competencies, the view switch offers
+  Outline, Map and Both, a saved or requested classic list opens the workspace, and the default view
+  is Both. On: the hub as it was, the classic list the default. The context bar's **Classic view** /
+  **Workspace view** link switches it, saving it because it carries the session key (an address
+  without it changes the visit only), and works without JavaScript. That link is the mode's one writer: a
+  display save from the hub's script never carries it, and the preference's clean callback
+  (`hub_mode::clean_display()`) keeps the stored mode on every client write. Hiding the Structures tab opens
+  and closes nothing: every tab still admits its viewers by its own `is_available()`.
+- Tests: `tests/local/hub_mode_test.php` (the session key refusals first, the strip for a site and a
+  category manager, the dynamic-tabs service still serving and refusing the Structures pane),
+  `structure_view_test` (the default view, the modes, the root's facts, the Structures menu),
+  `preferences_test`; Jest `commands` (the framework scope), `columns`, `carry`; Behat
+  `hub_framework_root.feature`. The features of the classic surfaces (`manage_frameworks`,
+  `configure_scale`, `central_category`, `competency_links`, `related_competencies`, `colour_mode`,
+  `hub_map_view`) switch classic mode on in their Background.
+
+### Framework insights for the map's lenses and checker (server side)
+
+Version `2026100537`. A new read-only web service, `local_dimensions_get_framework_insights`, answers
+for one framework what the map's lenses and "Check structure" will show; no page uses it yet.
+
+- **Usage** per competency: courses, activities, learning plan templates and learning plans (a plan
+  holds a competency of its own, an archived rating of a completed plan, or its template's, as core's
+  `plan::get_by_user_and_competency()` reads it). Counts are exact only for a viewer holding at the
+  site every capability core's own usage lists ask (course competencies, hidden courses and
+  activities, availability, template management, plans and their drafts) and when no role refuses
+  any of those capabilities (a prevent or prohibit in any context demotes the viewer to the next
+  level; the site administrator is not demoted). A manager of the
+  framework's competencies is told which kinds of use apply (0 or 1), what the delete check already
+  tells them; any other reader is told nothing about usage.
+- **Rules**: type, core's label, outcome and, for a points rule, the points asked, the points its
+  listed competencies still add up to, the required ones and whether a learner could ever meet it,
+  mirroring `competency_rule_points::matches()`.
+- **Relations**: every related pair of the framework once, lower id first (`pairs`, for the lens to
+  draw), and per competency the count of its relations, both from one statement; a row that
+  reaches another framework, which core never writes, is not read.
+- **Checks**, each with its title and sentence in `hubv2_check_<code>` and `_desc`: a rule that can
+  never fire, a rule over a single child, a rule without children (core saves an "all" rule on a
+  leaf), an empty description, an empty ID number (core keeps ID numbers unique but stores an empty
+  one), a competency nothing uses (only from exact counts) and custom colours under WCAG's 4.5:1
+  (`local\contrast_ratio`). Core refuses a framework scale with no proficient value, so that check is
+  not offered.
+- **Summary**: competencies, levels, rules, relation pairs and findings.
+- **Access** as the hub's framework lists: logged in, not the guest, competencyview in the
+  framework's own context, and a framework in a category `local_unlistedcourses` withholds from the
+  viewer refused as a missing one. The answer is a fixed number of statements whatever the
+  framework's size, and nothing is cached: each node computes it from the database.
+
+### Commands: a node's menu, a command palette, "Move to" and typing in the outline
+
+Version `2026100536`. Every action of the workspace (Outline, Map, Both) is in one registry
+(`js/esm/src/hubv2/commands.ts`) with one decision of when it is offered, and the panel's buttons, a
+node's menu, the command palette and the keys all draw from it and run it through one function, so
+no place offers what another refuses. No web service was added: the writes are core's
+`core_competency_create_competency`, `_update_competency`, `_move_up_competency`,
+`_move_down_competency` and `_set_parent_competency`, which check the competency rights themselves.
+
+- **A node's menu**: a "more" button on the selected row and the selected map card ("Actions of
+  <name>"), and Shift+F10 or the context-menu key on the focused item of either pane. The Design
+  System's menu: an icon per item, separators between groups, Delete last, shortcuts at the line's
+  end; the ARIA menu keys (Up, Down, Home, End, type-ahead, Enter, Escape, Tab). It is drawn over the
+  page, under its anchor or above it when below would leave the pane or the screen, so the panes never
+  clip it; closing it gives the focus back to the item.
+- **The command palette** (`Commands` in the workspace's bar, or Ctrl+K / Cmd+K while the focus is in
+  the workspace; outside it the browser keeps its own shortcut): a dialogue with one field driving a
+  list (the combobox pattern with `aria-activedescendant`), in three groups: the actions on the
+  selected competency, "Go to" (the tree's search, from two characters; choosing a hit reveals and
+  selects it in both panes), and structure and view (Outline, Map, Both, Expand all, Collapse all,
+  Add competency, Framework summary, and the move's own controls while a move is being picked).
+- **Move to…**: a dialogue titled with the competency's name, with a search field and the possible
+  parents as a single-select tree (branches load as they are opened) or the search's hits with their
+  paths; the top level first, the competency and its descendants never selectable, its current parent
+  marked. Once a parent is chosen it says which rules core resets (the sentences the pick-on-the-map
+  confirmation shows, read afresh); "Pick on the map" starts the existing move mode; the commit names
+  the target and runs the same move as picking.
+- **Reorder from the keyboard**: Alt+Up and Alt+Down on the focused item of either pane move it among
+  its siblings, keep the focus on it and say where it now stands ("moved down, now 2 of 4"), or that it
+  is already first or last. A move down past the loaded siblings reloads them as far as its new place,
+  so it no longer drops out of the tree.
+- **Typing in the outline** (owner's decision H5, for a manager): F2 renames in place; Ctrl+Enter
+  (Cmd+Enter, or Insert) opens a row with a name and an ID number for a new sibling right below, and
+  Ctrl+Shift+Enter for a new first child. The ID number is offered when the siblings' end in a number
+  or a dotted number (`DCE-1.2` gives `DCE-1.3`; zero padding kept); Enter saves and opens the row
+  again for the next sibling, Escape stops and returns the focus to the row; the server's refusal (a
+  taken ID number, a missing right) shows under the fields. The foot of the outline names the keys.
+- **Framework summary** (the panel with nothing selected, and a palette command): the total from the
+  server, then levels, rules and open branches counted over the loaded tree and labelled so while it is
+  not the whole framework. Relations are not counted: the tree's nodes do not carry them.
+- **Display options** in the outline's header: "Show identifiers" and "Show taxonomy", check boxes in a
+  menu, kept in the same preference the classic list's switches write
+  (`local_dimensions_central_display`, `structure.id` and `structure.tax`).
+- **The panel** keeps three controls for the selected competency: **Edit**, **Add child** and **More
+  actions**, which opens the same menu under itself (Delete is there, last). Closing a menu, the
+  palette or "Move to" gives the focus back to the row or node it belongs to, to the panel's button,
+  or, after a layer opened by another, to the selected item of the pane that last had the focus.
+- A reader (no `moodle/competency:competencymanage` on the competency) gets no menu button, no action
+  in the panel or the palette, and no key that writes.
+- New strings: `hubv2_actionsof`, `hubv2_cmd_*`, `hubv2_commands`, `hubv2_editor_*`, `hubv2_hint_*`,
+  `hubv2_moveto_*`, `hubv2_palette_*`, `hubv2_reorder_*`, `hubv2_reordered_*`, `hubv2_summary_*`.
+
+### The outline beside the map, and the keyboard of both
+
+Version `2026100535`. The Competencies tab's switch has four views: **Classic** (the list, still the
+default; its cell was **List**), **Outline**, **Map** and **Both**. The last three are one React
+workspace over one store, so moving among them keeps the opened branches and the selection and
+reloads nothing; only a move to or from Classic reloads the tab. `view=map` keeps meaning the map
+alone, in links and saved preferences.
+
+- **The outline** is an ARIA tree: a flat list of `treeitem` rows with `aria-level`, `aria-setsize`
+  (the parent's total from the server, since a lazy branch is never whole in the page),
+  `aria-posinset`, `aria-expanded` on parents and `aria-selected` on the selected row; the framework
+  is its root. One Tab stop with a roving tabindex, the keys of core's `core/tree` (Left and Right
+  swapped right to left) and type-ahead on the visible names. A row's click selects it, its chevron
+  only opens or closes; a "Load more" row loads the next page; a branch loading shows the Design
+  System's skeleton, an empty framework its empty state with "Add competency" for a manager.
+- **One selection**: selecting in the outline selects on the map and pans it to the node (at once
+  under reduced motion); selecting on the map, or revealing a search result, moves the outline's Tab
+  stop to the row and scrolls the outline alone to it. The move mode's "choose the new parent" takes
+  a click or Enter in either pane, and Escape cancels it.
+- **The map's keyboard** (from the stage 0 spike): one Tab stop instead of one per node, the same
+  keys as the outline, every node a group named with its level, position, state, children, rule and
+  relation to the selected competency (`hubv2_a11y_level`, `_position`, `_expanded`, `_collapsed`,
+  `_rule`, `_related`), React Flow's English role description and its own Enter and Space handling
+  dropped, the key help (`hubv2_a11y_node`) reworded. A key repeated faster than the panes draw acts
+  on where the previous one went, and a branch whose page is loading is asked for once. The pan that
+  follows the focus keeps the node clear of the overview map and the controls on a short canvas too.
+  A branch opened on the map, by key or by its card's button, moves the view just enough to show the
+  parent and the start of its children when they open outside it (at once under reduced motion, no
+  move when they fit).
+- **Both**: the outline at the left, 264 px by default, behind a splitter (`role="separator"`) moved
+  by the arrow keys, Home, End or a drag and reset by a double click; its width is kept in
+  `localStorage` (`local_dimensions_hubv2_outline_width`). Below 992 px the panes stack and the
+  splitter is not drawn.
+- **Expand all and Collapse all** in the outline's header: Expand all opens the visible tree level by
+  level, loading each closed branch's first page, and stops before passing 500 competencies with a
+  notice (`hubv2_expandall_capped`); Collapse all closes every branch, ending an Expand all still
+  running.
+- **The panel lists every related competency** (decision H10), not only those off the map; the
+  string `hubv2_related_offcanvas` goes.
+- **Server**: `structure::VIEWS` is `list`, `outline`, `map`, `both` and `structure::WORKSPACE_VIEWS`
+  the last three; the saved preference and the address accept the four; `hub_map::props()` carries
+  the first `layout`. The switch tells the workspace a new layout by the `local_dimensions:hubv2-layout`
+  event, and `hub_workspace_contract_test` holds the event's name, the view lists of the server, the
+  tab's modules and the workspace, and the outline width's custom property equal.
+
+### The competency map becomes the Competencies tab's map view
+
+Version `2026100534`. The canvas leaves its own page for the hub's Competencies tab, where a **List**
+/ **Map** switch beside the framework select chooses the view; the list stays the default.
+
+- **One tab, two views.** The map is drawn from what the tab already resolves (the context, the
+  framework list with the `local_unlistedcourses` rules, the selected framework, whether the viewer
+  manages it), so it lists exactly what the list lists, and a course category's manager reaches it
+  from the category's menu, locked to the category and its subcategories. The page's own context
+  form, its *List view* link and the canvas's `listurl` prop go.
+- **Remembered and linkable.** The view is kept under `structure` in
+  `local_dimensions_central_display` and in the address (`view=map`), which beats the saved choice;
+  an unknown value reads as none. `competencyid=M` reveals and selects that competency on the map
+  when the server finds it in the framework shown, and is ignored otherwise. Selecting a competency
+  rewrites the address in place, with no history entry; a framework or context change drops it.
+- **`hubv2.php` redirects** to `central.php?tab=structure&view=map`, carrying `contexttype`,
+  `categoryid` and `frameworkid` when given, behind the hub's own Site administration gate, so a
+  viewer the old page refused is refused the same way. The admin tree entry
+  `local_dimensions_centralv2`, `hubv2_page`, the `hubv2` template and the `hubv2_toolbar` module
+  are removed, with the strings `hubv2`, `hubv2_apply` and `hubv2_listview`.
+- **The canvas's strings** are listed once, in `output\hub_map::STRINGS`, which the tab hands to the
+  page in the map view; `hub_map_test` keeps it equal to `js/esm/src/hubv2/strings.ts`.
+- **Reduced motion**: the centring on a revealed competency is instant when the system asks for
+  reduced motion; the canvas animates nothing in CSS.
+- **Right to left**: in a language written right to left the tree grows leftwards (the layout
+  mirrored, the edge handles and the expand chevrons swapped, each card in the page's direction).
+- **Edges leave the accessibility tree** (hidden, no role, no "Edge from f to c198" name), and React
+  Flow's application wrapper is named after the framework.
+- **The move confirmation names the rules core resets**: `set_parent_competency()` resets the rule
+  of the current and of the new parent, and the dialogue says which of them has one, read fresh
+  before asking (`hubv2_moverule_oldparent`, `hubv2_moverule_newparent`).
+- **Design System**: the view switch is the segmented control (as a view switch, `aria-pressed`);
+  the canvas's radii come from the new `--local-dimensions-radius-*` scale tokens (a counter alone is
+  round: the expand button and the rule label lose their pill), and its two 0.6875rem sizes become
+  0.75rem.
+
+### Competency hub v2 on React Flow 13
+
+Version `2026100533`. The canvas looks and behaves as before, on the new library.
+
+- **React Flow** (`@xyflow/react`) goes from 12.12.1 to 13.0.3, with `@xyflow/system` 1.0.1,
+  zustand 5 and React's `react-compiler-runtime`; `js/esm/vendor/xyflow/xyflow.js` is rebuilt as its
+  README says, and `thirdpartylibs.xml` carries the new version and SHA-384. `useStore`,
+  `applyNodeChanges` and `applyEdgeChanges`, which 13 no longer exports, leave the module.
+  One error message of `react-compiler-runtime` is reworded as the module is built, because its
+  text starts with a marker the development-leftover check refuses in a shipped file.
+- The canvas reads 13's change batch (`NodeChangeset`) by type for the measured sizes and the
+  selection, and keeps 12's `elevateEdgesOnSelect` off, so the selected card's edges, its
+  related ones included, stay under the other cards.
+- 13 follows the system's colour scheme through its stylesheet only (`color-scheme` and
+  `light-dark()`); that stylesheet is not loaded and those rules are not ported, so the canvas
+  keeps following Moodle's `data-bs-theme` through the plugin's tokens.
+- `styles.css`: the pan cursor moves to the pane's `::before` layer, as 13's base rules do, so
+  nothing drawn above the pane (an edge, a rule label) inherits it.
+
 ### Design System: the filter line's funnel and eraser (D107, D109, D110)
 
 Version `2026100532`.

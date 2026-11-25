@@ -16,9 +16,9 @@
 /**
  * Hand-written, narrow declarations of the vendored React Flow module (xyflow.js beside this file).
  *
- * Only what the canvas uses, in the shape @xyflow/react 12.12.1 declares it
- * (node_modules/@xyflow/react/dist/esm/types and @xyflow/system/dist/esm/types of that release).
- * The real declarations are not vendored: they span two packages and some sixty files, and core's
+ * Only what the canvas uses, in the shape @xyflow/react 13.0.3 declares it
+ * (node_modules/@xyflow/react/dist/index.d.ts and @xyflow/system/dist/index.d.ts of that release).
+ * The real declarations are not vendored: they span two packages and some 4,000 lines, and core's
  * build compiles every .ts under js/esm/src, which is why this file and the module live outside it.
  * A name the canvas starts using is declared here first, from those sources, or tsc fails.
  *
@@ -27,7 +27,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import type {ComponentType, CSSProperties, HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode} from 'react';
+import type {ComponentType, CSSProperties, HTMLAttributes, MouseEvent as ReactMouseEvent, ReactNode, SVGAttributes} from 'react';
 
 /** Which side of a node a handle sits on (an enum of strings in the library). */
 export declare const Position: {readonly Left: 'left', readonly Top: 'top', readonly Right: 'right', readonly Bottom: 'bottom'};
@@ -73,6 +73,15 @@ export type Edge<EdgeData extends Record<string, unknown> = Record<string, unkno
     focusable?: boolean,
     deletable?: boolean,
     zIndex?: number,
+    /**
+     * The edge's name. The library names an edge without one "Edge from <source> to <target>", and
+     * writes no name at all for null: its EdgeWrapper tests `edge.ariaLabel === null`, though its own
+     * declaration says string only.
+     */
+    ariaLabel?: string | null,
+    ariaRole?: string,
+    domAttributes?: Omit<SVGAttributes<SVGGElement>,
+        'id' | 'style' | 'className' | 'role' | 'aria-label' | 'dangerouslySetInnerHTML'>,
 };
 
 /** What a custom node component receives. */
@@ -101,14 +110,32 @@ export type EdgeProps<EdgeType extends Edge = Edge> = {
     style?: CSSProperties,
 };
 
+/** A node's measured size, as the library reports it. */
+export type DimensionChange = {id: string, type: 'dimensions', dimensions?: {width: number, height: number}, resizing?: boolean,
+    setAttributes?: boolean | 'width' | 'height'};
+
+/** A node selected or unselected, by click or keyboard. */
+export type SelectionChange = {id: string, type: 'select', selected: boolean};
+
 /** A change the library reports for a node: only selection and measurement reach the canvas. */
-export type NodeChange =
-    {id: string, type: 'select', selected: boolean}
-    | {id: string, type: 'dimensions', dimensions?: {width: number, height: number}, resizing?: boolean}
-    | {id: string, type: 'position', position?: XYPosition, dragging?: boolean}
+export type NodeChange<NodeType extends Node = Node> =
+    DimensionChange
+    | SelectionChange
+    | {id: string, type: 'position', position?: XYPosition, positionAbsolute?: XYPosition, dragging?: boolean}
     | {id: string, type: 'remove'}
-    | {type: 'add', item: Node, index?: number}
-    | {id: string, type: 'replace', item: Node};
+    | {id: string, type: 'add', item: NodeType, index?: number}
+    | {id: string, type: 'replace', item: NodeType}
+    | {id: string, type: 'update', item: Partial<NodeType>}
+    | {id: string, type: 'data', data: Partial<NodeType['data']>, replace?: false}
+    | {id: string, type: 'data', data: NodeType['data'], replace: true};
+
+/**
+ * The batch of changes onNodesChange receives: a class instance in the library, of which the canvas
+ * reads the changes by type. No value is exported: the canvas never builds one.
+ */
+export type NodeChangeset<NodeType extends Node = Node> = {
+    getByType: <T extends NodeChange<NodeType>['type']>(changeType: T) => Extract<NodeChange<NodeType>, {type: T}>[],
+};
 
 /** The library's labels for its own controls and descriptions. */
 export type AriaLabelConfig = {
@@ -125,9 +152,13 @@ export type AriaLabelConfig = {
     'handle.ariaLabel': string,
 };
 
-/** A fitView padding: a fraction of the view, a length such as '24px', or one of those per side. */
-export type FitPadding = number | string
-    | {top?: number | string, right?: number | string, bottom?: number | string, left?: number | string};
+/** A fitView length: a number of pixels, '24px', or a share of the view such as '5%'. */
+export type PaddingWithUnit = number | `${number}px` | `${number}%`;
+
+/** A fitView padding: one length all round, or one per side. */
+export type FitPadding = PaddingWithUnit
+    | {top?: PaddingWithUnit, right?: PaddingWithUnit, bottom?: PaddingWithUnit, left?: PaddingWithUnit,
+        x?: PaddingWithUnit, y?: PaddingWithUnit};
 
 /** How fitView frames the nodes. */
 export type FitViewOptions = {padding?: FitPadding, minZoom?: number, maxZoom?: number, duration?: number, nodes?: {id: string}[]};
@@ -138,13 +169,16 @@ export type ReactFlowProps<NodeType extends Node = Node, EdgeType extends Edge =
     edges: EdgeType[],
     nodeTypes?: Record<string, ComponentType<NodeProps<NodeType>>>,
     edgeTypes?: Record<string, ComponentType<EdgeProps<EdgeType>>>,
-    onNodesChange?: (changes: NodeChange[]) => void,
+    onNodesChange?: (changes: NodeChangeset<NodeType>) => void,
     onPaneClick?: (event: ReactMouseEvent) => void,
+    // Every change of the view, the fitted view and a programmatic one included.
+    onMove?: (event: unknown, viewport: {x: number, y: number, zoom: number}) => void,
     nodesDraggable?: boolean,
     nodesConnectable?: boolean,
     nodesFocusable?: boolean,
     edgesFocusable?: boolean,
     elementsSelectable?: boolean,
+    elevateEdgesOnSelect?: boolean,
     selectNodesOnDrag?: boolean,
     deleteKeyCode?: string | string[] | null,
     selectionKeyCode?: string | string[] | null,
@@ -207,10 +241,8 @@ export type ReactFlowInstance = {
     setCenter: (x: number, y: number, options?: {zoom?: number, duration?: number}) => Promise<boolean>,
     fitView: (options?: FitViewOptions) => Promise<boolean>,
     getZoom: () => number,
+    getViewport: () => {x: number, y: number, zoom: number},
 };
 
 /** The canvas's imperative helpers, inside a ReactFlowProvider. */
 export declare function useReactFlow(): ReactFlowInstance;
-
-/** Apply the changes the library reports to a list of nodes. */
-export declare function applyNodeChanges<NodeType extends Node = Node>(changes: NodeChange[], nodes: NodeType[]): NodeType[];

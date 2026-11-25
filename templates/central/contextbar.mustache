@@ -39,6 +39,8 @@
       rendered only when a hidden category is reachable
     * systemframeworkcount (int) · systemtemplatecount (int)
     * selectedframeworkcount (int) · selectedtemplatecount (int)
+    * modelink (object|null) {url, label, icon} · the quiet link to the hub's other mode (classic or workspace),
+      a real link that works without JavaScript; amd/src/central/context.js keeps its framework and context in step
 
     Example context (json):
     {
@@ -63,7 +65,8 @@
         "systemframeworkcount": 7,
         "systemtemplatecount": 5,
         "selectedframeworkcount": 4,
-        "selectedtemplatecount": 2
+        "selectedtemplatecount": 2,
+        "modelink": {"url": "https://example.com/local/dimensions/central.php?tab=structure&classic=1", "label": "Classic view", "icon": "fa-table-list"}
     }
 }}
 <div class="local-dimensions-central-contextbar d-flex flex-wrap align-items-start gap-3 mb-4"
@@ -119,7 +122,12 @@
         <span data-mode="plans" hidden>{{#str}}central_plans, local_dimensions{{/str}}</span>
     </div>
 
-    <div class="ms-auto align-self-center">
+    <div class="ms-auto align-self-center d-flex align-items-center gap-3">
+        {{#modelink}}
+        <a class="local-dimensions-central-modelink" href="{{url}}" data-region="mode-link">
+            <i class="fa {{icon}} me-1" aria-hidden="true"></i>{{label}}
+        </a>
+        {{/modelink}}
         <button type="button" class="btn btn-outline-secondary btn-sm" data-action="refresh">
             <i class="fa fa-rotate me-1" aria-hidden="true"></i>{{#str}}refresh, moodle{{/str}}
         </button>

@@ -46,6 +46,8 @@ import {initMasterResizer} from 'local_dimensions/central/pane_resizer';
 import {reloadPane} from 'local_dimensions/central/tabs';
 import * as ActionFooter from 'local_dimensions/central/action_footer';
 import * as Preferences from 'local_dimensions/central/preferences';
+import {setUrlParams, urlCompetencyId} from 'local_dimensions/central/deeplink';
+import * as Frameworks from 'local_dimensions/central/frameworks';
 
 const FORM_CLASS = 'local_dimensions\\form\\competency_dynamic_form';
 const PAGE_SIZE = 25;
@@ -87,7 +89,21 @@ const SELECTORS = {
     childLoadMore: '[data-region="child-loadmore"]',
     structureBody: '[data-region="structure-body"]',
     structureResizer: '[data-region="structure-resizer"]',
+    switchView: '[data-action="switch-view"]',
 };
+
+/**
+ * @type {String[]} The tab's views (structure::VIEWS); the classic list only in classic mode. The server resolves
+ * the view and the mode, and only offers the cells of the mode's views.
+ */
+const VIEWS = ['list', 'outline', 'map', 'both'];
+/** @type {String[]} The views of the one React workspace (structure::WORKSPACE_VIEWS). */
+const WORKSPACE_VIEWS = ['outline', 'map', 'both'];
+/**
+ * @type {String} The event that tells the workspace its new layout (LAYOUT_EVENT in
+ * js/esm/src/hubv2/selection.ts; hub_javascript_guards_test holds the two names equal).
+ */
+const LAYOUT_EVENT = 'local_dimensions:hubv2-layout';
 
 /** @type {HTMLElement|null} */
 let activeRow = null;
@@ -1365,7 +1381,183 @@ const initStructureResize = (region) => {
 };
 
 /**
+ * Show a framework in the Competencies tab: name it in the pane, the address and the saved place, and reload
+ * the pane. The deep link's competency is dropped: it names a competency of the framework shown before.
+ *
+ * Every change of framework goes through here: the framework select, a structure created or imported from the
+ * Structures menu or the workspace's palette, the workspace's root after an edit, a duplicate or a delete
+ * (js/esm/src/hubv2/Hub.tsx, through amd.ts).
+ *
+ * @param {HTMLElement} pane The Competencies tab's pane.
+ * @param {Number} frameworkid The framework; 0 lets the server choose the first visible one.
+ * @return {Promise<void>}
+ */
+export const showFramework = (pane, frameworkid) => {
+    window.clearTimeout(searchDebounce);
+    const id = Number(frameworkid) || 0;
+    pane.dataset.frameworkid = id;
+    pane.dataset.competencyid = 0;
+    setUrlParams({competencyid: null});
+    Preferences.saveNav({frameworkid: id});
+    return reloadPane(pane);
+};
+
+/**
+ * The framework to show once one is deleted: the next one the select lists, else the one before, else none.
+ *
+ * @param {Number} deletedid The deleted framework.
+ * @return {Number} The framework to show, 0 for none (the server then chooses, or shows the empty state).
+ */
+export const nextFramework = (deletedid) => {
+    const select = activeRegion ? activeRegion.querySelector(SELECTORS.frameworkSelect) : null;
+    const ids = select ? Array.from(select.options).map((option) => Number(option.value)) : [];
+    const index = ids.indexOf(Number(deletedid));
+    if (index < 0) {
+        return 0;
+    }
+    return ids[index + 1] || ids[index - 1] || 0;
+};
+
+/**
+ * Close the Structures menu, Bootstrap's dropdown, by its own button.
+ *
+ * @param {HTMLElement} menu The menu's wrapper.
+ */
+const closeStructuresMenu = (menu) => {
+    const trigger = menu.querySelector('[data-bs-toggle="dropdown"]');
+    if (trigger && trigger.getAttribute('aria-expanded') === 'true') {
+        trigger.click();
+    }
+};
+
+/**
+ * Wire the Structures menu (templates/central/structures_menu.mustache): New structure and Import from CSV run
+ * the Structures tab's dialogues (frameworks.js) in the tab's context and then show the new framework; "Show
+ * hidden structures" is the tab's saved toggle, kept checked in the menu; the scales link is a plain link.
+ *
+ * The server offers the first two only to whoever manages competencies in the tab's context, and the forms
+ * check that context again on submission.
+ *
+ * @param {HTMLElement} region The tab's region.
+ * @param {HTMLElement|null} pane The tab's pane.
+ */
+const initStructuresMenu = (region, pane) => {
+    const menu = region.querySelector('[data-region="structures-menu"]');
+    if (!menu || !pane) {
+        return;
+    }
+    const canscalespage = region.dataset.canscalespage === '1';
+    menu.addEventListener('click', (event) => {
+        const item = event.target.closest('[data-action]');
+        if (!item || !menu.contains(item)) {
+            return;
+        }
+        const action = item.dataset.action;
+        if (action === 'structures-showhidden') {
+            const checked = item.getAttribute('aria-checked') !== 'true';
+            item.setAttribute('aria-checked', String(checked));
+            Preferences.saveDisplay({structure: {showhidden: checked}});
+            applyShowHidden(region, checked);
+            return;
+        }
+        if (action === 'structures-new') {
+            closeStructuresMenu(menu);
+            Frameworks.createFramework(region.dataset.contextid, {
+                onSaved: (id) => showFramework(pane, id).catch(notifyError),
+                canscalespage: canscalespage,
+            }).catch(notifyError);
+        } else if (action === 'structures-import') {
+            closeStructuresMenu(menu);
+            Frameworks.importFramework(region.dataset.contextid, (id) => showFramework(pane, id).catch(notifyError))
+                .catch(notifyError);
+        }
+    });
+};
+
+/**
+ * Wire what every view shares: the framework select, its "show hidden" filter and the view switch.
+ *
+ * Each re-renders the pane from its dataset, the tab's single source of truth for its arguments. The
+ * workspace's deep link is carried by the dataset too: a framework change drops it (it names a
+ * competency of the framework left behind), the list has no use for it, and a switch from the list to
+ * the workspace takes the one the address holds, which the workspace keeps on the competency selected
+ * last.
+ *
+ * A switch among the workspace's three views (Outline, Map, Both) reloads nothing: the workspace keeps
+ * its tree, its opened branches and its selection, and only hears the new layout (LAYOUT_EVENT). The
+ * view is still written where a reload reads it (the dataset, the address, the saved preference), so
+ * the next reload of the pane, a framework change, opens the same layout.
+ *
+ * @param {HTMLElement} region
+ * @param {HTMLElement|null} pane
+ * @param {String} view The view shown.
+ */
+const initSharedControls = (region, pane, view) => {
+    let shown = view;
+    const select = region.querySelector(SELECTORS.frameworkSelect);
+    if (select && pane) {
+        select.addEventListener('change', () => {
+            showFramework(pane, Number(select.value) || 0).catch(notifyError);
+        });
+    }
+    initStructuresMenu(region, pane);
+
+    // Snapshot every framework option so "show hidden" filters the dropdown client-side
+    // (no pane reload -> no re-apply of display prefs -> no toggle flash).
+    if (select) {
+        frameworkOptions = Array.from(select.options).map((option) => ({
+            value: option.value,
+            label: option.textContent,
+            hidden: option.dataset.hidden === '1',
+        }));
+    }
+    const showhidden = Boolean(Preferences.getDisplay().structure.showhidden);
+    applyShowHidden(region, showhidden);
+    const menuToggle = region.querySelector('[data-action="structures-showhidden"]');
+    if (menuToggle) {
+        menuToggle.setAttribute('aria-checked', String(showhidden));
+    }
+    const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
+    if (toggleHidden) {
+        toggleHidden.checked = showhidden;
+        toggleHidden.addEventListener('change', () => {
+            Preferences.saveDisplay({structure: {showhidden: toggleHidden.checked}});
+            applyShowHidden(region, toggleHidden.checked);
+        });
+    }
+
+    const buttons = region.querySelectorAll(SELECTORS.switchView);
+    buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const next = button.dataset.view;
+            if (!pane || !VIEWS.includes(next) || next === shown) {
+                return;
+            }
+            const inworkspace = WORKSPACE_VIEWS.includes(next) && WORKSPACE_VIEWS.includes(shown);
+            shown = next;
+            pane.dataset.view = next;
+            // The address names the view too, so a reload keeps it before the debounced preference lands.
+            Preferences.saveDisplay({structure: {view: next}});
+            if (inworkspace) {
+                setUrlParams({view: next});
+                buttons.forEach((cell) => cell.setAttribute('aria-pressed', String(cell.dataset.view === next)));
+                document.dispatchEvent(new CustomEvent(LAYOUT_EVENT, {detail: {layout: next}}));
+                return;
+            }
+            window.clearTimeout(searchDebounce);
+            const competencyid = WORKSPACE_VIEWS.includes(next) ? urlCompetencyId() : 0;
+            pane.dataset.competencyid = competencyid;
+            setUrlParams({view: next, competencyid: competencyid || null});
+            reloadPane(pane).catch(notifyError);
+        });
+    });
+};
+
+/**
  * Initialise the Structure tab. Re-runs after each tab refresh.
+ *
+ * In the workspace's views only the shared controls are wired: the workspace owns its tree, its
+ * selection and its actions, and the list's footer stays hidden with no row to act on.
  */
 export const init = () => {
     const region = document.querySelector(SELECTORS.region);
@@ -1384,10 +1576,19 @@ export const init = () => {
         ActionFooter.hide();
     }
 
+    const view = VIEWS.includes(region.dataset.view) ? region.dataset.view : VIEWS[0];
     if (pane) {
         // Keep the pane dataset in sync with the framework the server actually resolved: when the
         // requested one is not listed in the context, it falls back to the first visible framework.
+        // The view likewise: a pane that named none shows the saved one, which later reloads keep.
         pane.dataset.frameworkid = frameworkid;
+        pane.dataset.view = view;
+    }
+
+    initSharedControls(region, pane, view);
+    if (WORKSPACE_VIEWS.includes(view)) {
+        activeRow = null;
+        return;
     }
 
     rulesModules = readJson(region, 'rules-modules', []);
@@ -1498,38 +1699,6 @@ export const init = () => {
             searchDebounce = window.setTimeout(() => {
                 runSearch(region, query).catch(notifyError);
             }, 250);
-        });
-    }
-
-    const select = region.querySelector(SELECTORS.frameworkSelect);
-    if (select && pane) {
-        select.addEventListener('change', () => {
-            window.clearTimeout(searchDebounce);
-            // The pane dataset is the single source of truth for the tab's arguments.
-            pane.dataset.frameworkid = select.value;
-            Preferences.saveNav({frameworkid: Number(select.value) || 0});
-            reloadPane(pane).catch(notifyError);
-        });
-    }
-
-    // Snapshot every framework option so "show hidden" filters the dropdown client-side
-    // (no pane reload -> no re-apply of display prefs -> no toggle flash).
-    const frameworkselect = region.querySelector(SELECTORS.frameworkSelect);
-    if (frameworkselect) {
-        frameworkOptions = Array.from(frameworkselect.options).map((option) => ({
-            value: option.value,
-            label: option.textContent,
-            hidden: option.dataset.hidden === '1',
-        }));
-    }
-    const toggleHidden = region.querySelector('[data-action="toggle-hidden"]');
-    if (toggleHidden) {
-        const showhidden = Boolean(Preferences.getDisplay().structure.showhidden);
-        toggleHidden.checked = showhidden;
-        applyShowHidden(region, showhidden);
-        toggleHidden.addEventListener('change', () => {
-            Preferences.saveDisplay({structure: {showhidden: toggleHidden.checked}});
-            applyShowHidden(region, toggleHidden.checked);
         });
     }
 
