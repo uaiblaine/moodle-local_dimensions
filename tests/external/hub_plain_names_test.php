@@ -27,6 +27,7 @@ use local_dimensions\output\dynamictabs\plans;
 use local_dimensions\output\dynamictabs\structure;
 use local_dimensions\template_metadata_cache;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Names in the Competency hub reach the reader escaped exactly once.
@@ -401,6 +402,47 @@ final class hub_plain_names_test extends \advanced_testcase {
         $node = $this->item($browse['items'], 'id', $f['childid']);
         foreach (['type', 'tag1', 'tag2'] as $key) {
             $this->assertSame('Core skills', $node[$key], $key);
+        }
+    }
+
+    /**
+     * Both values of formatstringstriptags.
+     *
+     * @return array
+     */
+    public static function striptags_provider(): array {
+        return ['tags stripped (the default)' => [1], 'tags kept' => [0]];
+    }
+
+    /**
+     * A type or tag label holding markup reaches the tree as the same plain text whatever formatstringstriptags
+     * says, through both structure services.
+     *
+     * With the setting off, format_string() keeps a label's tags ("Core <b>skills</b>" stays as typed), and one
+     * tag in a PARAM_TEXT return field fails the whole response: the tree would not load for anybody.
+     *
+     * Change that must make it fail, with tags kept: in helper::structure_nodes(), send a label as format_string()
+     * returns it.
+     *
+     * @param int $striptags The site's formatstringstriptags.
+     * @return void
+     */
+    #[DataProvider('striptags_provider')]
+    public function test_structure_labels_are_plain_whatever_formatstringstriptags_says(int $striptags): void {
+        $this->resetAfterTest();
+        set_config('formatstringstriptags', $striptags);
+        $f = $this->create_fixture();
+        $this->set_select_labels(helper::AREA_COMPETENCY, $f['childid'], 'Core <b>skills</b> & R&D');
+
+        $browse = $this->call_service('local_dimensions_browse_structure', [
+            'frameworkid' => $f['frameworkid'],
+            'parentid' => $f['parentid'],
+        ]);
+        $node = $this->item($browse['items'], 'id', $f['childid']);
+        $single = $this->call_service('local_dimensions_get_structure_node', ['competencyid' => $f['childid']]);
+        foreach (['type', 'tag1', 'tag2'] as $key) {
+            $this->assertSame('Core skills & R&D', $node[$key], $key);
+            $this->assertSame('Core skills & R&D', $single['node'][$key], $key);
         }
     }
 

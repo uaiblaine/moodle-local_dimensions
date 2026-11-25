@@ -34,6 +34,9 @@ Feature: Manage a competency framework from the root of the Competency hub's wor
     And I click on "//li[@role='treeitem'][@aria-level='1']" "xpath_element"
     And I should see "Behat framework" in the "aside.local-dimensions-hubv2-panel h3" "css_element"
     And I should see "BF1" in the "aside.local-dimensions-hubv2-panel" "css_element"
+    # The controls of "A reader sees the structure's facts on the root and none of its actions".
+    And "More actions" "button" should exist in the "aside.local-dimensions-hubv2-panel" "css_element"
+    And "Add competency" "button" should exist in the "aside.local-dimensions-hubv2-panel" "css_element"
     When I click on "Edit structure" "button" in the "aside.local-dimensions-hubv2-panel" "css_element"
     And I set the field "Name" in the "Edit structure" "dialogue" to "Renamed framework"
     And I click on "Save changes" "button" in the "Edit structure" "dialogue"
@@ -85,6 +88,23 @@ Feature: Manage a competency framework from the root of the Competency hub's wor
     When I click on "Workspace view" "link" in the "[data-region='contextbar']" "css_element"
     Then "Structures" "link" should not exist in the "#dynamictabs-tabs" "css_element"
     And I should see "Classic view" in the "[data-region='contextbar']" "css_element"
+
+  Scenario: A reader sees the structure's facts on the root and none of its actions
+    Given the following "users" exist:
+      | username | firstname | lastname |
+      | reader   | Rea       | Der      |
+    And I am on the "ENG" "local_dimensions > Competency hub" page logged in as "reader"
+    And I click on "Competencies" "link" in the "#dynamictabs-tabs" "css_element"
+    And I click on "Outline" "button" in the ".local-dimensions-central-viewswitch" "css_element"
+    And I should see "Circuits" in the ".local-dimensions-hubv2-tree" "css_element"
+    When I click on "//li[@role='treeitem'][@aria-level='1']" "xpath_element"
+    Then I should see "Engineering framework" in the "aside.local-dimensions-hubv2-panel h3" "css_element"
+    And I should see "ENGFW" in the "aside.local-dimensions-hubv2-panel" "css_element"
+    And "Edit structure" "button" should not exist
+    And "More actions" "button" should not exist
+    And "Add competency" "button" should not exist
+    # Nothing to create, import or reveal: the Structures menu is not drawn.
+    And "[data-region='structures-menu']" "css_element" should not exist
 
   Scenario: A category manager on the locked entry gets the workspace by default, on the category's framework
     Given I am on the "ENG" "local_dimensions > Competency hub" page logged in as "catmanager"

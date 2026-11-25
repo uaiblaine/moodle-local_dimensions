@@ -1,1 +1,1 @@
-s/\{name: escapeHtml\(row\.dataset\.name\), count: row\.dataset\.count\}/{name: row.dataset.name, count: row.dataset.count}/;
+s/\{name: escapeHtml\(name\), count: count\}/{name: name, count: count}/;
