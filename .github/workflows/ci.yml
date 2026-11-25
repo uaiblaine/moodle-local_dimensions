@@ -66,6 +66,6 @@ jobs:
       runner: ${{ inputs.runner != 'hosted' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CI_RUNNER || '' }}
       moodle-core-branch: MOODLE_503_STABLE
       plugin-dependencies: |
-        uaiblaine/moodle-enrol_apply,master
+        uaiblaine/moodle-enrol_apply,MOODLE_503_STABLE
         uaiblaine/moodle-block_dimensions,main
         uaiblaine/moodle-local_unlistedcourses,MOODLE_503_STABLE
