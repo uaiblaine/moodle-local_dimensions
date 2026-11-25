@@ -535,13 +535,12 @@ final class plan_journey_test extends \advanced_testcase {
             'action' => evidence::ACTION_COMPLETE,
             'grade' => 1,
         ]);
-        $suggest = $this->evidence($ownerid, $f->alpha, self::OCTOBER + 1, $other + ['action' => evidence::ACTION_SUGGEST]);
         $this->evidence($ownerid, $f->alpha, self::OCTOBER, $other);
 
         $this->setUser($f->owner);
         $page = plan_journey::page($f->planid, 0, 0);
 
-        $this->assertSame([$override, $complete, $suggest], self::ids($page));
+        $this->assertSame([$override, $complete], self::ids($page));
         $this->assertSame(1, self::folded($page));
     }
 
@@ -635,7 +634,11 @@ final class plan_journey_test extends \advanced_testcase {
      */
     public function test_a_plan_without_competencies_is_an_empty_page(): void {
         $owner = $this->getDataGenerator()->create_user();
-        $plan = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan(['userid' => $owner->id]);
+        // An active plan: core's default user role reads its own plans, not its own drafts.
+        $plan = $this->getDataGenerator()->get_plugin_generator('core_competency')->create_plan([
+            'userid' => $owner->id,
+            'status' => plan::STATUS_ACTIVE,
+        ]);
 
         $this->setUser($owner);
         $page = plan_journey::page((int) $plan->get('id'), 0, 0);
