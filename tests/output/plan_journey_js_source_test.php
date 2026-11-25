@@ -151,8 +151,13 @@ final class plan_journey_js_source_test extends \basic_testcase {
         $this->assertStringContainsString('initViewToggle(planId, armJourney(summary, planId));', $code);
         $shown = strpos($toggle, 'button.hidden = false;');
         $this->assertNotFalse($shown);
-        $this->assertLessThan($shown, strpos($toggle, "addEventListener('click'"));
-        $this->assertLessThan($shown, strpos($toggle, 'if (journeyArmed) {'));
+        // A missing line is false, which compares as less than any position: each must be found first.
+        $listener = strpos($toggle, "addEventListener('click'");
+        $guard = strpos($toggle, 'if (journeyArmed) {');
+        $this->assertNotFalse($listener, 'The press is handled before the button is shown.');
+        $this->assertNotFalse($guard, 'The button is shown only under the armed guard.');
+        $this->assertLessThan($shown, $listener);
+        $this->assertLessThan($shown, $guard);
         $this->assertStringContainsString('Journey.refilter();', $this->body($code, 'applyFilter', '        '));
         $this->assertStringContainsString('openDetailModal(item, planId);', $this->body($code, 'armJourney', '        '));
     }
@@ -174,7 +179,11 @@ final class plan_journey_js_source_test extends \basic_testcase {
         $this->assertLessThan($toggle, $shown, 'The class is written after the Journey is shown.');
 
         $show = $this->body($this->code($this->js_source('plan_journey')), 'show');
-        $this->assertLessThan(strpos($show, 'return true;'), strpos($show, 'frame.region.hidden = false;'));
+        $unhidden = strpos($show, 'frame.region.hidden = false;');
+        $answered = strpos($show, 'return true;');
+        $this->assertNotFalse($unhidden, 'The frame is shown.');
+        $this->assertNotFalse($answered, 'An armed module answers true.');
+        $this->assertLessThan($answered, $unhidden);
         $this->assertStringContainsString('return false;', $show, 'A module without a frame answers false.');
 
         $css = (string) file_get_contents(dirname(__DIR__, 2) . '/styles.css');
