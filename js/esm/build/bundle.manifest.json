@@ -3,7 +3,7 @@
     "outfile": "build/bundle.js",
     "sources": {
         "src/hubv2/BulkDialogs.tsx": "a1862db17b90c7c7c659a7c8ced11ca19b13ba3f",
-        "src/hubv2/ColumnHeads.tsx": "01d41ba36e9ef1aebe7b234c74d7ce2dbefd6aea",
+        "src/hubv2/ColumnHeads.tsx": "ee933d771fea8b90e2032e2882c6f52b5ac8c04c",
         "src/hubv2/Dialog.tsx": "0550a5c560288cabd7331c920ecc87b4bd732cab",
         "src/hubv2/Dock.tsx": "8472d0c94ad49c8399bf5d7e645bde35080eaa77",
         "src/hubv2/Editor.tsx": "42be1ad95fb22950af8dc19aed5807fb2abdc52b",
@@ -20,7 +20,7 @@
         "src/hubv2/amd.ts": "791104ac021d3c7c15310677d4cc680c2c195fd7",
         "src/hubv2/bulk.ts": "f38f06674980d95c2e86721d4fb90004a7f353b1",
         "src/hubv2/carry.ts": "0fff7f6801539a128842036c069ac65ebb93d355",
-        "src/hubv2/columns.ts": "7b5ca185434544287ecbfa716851080a1e2a0840",
+        "src/hubv2/columns.ts": "14035af1814689b0caaec9706587e7de8bd2a3dd",
         "src/hubv2/commands.ts": "124063fe16db0d75a3de4a66bf12dd4af1df7b3e",
         "src/hubv2/contrast.ts": "9f6eb8eaead72bce0701c56f29925cacaf90c5e0",
         "src/hubv2/deeplink.ts": "ddb1e871d6c4506d0a7374ac8eab6ee59dd3ddb9",

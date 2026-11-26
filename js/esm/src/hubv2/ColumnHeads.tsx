@@ -14,14 +14,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The map's column headings: above each column, the taxonomy term the framework gives that level.
+ * The map's column headings: above each column of competencies, its level and the taxonomy term the framework
+ * gives that level ("Level 2: Competency").
  *
  * Quiet text in a strip along the canvas's top edge, inside the canvas, under its controls. The strip follows
  * the map sideways (its headings move and scale with the view), not up and down, and the map's fitted view
  * leaves the strip's height free above the cards, so a heading never covers a card at rest. The strip is
  * drawing for the eye: hidden from assistive technology, which reads the levels once, in the canvas's
- * description, and never a Tab stop. A manager's pencil on a heading opens the framework's form, where the
- * taxonomies are edited, for the pointer only: the root's "Edit structure" is the keyboard's way to it.
+ * description, and never a Tab stop.
+ *
+ * The level names are the framework's, so a manager's way to them is one control, named for what it does, above
+ * the framework's own column: it opens the framework's form, where the taxonomies are edited. It is for the
+ * pointer only: the root's "Edit structure" is the keyboard's way to the same form. A heading carries no control
+ * of its own: one beside each term read as a button named after the term, once per column.
  *
  * @module     local_dimensions/hubv2/ColumnHeads
  * @copyright  2026 Anderson Blaine
@@ -30,6 +35,7 @@
 
 import {useEffect, useState} from 'react';
 import type {MouseEvent, ReactNode} from 'react';
+import {headWords} from './columns';
 import type {ColumnHead} from './columns';
 import {fill} from './strings';
 import type {Labels} from './strings';
@@ -65,7 +71,7 @@ export type ColumnHeadsProps = {
  */
 export const levelsSaid = (labels: Labels, heads: ColumnHead[]): string => fill(labels.hubv2_columns, [...heads]
     .sort((one, other) => one.level - other.level)
-    .map((head) => `${fill(labels.hubv2_fw_level, String(head.level))}: ${head.term}`)
+    .map((head) => headWords(labels.hubv2_fw_level, head))
     .join('; '));
 
 /**
@@ -95,27 +101,34 @@ const ColumnHeads = ({labels, heads, cardwidth, read, subscribe, describedby, ca
         <>
             <p id={describedby} className="visually-hidden">{levelsSaid(labels, heads)}</p>
             <div className="local-dimensions-hubv2-colheads" aria-hidden="true">
+                {canedit ? (
+                    // The framework's column is column 0 in both directions (columns.ts): its heading is the way to
+                    // the framework's level names.
+                    <div
+                        className="local-dimensions-hubv2-colhead"
+                        style={{left: `${viewport.x}px`, width: `${cardwidth * viewport.zoom}px`}}
+                    >
+                        <button
+                            type="button"
+                            className="local-dimensions-hubv2-iconbtn local-dimensions-hubv2-colhead-edit"
+                            tabIndex={-1}
+                            onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                event.stopPropagation();
+                                onEdit();
+                            }}
+                        >
+                            <i className="fa fa-pen" aria-hidden="true" />
+                            <span className="local-dimensions-hubv2-colhead-editlabel">{labels.hubv2_column_edit}</span>
+                        </button>
+                    </div>
+                ) : null}
                 {heads.map((head) => (
                     <div
                         key={head.level}
                         className="local-dimensions-hubv2-colhead"
                         style={{left: `${viewport.x + head.x * viewport.zoom}px`, width: `${cardwidth * viewport.zoom}px`}}
                     >
-                        <span className="local-dimensions-hubv2-colhead-term">{head.term}</span>
-                        {canedit ? (
-                            <button
-                                type="button"
-                                className="local-dimensions-hubv2-iconbtn local-dimensions-hubv2-colhead-edit"
-                                tabIndex={-1}
-                                title={labels.hubv2_column_edit}
-                                onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                                    event.stopPropagation();
-                                    onEdit();
-                                }}
-                            >
-                                <i className="fa fa-pen" aria-hidden="true" />
-                            </button>
-                        ) : null}
+                        <span className="local-dimensions-hubv2-colhead-term">{headWords(labels.hubv2_fw_level, head)}</span>
                     </div>
                 ))}
             </div>

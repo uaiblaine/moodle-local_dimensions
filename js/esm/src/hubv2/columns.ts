@@ -29,6 +29,7 @@
  */
 
 import {GRID} from './layout';
+import {fill} from './strings';
 import {visibleItems} from './tree';
 import type {Tree} from './tree';
 
@@ -45,6 +46,18 @@ export type ColumnHead = {level: number, x: number, term: string};
  */
 export const levelTerm = (terms: string[], fallback: string, level: number): string =>
     (level >= 1 && terms[level - 1]) ? terms[level - 1] : fallback;
+
+/**
+ * A heading's words: the level, then its term ("Level 2: Competency").
+ *
+ * The level is said because a framework often gives every level the same term, and the term alone would then
+ * head every column with one word. The canvas's description says the levels with the same words.
+ *
+ * @param {string} levellabel The "Level {$a}" label.
+ * @param {object} head The heading.
+ * @returns {string} The words.
+ */
+export const headWords = (levellabel: string, head: ColumnHead): string => `${fill(levellabel, String(head.level))}: ${head.term}`;
 
 /**
  * The deepest level the map draws: the level of its deepest visible competency, 0 with none.
