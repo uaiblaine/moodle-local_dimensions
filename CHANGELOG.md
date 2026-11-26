@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed: the map's column headings read as a button repeated on every column
+
+Version `2026100546`.
+
+- Each heading of the map carried a pencil that opened the framework's form, so a framework whose levels share one
+  term showed "Competency" with a pencil above every column: a control repeated once per level and named, to the
+  eye, after the level's term. The strip now has one control, "Edit the level names", above the framework's own
+  column, and a heading is words only.
+- A heading says its level before its term ("Level 2: Competency"), the words the canvas's description already
+  used, so two levels of one term are two different headings.
+
 ### The plan overview's Journey view
 
 Version `2026100545`. Phase C of the competency pages: the "evidence journey" study as a third view of the
