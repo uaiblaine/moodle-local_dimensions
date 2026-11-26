@@ -15,8 +15,10 @@ var __name = (target, value) => __defProp(target, "name", { value, configurable:
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 import { GRID } from "./layout";
+import { fill } from "./strings";
 import { visibleItems } from "./tree";
 const levelTerm = /* @__PURE__ */ __name((terms, fallback, level) => level >= 1 && terms[level - 1] ? terms[level - 1] : fallback, "levelTerm");
+const headWords = /* @__PURE__ */ __name((levellabel, head) => `${fill(levellabel, String(head.level))}: ${head.term}`, "headWords");
 const deepestLevel = /* @__PURE__ */ __name((tree) => visibleItems(tree).reduce((deepest, item) => item.kind === "competency" ? Math.max(deepest, item.depth) : deepest, 0), "deepestLevel");
 const columnHeads = /* @__PURE__ */ __name((levels, terms, fallback, rtl, columnwidth = GRID.columnWidth) => {
   const heads = [];
@@ -29,6 +31,7 @@ const columnHeads = /* @__PURE__ */ __name((levels, terms, fallback, rtl, column
 export {
   columnHeads,
   deepestLevel,
+  headWords,
   levelTerm
 };
 //# sourceMappingURL=columns.dev.js.map

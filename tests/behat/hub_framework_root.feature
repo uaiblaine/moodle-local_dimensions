@@ -89,6 +89,22 @@ Feature: Manage a competency framework from the root of the Competency hub's wor
     Then "Structures" "link" should not exist in the "#dynamictabs-tabs" "css_element"
     And I should see "Classic view" in the "[data-region='contextbar']" "css_element"
 
+  Scenario: The map heads each level with its number and term, and offers the level names once
+    Given the following "core_competency > competencies" exist:
+      | shortname | idnumber | competencyframework | parent |
+      | Leaf A1   | LA1      | BF1                 | DA     |
+    And I log in as "admin"
+    When I visit "/local/dimensions/central.php"
+    And I click on "Map" "button" in the ".local-dimensions-central-viewswitch" "css_element"
+    And I click on "Expand Domain A" "button"
+    # Both levels use core's term: the number tells the two headings apart.
+    Then I should see "Level 1: Competency" in the ".local-dimensions-hubv2-colheads" "css_element"
+    And I should see "Level 2: Competency" in the ".local-dimensions-hubv2-colheads" "css_element"
+    # One control however many levels are drawn, named for what it does and not after a level's term.
+    And "(//div[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-colheads ')]//button)[2]" "xpath_element" should not exist
+    When I click on "Edit the level names" "button" in the ".local-dimensions-hubv2-colheads" "css_element"
+    Then "Edit structure" "dialogue" should exist
+
   Scenario: A reader sees the structure's facts on the root and none of its actions
     Given the following "users" exist:
       | username | firstname | lastname |

@@ -21,7 +21,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {columnHeads, deepestLevel, levelTerm} from '../../src/hubv2/columns';
+import {columnHeads, deepestLevel, headWords, levelTerm} from '../../src/hubv2/columns';
 import {GRID} from '../../src/hubv2/layout';
 import {ROOT, createTree, insertChildren, setExpanded} from '../../src/hubv2/tree';
 import type {StructureNode} from '../../src/hubv2/types';
@@ -54,6 +54,17 @@ describe('a level\'s term', () => {
         expect(levelTerm([], 'Competency', 1)).toBe('Competency');
         expect(levelTerm(['', 'Skill'], 'Competency', 1)).toBe('Competency');
         expect(levelTerm(TERMS, 'Competency', 0)).toBe('Competency');
+    });
+});
+
+describe('a heading\'s words', () => {
+    it('say the level before its term, so two levels of one term are two headings', () => {
+        const heads = columnHeads(2, [], 'Competency', false);
+        expect(heads.map((head) => headWords('Level {$a}', head))).toEqual(['Level 1: Competency', 'Level 2: Competency']);
+    });
+
+    it('keep the framework\'s own term', () => {
+        expect(headWords('Level {$a}', {level: 3, x: 0, term: 'Indicator'})).toBe('Level 3: Indicator');
     });
 });
 
