@@ -34,9 +34,9 @@ Facts worth keeping for the next piece of work here:
   `spike/hubv2-a11y`, the S0 spike: one commit never merged and uncommitted files) is kept as it is. `spike/scratch-setup/` in this folder rebuilds the Jest and
   type-check setup (`xyflow13-build/` needs `npm install`).
 
-## After the run: two follow-ups (2026-11-25)
+## After the run: four follow-ups (2026-11-25 and 2026-11-26)
 
-Both came after the report of the run, the first from the owner's own use of the hub.
+All came after the report of the run; the first, the third and the fourth from the owner's own use of the hub.
 
 1. **#183, the display preference was refused and shown as a lost connection** (version 2026100542, main
    `61e5c1c`; `MOODLE_503_STABLE` level through #184). Reported by the owner: every switch among Classic, Outline,
@@ -70,7 +70,26 @@ Both came after the report of the run, the first from the owner's own use of the
      green on the first pass, 1,195 tests and 58 scenarios a leg; the mutation sweep of the change, 72 of 72 red
      on pgsql and on mariadb.
 
-Both are installed on m503, m503b and the mini cluster (2026100544, 2026-11-25).
+3. **#195, the map's column headings read as a button repeated on every column** (version 2026100546, main
+   `48aa685`; `MOODLE_503_STABLE` level through #196). Reported by the owner on the Map view: with a competency
+   below the second level selected, a "Competency" button that edits the framework was repeated; two problems, the
+   repetition and the name.
+   - Cause: each heading (the taxonomy term of its level, S4) carried a pencil that opened the framework's form. A
+     framework that gives every level one term showed the term with a pencil above every column drawn.
+   - Fix: the strip has one control, above the framework's own column (column 0 in both directions), named for
+     what it does; a heading is words only and says its level before its term ("Level 2: Competency"), the words
+     the canvas's description already used.
+   - Gate: the GitHub pipeline on GitHub's own runners, four legs green on the first pass, 1,236 tests and 60
+     scenarios a leg, Jest 311. One new scenario: two levels drawn, one button and no second, and it opens "Edit
+     structure". Seen on m503b: two numbered headings, one control, the form opens.
+4. **#197, a shorter label for that control** (version 2026100547, main `37c11ad`; `MOODLE_503_STABLE` level
+   through #198). Asked for by the owner after #195: "Edit the level names" is "Level names" beside its pencil
+   ("Nomes dos níveis" in Brazilian Portuguese). The control is as wide as the framework's card, about 177 px at the
+   map's fitted zoom on a desktop, and the longer Portuguese label was cut short. Two lang strings and the
+   scenario's step; the same pipeline, green on the first pass. Seen on m503b: the label takes 103 px, uncut.
+
+All four are installed on m503, m503b and the mini cluster (2026100547, 2026-11-26; the last round was run by
+another session, after the owner freed m503 at the end of a live demonstration).
 
 ## Where it stands
 
@@ -88,12 +107,16 @@ Both are installed on m503, m503b and the mini cluster (2026100544, 2026-11-25).
 | S7 companion sections | **merged** 2026-11-25. local_dimensions: `51aba0b` on main, matrix with Behat 4 of 4 one leg at a time on the MacBook (1,177 tests, 53 scenarios, Jest 309), sweep 21 of 21 red on both databases, `security-diff-read` no blocker; it carries the bulk dock's "Move under…" focus fix. local_evidencehub: `b50e3c2` on its main, matrix with Behat 4 of 4 (589 tests, 23 scenarios), 15 of 15 gates red on both databases. Both installed on m503, m503b and the cluster | [#180](https://github.com/uaiblaine/moodle-local_dimensions/pull/180) and [evidencehub #26](https://github.com/uaiblaine/moodle-local_evidencehub/pull/26) | versions 2026100541 and 2026100520 |
 | After the run: display preference | **merged** 2026-11-25, `61e5c1c` on main; one full leg with Behat (1,178 tests, 55 scenarios); seen on m503b in classic mode | [#183](https://github.com/uaiblaine/moodle-local_dimensions/pull/183) | version 2026100542 |
 | After the run: three open points | **merged** 2026-11-25, `9799755` on main; GitHub pipeline 4 of 4 legs (1,195 tests, 58 scenarios); sweep 72 of 72 red on both databases | [#187](https://github.com/uaiblaine/moodle-local_dimensions/pull/187) | version 2026100544 |
+| After the run: the map's column headings | **merged** 2026-11-26, `48aa685` on main; GitHub pipeline 4 of 4 legs (1,236 tests, 60 scenarios, Jest 311); seen on m503b | [#195](https://github.com/uaiblaine/moodle-local_dimensions/pull/195) | version 2026100546 |
+| After the run: the control's label | **merged** 2026-11-26, `37c11ad` on main; GitHub pipeline 4 of 4 legs (1,236 tests, 60 scenarios); seen on m503b | [#197](https://github.com/uaiblaine/moodle-local_dimensions/pull/197) | version 2026100547 |
 
 ## Open points found on the way
 
 Closed by #187: the label holding markup, the camelcase warnings of the Jest test, the reader's scenario.
 
 - Not checked in a browser at any stage: a screen reader, phone width, right-to-left, dark mode, colours and layout.
+- The map's "Level names" control moves with the framework's column, so it is out of sight while the map is panned
+  to a deep level; the root's "Edit structure" opens the same form from anywhere.
 - S6's bound of 30 statements a competency (`PER_COMPETENCY`) passes; the exact number was not measured.
 - What the client shows for an option label such as `R&D <beta>` was not measured (the server now sends it as
   the same plain text whatever `formatstringstriptags` says).
@@ -199,6 +222,11 @@ list as the default view until S3 reaches parity.
     of a peer session, at its request: local_ivquiz, local_ivform, mod_flexbook, auth_loginsteps), then
     local_evidencehub 2026100520, because evidencehub's gate needs local_dimensions' main in the mounted
     checkout. local_dimensions 2026100540 had been installed by a peer's round on 2026-11-24.
+
+22. **#195: a heading says its level before its term** ("Level 2: Competency"); the report asked only for one
+    control with a true name. To reverse: `headWords()` in `js/esm/src/hubv2/columns.ts` returns the term alone.
+    The one control sits above the framework's column and keeps the workspace's quiet button with its word, not
+    core's `.btn`.
 
 ## Left for the owner
 
