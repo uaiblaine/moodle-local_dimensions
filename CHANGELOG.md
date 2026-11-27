@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed: the map's control for the level names has a shorter label
+
+Version `2026100547`.
+
+- "Edit the level names" is now "Level names" beside its pencil ("Nomes dos níveis" in Brazilian Portuguese). The
+  control is as wide as the framework's card, and at the map's fitted zoom the longer Portuguese label was cut
+  short.
+
 ### Fixed: the map's column headings read as a button repeated on every column
 
 Version `2026100546`.

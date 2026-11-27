@@ -102,7 +102,7 @@ Feature: Manage a competency framework from the root of the Competency hub's wor
     And I should see "Level 2: Competency" in the ".local-dimensions-hubv2-colheads" "css_element"
     # One control however many levels are drawn, named for what it does and not after a level's term.
     And "(//div[contains(concat(' ', @class, ' '), ' local-dimensions-hubv2-colheads ')]//button)[2]" "xpath_element" should not exist
-    When I click on "Edit the level names" "button" in the ".local-dimensions-hubv2-colheads" "css_element"
+    When I click on "Level names" "button" in the ".local-dimensions-hubv2-colheads" "css_element"
     Then "Edit structure" "dialogue" should exist
 
   Scenario: A reader sees the structure's facts on the root and none of its actions
