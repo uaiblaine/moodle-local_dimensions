@@ -10436,7 +10436,7 @@ a.local-dimensions-central-links-badge-warn:focus {
 /*
  * The map's column headings (ColumnHeads.tsx): a strip inside the canvas's top edge, which the fitted view leaves
  * free (FIT in Hub.tsx), under the canvas's controls. Hub.tsx writes each heading's left and width from the view.
- * Presses go through the strip to the map, except on a manager's "Edit the level names", the one control of the
+ * Presses go through the strip to the map, except on a manager's "Level names", the one control of the
  * strip, above the framework's column.
  */
 .local-dimensions-hubv2-colheads {
